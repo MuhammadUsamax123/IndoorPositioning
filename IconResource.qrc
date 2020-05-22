@@ -1,0 +1,26 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file>images/add.png</file>
+    <file>images/armPPE.png</file>
+    <file>images/dropDown.png</file>
+    <file>images/dropUp.png</file>
+    <file>images/dropDownTime.png</file>
+    <file>images/dropUpTime.png</file>
+    <file>images/duty.png</file>
+    <file>images/gangway.png</file>
+    <file>images/genKey.png</file>
+    <file>images/impKey.png</file>
+    <file>images/locate.png</file>
+    <file>images/mob.png</file>
+    <file>images/night.png</file>
+    <file>images/oodObserve.png</file>
+    <file>images/personnel.png</file>
+    <file>images/punishment.png</file>
+    <file>images/sreCall.png</file>
+    <file>images/transport.png</file>
+    <file>images/viewDetails.png</file>
+    <file>images/visitor.png</file>
+    <file>images/personnelData.png</file>
+    <file>images/logoMTIP.png</file>
+</qresource>
+</RCC>
