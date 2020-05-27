@@ -37,7 +37,7 @@
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>280</width>
+       <width>290</width>
        <height>768</height>
       </rect>
      </property>
@@ -132,8 +132,8 @@ QPushButton:pressed
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>512</y>
-       <width>260</width>
+       <y>558</y>
+       <width>270</width>
        <height>44</height>
       </rect>
      </property>
@@ -198,8 +198,8 @@ QPushButton:pressed
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>248</y>
-       <width>260</width>
+       <y>294</y>
+       <width>270</width>
        <height>44</height>
       </rect>
      </property>
@@ -230,6 +230,10 @@ QPushButton:pressed
 }
 
 QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:active
 {
     background-color:#4154A0;
 }
@@ -264,8 +268,8 @@ QPushButton:pressed
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>292</y>
-       <width>260</width>
+       <y>338</y>
+       <width>270</width>
        <height>44</height>
       </rect>
      </property>
@@ -299,6 +303,7 @@ QPushButton:hover
 {
     background-color:#4154A0;
 }
+
 QPushButton:pressed
 {
     background-color: #384889;
@@ -330,8 +335,8 @@ QPushButton:pressed
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>336</y>
-       <width>260</width>
+       <y>382</y>
+       <width>270</width>
        <height>44</height>
       </rect>
      </property>
@@ -396,8 +401,8 @@ QPushButton:pressed
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>380</y>
-       <width>260</width>
+       <y>426</y>
+       <width>270</width>
        <height>44</height>
       </rect>
      </property>
@@ -462,8 +467,8 @@ QPushButton:pressed
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>424</y>
-       <width>260</width>
+       <y>470</y>
+       <width>270</width>
        <height>44</height>
       </rect>
      </property>
@@ -528,8 +533,8 @@ QPushButton:pressed
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>468</y>
-       <width>260</width>
+       <y>514</y>
+       <width>270</width>
        <height>44</height>
       </rect>
      </property>
@@ -594,8 +599,8 @@ QPushButton:pressed
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>600</y>
-       <width>260</width>
+       <y>646</y>
+       <width>270</width>
        <height>44</height>
       </rect>
      </property>
@@ -660,8 +665,8 @@ QPushButton:pressed
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>199</y>
-       <width>260</width>
+       <y>245</y>
+       <width>270</width>
        <height>2</height>
       </rect>
      </property>
@@ -676,8 +681,8 @@ QPushButton:pressed
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>108</y>
-       <width>260</width>
+       <y>110</y>
+       <width>270</width>
        <height>44</height>
       </rect>
      </property>
@@ -742,8 +747,8 @@ QPushButton:pressed
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>20</y>
-       <width>260</width>
+       <y>22</y>
+       <width>270</width>
        <height>44</height>
       </rect>
      </property>
@@ -808,8 +813,8 @@ QPushButton:pressed
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>64</y>
-       <width>260</width>
+       <y>66</y>
+       <width>270</width>
        <height>44</height>
       </rect>
      </property>
@@ -874,8 +879,8 @@ QPushButton:pressed
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>644</y>
-       <width>260</width>
+       <y>690</y>
+       <width>270</width>
        <height>44</height>
       </rect>
      </property>
@@ -940,8 +945,8 @@ QPushButton:pressed
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>556</y>
-       <width>260</width>
+       <y>602</y>
+       <width>270</width>
        <height>44</height>
       </rect>
      </property>
@@ -1006,8 +1011,8 @@ QPushButton:pressed
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>152</y>
-       <width>260</width>
+       <y>154</y>
+       <width>270</width>
        <height>44</height>
       </rect>
      </property>
@@ -1072,7 +1077,7 @@ QPushButton:pressed
      <property name="geometry">
       <rect>
        <x>331</x>
-       <y>152</y>
+       <y>138</y>
        <width>191</width>
        <height>44</height>
       </rect>
@@ -1102,7 +1107,7 @@ font-size: 11pt</string>
      <property name="geometry">
       <rect>
        <x>522</x>
-       <y>154</y>
+       <y>140</y>
        <width>345</width>
        <height>38</height>
       </rect>
@@ -1136,7 +1141,7 @@ font-size: 11pt</string>
      <property name="geometry">
       <rect>
        <x>331</x>
-       <y>196</y>
+       <y>182</y>
        <width>191</width>
        <height>44</height>
       </rect>
@@ -1166,7 +1171,7 @@ font-size: 11pt</string>
      <property name="geometry">
       <rect>
        <x>522</x>
-       <y>198</y>
+       <y>184</y>
        <width>345</width>
        <height>38</height>
       </rect>
@@ -1200,7 +1205,7 @@ font-size: 11pt</string>
      <property name="geometry">
       <rect>
        <x>331</x>
-       <y>240</y>
+       <y>226</y>
        <width>191</width>
        <height>44</height>
       </rect>
@@ -1230,7 +1235,7 @@ font-size: 11pt</string>
      <property name="geometry">
       <rect>
        <x>331</x>
-       <y>284</y>
+       <y>270</y>
        <width>191</width>
        <height>44</height>
       </rect>
@@ -1250,7 +1255,7 @@ background-color:#ffffff;
 font-size: 11pt</string>
      </property>
      <property name="text">
-      <string>Name</string>
+      <string>Name:</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -1260,7 +1265,7 @@ font-size: 11pt</string>
      <property name="geometry">
       <rect>
        <x>331</x>
-       <y>328</y>
+       <y>314</y>
        <width>191</width>
        <height>44</height>
       </rect>
@@ -1280,7 +1285,7 @@ background-color:#ffffff;
 font-size: 11pt</string>
      </property>
      <property name="text">
-      <string>Rank/ Role</string>
+      <string>Rank/ Role:</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -1290,7 +1295,7 @@ font-size: 11pt</string>
      <property name="geometry">
       <rect>
        <x>331</x>
-       <y>372</y>
+       <y>358</y>
        <width>191</width>
        <height>44</height>
       </rect>
@@ -1320,7 +1325,7 @@ font-size: 11pt</string>
      <property name="geometry">
       <rect>
        <x>331</x>
-       <y>416</y>
+       <y>402</y>
        <width>191</width>
        <height>44</height>
       </rect>
@@ -1350,7 +1355,7 @@ font-size: 11pt</string>
      <property name="geometry">
       <rect>
        <x>522</x>
-       <y>374</y>
+       <y>360</y>
        <width>345</width>
        <height>38</height>
       </rect>
@@ -1430,7 +1435,7 @@ border-bottom: 1px solid dodgerBlue;
      <property name="geometry">
       <rect>
        <x>522</x>
-       <y>418</y>
+       <y>404</y>
        <width>345</width>
        <height>38</height>
       </rect>
@@ -1513,7 +1518,7 @@ border-bottom: 1px solid dodgerBlue;
      <property name="geometry">
       <rect>
        <x>331</x>
-       <y>470</y>
+       <y>454</y>
        <width>361</width>
        <height>44</height>
       </rect>
@@ -1582,10 +1587,10 @@ font-size: 11pt</string>
      </property>
      <property name="geometry">
       <rect>
-       <x>296</x>
-       <y>627</y>
-       <width>251</width>
-       <height>181</height>
+       <x>306</x>
+       <y>680</y>
+       <width>100</width>
+       <height>80</height>
       </rect>
      </property>
      <property name="styleSheet">
@@ -1611,8 +1616,8 @@ font-size: 11pt</string>
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>204</y>
-       <width>260</width>
+       <y>250</y>
+       <width>270</width>
        <height>44</height>
       </rect>
      </property>
@@ -1646,10 +1651,7 @@ QPushButton:hover
 {
     background-color:#4154A0;
 }
-QPushButton:active
-{
-    background-color:#4154A0;
-}
+
 QPushButton:pressed
 {
     background-color: #384889;
@@ -1677,60 +1679,11 @@ QPushButton:pressed
       <bool>false</bool>
      </property>
     </widget>
-    <widget class="QComboBox" name="cBoxIssuingName">
-     <property name="geometry">
-      <rect>
-       <x>522</x>
-       <y>286</y>
-       <width>345</width>
-       <height>38</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-       <kerning>true</kerning>
-      </font>
-     </property>
-     <property name="cursor">
-      <cursorShape>PointingHandCursor</cursorShape>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QComboBox{ border-width: 1px;
- border-color: #aaa;
- border-style: solid;
-border-radius:6; 
-}
-
-QComboBox::drop-down:button{
-background-color:transparent;
-}
-QComboBox::down-arrow {
- 
-    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);
-    width: 25px;
-    height: 9px;
-}
-QComboBox:hover{
-	 border:1px solid #000;	
- 	transition:.3s;
-}
-  QComboBox:focus{
-    border-color:dodgerBlue;
-    box-shadow:0 0 8px 0 dodgerBlue;
-  }
-</string>
-     </property>
-     <property name="frame">
-      <bool>true</bool>
-     </property>
-    </widget>
     <widget class="QComboBox" name="cBoxIssuingPNo">
      <property name="geometry">
       <rect>
        <x>522</x>
-       <y>242</y>
+       <y>228</y>
        <width>345</width>
        <height>38</height>
       </rect>
@@ -1770,58 +1723,200 @@ QComboBox:hover{
     box-shadow:0 0 8px 0 dodgerBlue;
   }
 </string>
+     </property>
+     <property name="editable">
+      <bool>false</bool>
      </property>
      <property name="frame">
       <bool>true</bool>
      </property>
     </widget>
-    <widget class="QComboBox" name="cBoxImpRank">
+    <widget class="QLabel" name="lblIssuingName">
      <property name="geometry">
       <rect>
        <x>522</x>
-       <y>330</y>
+       <y>270</y>
        <width>345</width>
-       <height>38</height>
+       <height>44</height>
       </rect>
      </property>
      <property name="font">
       <font>
        <family>Segoe UI</family>
        <pointsize>11</pointsize>
-       <kerning>true</kerning>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>Name</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="lblIssuingRank">
+     <property name="geometry">
+      <rect>
+       <x>522</x>
+       <y>314</y>
+       <width>345</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>Name</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="btnAddImpKey">
+     <property name="geometry">
+      <rect>
+       <x>596</x>
+       <y>480</y>
+       <width>271</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
       </font>
      </property>
      <property name="cursor">
       <cursorShape>PointingHandCursor</cursorShape>
      </property>
      <property name="styleSheet">
-      <string notr="true">QComboBox{ border-width: 1px;
- border-color: #aaa;
- border-style: solid;
-border-radius:6; 
+      <string notr="true">QPushButton
+{
+    color: #ffffff;
+    background-color:#4154A0;
+    border-width: 1px;
+    border-color: #4154A0;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
 }
 
-QComboBox::drop-down:button{
-background-color:transparent;
+QPushButton:hover
+{
+    background-color:#384889
 }
-QComboBox::down-arrow {
- 
-    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);
-    width: 25px;
-    height: 9px;
-}
-QComboBox:hover{
-	 border:1px solid #000;	
- 	transition:.3s;
-}
-  QComboBox:focus{
-    border-color:dodgerBlue;
-    box-shadow:0 0 8px 0 dodgerBlue;
-  }
-</string>
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
      </property>
-     <property name="frame">
-      <bool>true</bool>
+     <property name="text">
+      <string>Add New Important Key Entry</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/add.png</normaloff>:/images/add.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewState">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>198</y>
+       <width>270</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>Armory State Management System</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/armoryState.png</normaloff>:/images/armoryState.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
      </property>
     </widget>
     <zorder>label_2</zorder>
@@ -1857,16 +1952,18 @@ QComboBox:hover{
     <zorder>pushButton</zorder>
     <zorder>pushButton_2</zorder>
     <zorder>navViewPersonnel</zorder>
-    <zorder>cBoxIssuingName</zorder>
     <zorder>cBoxIssuingPNo</zorder>
-    <zorder>cBoxImpRank</zorder>
+    <zorder>lblIssuingName</zorder>
+    <zorder>lblIssuingRank</zorder>
+    <zorder>btnAddImpKey</zorder>
+    <zorder>navViewState</zorder>
    </widget>
    <widget class="QLabel" name="label_13">
     <property name="geometry">
      <rect>
-      <x>296</x>
+      <x>306</x>
       <y>100</y>
-      <width>1050</width>
+      <width>1040</width>
       <height>1</height>
      </rect>
     </property>
@@ -1880,7 +1977,7 @@ QComboBox:hover{
    <widget class="QLabel" name="label_6">
     <property name="geometry">
      <rect>
-      <x>296</x>
+      <x>306</x>
       <y>60</y>
       <width>221</width>
       <height>31</height>
@@ -1905,68 +2002,6 @@ font-size: 11pt</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="navAddImpKey">
-    <property name="geometry">
-     <rect>
-      <x>592</x>
-      <y>490</y>
-      <width>271</width>
-      <height>44</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Segoe UI</family>
-      <pointsize>11</pointsize>
-     </font>
-    </property>
-    <property name="cursor">
-     <cursorShape>PointingHandCursor</cursorShape>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">QPushButton
-{
-    color: #ffffff;
-    background-color:#4154A0;
-    border-width: 1px;
-    border-color: #4154A0;
-    border-style: solid;
-    border-radius: 6;
-    padding: 3px;
-    font-size: 11pt;
-    padding-left: 5px;
-    padding-right: 5px;
-    min-width: 40px;
-}
-
-QPushButton:hover
-{
-    background-color:#384889
-}
-QPushButton:pressed
-{
-    background-color: #384889;
- 	border-width: 3px;
-    border-color: #5C70BC;
-    border-style: solid;
-    border-radius: 6;
-
-}</string>
-    </property>
-    <property name="text">
-     <string>Add New Important Key Entry</string>
-    </property>
-    <property name="icon">
-     <iconset resource="../IconResource.qrc">
-      <normaloff>:/images/add.png</normaloff>:/images/add.png</iconset>
-    </property>
-    <property name="iconSize">
-     <size>
-      <width>25</width>
-      <height>25</height>
-     </size>
     </property>
    </widget>
   </widget>

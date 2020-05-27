@@ -32,23 +32,6 @@
     <property name="frameShadow">
      <enum>QFrame::Raised</enum>
     </property>
-    <widget class="QLabel" name="label">
-     <property name="geometry">
-      <rect>
-       <x>0</x>
-       <y>0</y>
-       <width>290</width>
-       <height>768</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">background-image: url(null);
-background-color:#2F3C71;</string>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-    </widget>
     <widget class="QLabel" name="label_2">
      <property name="geometry">
       <rect>
@@ -59,18 +42,17 @@ background-color:#2F3C71;</string>
       </rect>
      </property>
      <property name="styleSheet">
-      <string notr="true">background-image: url(null);
-background-color:#222222;</string>
+      <string notr="true">background-color:#222222;</string>
      </property>
      <property name="text">
       <string/>
      </property>
     </widget>
-    <widget class="QPushButton" name="navViewOODObservationDetails">
+    <widget class="QPushButton" name="navViewDutyDetails">
      <property name="geometry">
       <rect>
        <x>1075</x>
-       <y>120</y>
+       <y>668</y>
        <width>271</width>
        <height>44</height>
       </rect>
@@ -115,7 +97,7 @@ QPushButton:pressed
 }</string>
      </property>
      <property name="text">
-      <string>View OOD Observation Details</string>
+      <string>View Duty Details</string>
      </property>
      <property name="icon">
       <iconset resource="../IconResource.qrc">
@@ -128,322 +110,113 @@ QPushButton:pressed
       </size>
      </property>
     </widget>
-    <widget class="QLabel" name="label_4">
+    <widget class="QLabel" name="lblDataEntrySuccessful">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>245</y>
-       <width>270</width>
-       <height>2</height>
+       <x>331</x>
+       <y>412</y>
+       <width>361</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: green;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>Details Saved Successfully!</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>1080</x>
+       <y>5</y>
+       <width>260</width>
+       <height>35</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true"> text-align: right;
+    color: #ffffff;
+    background-color:#222222;</string>
+     </property>
+     <property name="text">
+      <string>Duty Book</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/duty.png</normaloff>:/images/duty.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>32</width>
+       <height>32</height>
+      </size>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_2">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>331</x>
+       <y>680</y>
+       <width>100</width>
+       <height>80</height>
       </rect>
      </property>
      <property name="styleSheet">
-      <string notr="true">background-color:#4154A0;</string>
+      <string notr="true"> border:1px solid #fff;
+    border-radius:4px;
+    outline:none;</string>
      </property>
      <property name="text">
       <string/>
      </property>
-    </widget>
-    <widget class="QPushButton" name="navViewMOB">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>110</y>
-       <width>270</width>
-       <height>44</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="cursor">
-      <cursorShape>PointingHandCursor</cursorShape>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QPushButton 
-{
-    text-align: left;
-    color: #ffffff;
-    background-color:#2F3C71;
-    border-width: 1px;
-    border-color: #2F3C71;
-    border-style: solid;
-    border-radius: 6;
-    padding: 3px;
-    font-size: 11pt;
-    padding-left: 5px;
-    padding-right: 5px;
-    min-width: 40px;
-}
-
-QPushButton:hover
-{
-    background-color:#4154A0;
-}
-QPushButton:pressed
-{
-    background-color: #384889;
- 	border-width: 3px;
-    border-color: #5C70BC;
-    border-style: solid;
-    border-radius: 6;
-
-}</string>
-     </property>
-     <property name="text">
-      <string>Man Over Board</string>
-     </property>
      <property name="icon">
       <iconset resource="../IconResource.qrc">
-       <normaloff>:/images/mob.png</normaloff>:/images/mob.png</iconset>
+       <normaloff>:/images/logoMTIP.png</normaloff>:/images/logoMTIP.png</iconset>
      </property>
      <property name="iconSize">
       <size>
-       <width>32</width>
-       <height>32</height>
+       <width>200</width>
+       <height>200</height>
       </size>
      </property>
-     <property name="flat">
-      <bool>false</bool>
-     </property>
     </widget>
-    <widget class="QPushButton" name="navViewLocation">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>22</y>
-       <width>270</width>
-       <height>44</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="cursor">
-      <cursorShape>PointingHandCursor</cursorShape>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QPushButton 
-{
-    text-align: left;
-    color: #ffffff;
-    background-color:#2F3C71;
-    border-width: 1px;
-    border-color: #2F3C71;
-    border-style: solid;
-    border-radius: 6;
-    padding: 3px;
-    font-size: 11pt;
-    padding-left: 5px;
-    padding-right: 5px;
-    min-width: 40px;
-}
-
-QPushButton:hover
-{
-    background-color:#4154A0;
-}
-QPushButton:pressed
-{
-    background-color: #384889;
- 	border-width: 3px;
-    border-color: #5C70BC;
-    border-style: solid;
-    border-radius: 6;
-
-}</string>
-     </property>
-     <property name="text">
-      <string>Personnel Location</string>
-     </property>
-     <property name="icon">
-      <iconset resource="../IconResource.qrc">
-       <normaloff>:/images/locate.png</normaloff>:/images/locate.png</iconset>
-     </property>
-     <property name="iconSize">
-      <size>
-       <width>25</width>
-       <height>25</height>
-      </size>
-     </property>
-     <property name="flat">
-      <bool>false</bool>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="navViewManagement">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>66</y>
-       <width>270</width>
-       <height>44</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="cursor">
-      <cursorShape>PointingHandCursor</cursorShape>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QPushButton 
-{
-    text-align: left;
-    color: #ffffff;
-    background-color:#2F3C71;
-    border-width: 1px;
-    border-color: #2F3C71;
-    border-style: solid;
-    border-radius: 6;
-    padding: 3px;
-    font-size: 11pt;
-    padding-left: 5px;
-    padding-right: 5px;
-    min-width: 40px;
-}
-
-QPushButton:hover
-{
-    background-color:#4154A0;
-}
-QPushButton:pressed
-{
-    background-color: #384889;
- 	border-width: 3px;
-    border-color: #5C70BC;
-    border-style: solid;
-    border-radius: 6;
-
-}</string>
-     </property>
-     <property name="text">
-      <string>Personnel Management System</string>
-     </property>
-     <property name="icon">
-      <iconset resource="../IconResource.qrc">
-       <normaloff>:/images/personnel.png</normaloff>:/images/personnel.png</iconset>
-     </property>
-     <property name="iconSize">
-      <size>
-       <width>32</width>
-       <height>32</height>
-      </size>
-     </property>
-     <property name="flat">
-      <bool>false</bool>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="navViewCMS">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>154</y>
-       <width>270</width>
-       <height>44</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="cursor">
-      <cursorShape>PointingHandCursor</cursorShape>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QPushButton 
-{
-    text-align: left;
-    color: #ffffff;
-    background-color:#2F3C71;
-    border-width: 1px;
-    border-color: #2F3C71;
-    border-style: solid;
-    border-radius: 6;
-    padding: 3px;
-    font-size: 11pt;
-    padding-left: 5px;
-    padding-right: 5px;
-    min-width: 40px;
-}
-
-QPushButton:hover
-{
-    background-color:#4154A0;
-}
-QPushButton:pressed
-{
-    background-color: #384889;
- 	border-width: 3px;
-    border-color: #5C70BC;
-    border-style: solid;
-    border-radius: 6;
-
-}</string>
-     </property>
-     <property name="text">
-      <string>SRE Call Management System</string>
-     </property>
-     <property name="icon">
-      <iconset resource="../IconResource.qrc">
-       <normaloff>:/images/sreCall.png</normaloff>:/images/sreCall.png</iconset>
-     </property>
-     <property name="iconSize">
-      <size>
-       <width>25</width>
-       <height>25</height>
-      </size>
-     </property>
-     <property name="flat">
-      <bool>false</bool>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_6">
-     <property name="geometry">
-      <rect>
-       <x>306</x>
-       <y>60</y>
-       <width>221</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="layoutDirection">
-      <enum>Qt::LeftToRight</enum>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">color: #000000;
-background-color:#ffffff;
-font-size: 11pt</string>
-     </property>
-     <property name="text">
-      <string>Enter OOD Observation Details</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_7">
+    <widget class="QLabel" name="label_14">
      <property name="geometry">
       <rect>
        <x>331</x>
-       <y>138</y>
-       <width>159</width>
+       <y>314</y>
+       <width>151</width>
        <height>44</height>
       </rect>
      </property>
@@ -462,18 +235,424 @@ background-color:#ffffff;
 font-size: 11pt</string>
      </property>
      <property name="text">
-      <string>OOD Name</string>
+      <string>Time Out</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_8">
+    <widget class="QLabel" name="label_12">
+     <property name="geometry">
+      <rect>
+       <x>331</x>
+       <y>270</y>
+       <width>151</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>Place of Duty</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_16">
+     <property name="geometry">
+      <rect>
+       <x>331</x>
+       <y>358</y>
+       <width>151</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>Time in</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QTimeEdit" name="tmIn">
+     <property name="geometry">
+      <rect>
+       <x>490</x>
+       <y>360</y>
+       <width>345</width>
+       <height>38</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QTimeEdit{
+    border:1px solid #aaa;
+    border-radius:6px;
+    outline:none;
+    padding:6px;
+    box-sizing:border-box;
+    transition:.3s;
+  }
+  QTimeEdit:hover{
+	 border:1px solid #000;	
+ 	transition:.3s;
+}
+  QTimeEdit:focus{
+    border-color:dodgerBlue;
+    box-shadow:0 0 8px 0 dodgerBlue;
+border-radius: 6;
+  }
+	QTimeEdit::up-button{
+ subcontrol-origin: border;
+subcontrol-position: top right;
+width: 25px;
+ border: none;
+image: url(:/images/dropUpTime.png);
+}
+QTimeEdit::down-button {
+ subcontrol-origin: border;
+ subcontrol-position: bottom right;
+ width: 25px;
+ border: none;
+
+image: url(:/images/dropDownTime.png);
+
+}
+QTimeEdit::down-button:hover {
+ border: 1px solid rgba(0, 0, 0, 0%);
+border-bottom: 1px solid rgb(0, 0, 0);
+ border-right: 1px solid rgb(0, 0, 0);
+background-color:#e6e6e6;
+    
+}
+QTimeEdit::up-button:hover {
+ border: 1px solid rgba(0, 0, 0, 0%);
+border-top: 1px solid rgb(0, 0, 0);
+ border-right: 1px solid rgb(0, 0, 0);
+background-color:#e6e6e6;
+
+}
+QTimeEdit::up-button:focus{
+ border: 1px solid rgba(0, 0, 0, 0%);
+border-top: 1px solid dodgerBlue;
+ border-right: 1px solid dodgerBlue;
+
+}
+QTimeEdit::down-button:focus{
+ border: 1px solid rgba(0, 0, 0, 0%);
+border-bottom: 1px solid dodgerBlue;
+ border-right: 1px solid dodgerBlue;
+
+}</string>
+     </property>
+     <property name="calendarPopup">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="edtDutyPlace">
+     <property name="geometry">
+      <rect>
+       <x>490</x>
+       <y>272</y>
+       <width>345</width>
+       <height>38</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QLineEdit{
+    border:1px solid #aaa;
+    border-radius:4px;
+    outline:none;
+    padding:6px;
+    box-sizing:border-box;
+    transition:.3s;
+  }
+  QLineEdit:hover{
+	 border:1px solid #000;	
+ 	transition:.3s;
+}
+  QLineEdit:focus{
+    border-color:dodgerBlue;
+    box-shadow:0 0 8px 0 dodgerBlue;
+  }</string>
+     </property>
+    </widget>
+    <widget class="QTimeEdit" name="tmOut">
+     <property name="geometry">
+      <rect>
+       <x>490</x>
+       <y>316</y>
+       <width>345</width>
+       <height>38</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QTimeEdit{
+    border:1px solid #aaa;
+    border-radius:6px;
+    outline:none;
+    padding:6px;
+    box-sizing:border-box;
+    transition:.3s;
+  }
+  QTimeEdit:hover{
+	 border:1px solid #000;	
+ 	transition:.3s;
+}
+  QTimeEdit:focus{
+    border-color:dodgerBlue;
+    box-shadow:0 0 8px 0 dodgerBlue;
+border-radius: 6;
+  }
+	QTimeEdit::up-button{
+ subcontrol-origin: border;
+subcontrol-position: top right;
+width: 25px;
+ border: none;
+image: url(:/images/dropUpTime.png);
+}
+QTimeEdit::down-button {
+ subcontrol-origin: border;
+ subcontrol-position: bottom right;
+ width: 25px;
+ border: none;
+
+image: url(:/images/dropDownTime.png);
+
+}
+QTimeEdit::down-button:hover {
+ border: 1px solid rgba(0, 0, 0, 0%);
+border-bottom: 1px solid rgb(0, 0, 0);
+ border-right: 1px solid rgb(0, 0, 0);
+background-color:#e6e6e6;
+    
+}
+QTimeEdit::up-button:hover {
+ border: 1px solid rgba(0, 0, 0, 0%);
+border-top: 1px solid rgb(0, 0, 0);
+ border-right: 1px solid rgb(0, 0, 0);
+background-color:#e6e6e6;
+
+}
+QTimeEdit::up-button:focus{
+ border: 1px solid rgba(0, 0, 0, 0%);
+border-top: 1px solid dodgerBlue;
+ border-right: 1px solid dodgerBlue;
+
+}
+QTimeEdit::down-button:focus{
+ border: 1px solid rgba(0, 0, 0, 0%);
+border-bottom: 1px solid dodgerBlue;
+ border-right: 1px solid dodgerBlue;
+
+}</string>
+     </property>
+     <property name="calendarPopup">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="btnAddDuty">
+     <property name="geometry">
+      <rect>
+       <x>564</x>
+       <y>433</y>
+       <width>271</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton
+{
+    color: #ffffff;
+    background-color:#4154A0;
+    border-width: 1px;
+    border-color: #4154A0;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#384889
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>Add New Duty Entry</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/add.png</normaloff>:/images/add.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_11">
+     <property name="geometry">
+      <rect>
+       <x>331</x>
+       <y>226</y>
+       <width>151</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>Rank/ Role:</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="lblIDutyName">
+     <property name="geometry">
+      <rect>
+       <x>490</x>
+       <y>182</y>
+       <width>345</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>Name</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="lblDutyRank">
+     <property name="geometry">
+      <rect>
+       <x>490</x>
+       <y>226</y>
+       <width>345</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>Name</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_10">
      <property name="geometry">
       <rect>
        <x>331</x>
        <y>182</y>
-       <width>101</width>
+       <width>151</width>
        <height>44</height>
       </rect>
      </property>
@@ -492,7 +671,7 @@ background-color:#ffffff;
 font-size: 11pt</string>
      </property>
      <property name="text">
-      <string>OOD Rank:</string>
+      <string>Name:</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -502,8 +681,8 @@ font-size: 11pt</string>
      <property name="geometry">
       <rect>
        <x>331</x>
-       <y>226</y>
-       <width>159</width>
+       <y>138</y>
+       <width>151</width>
        <height>44</height>
       </rect>
      </property>
@@ -522,95 +701,13 @@ background-color:#ffffff;
 font-size: 11pt</string>
      </property>
      <property name="text">
-      <string>Observation Date</string>
+      <string>P.No/ O.No</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="label_13">
-     <property name="geometry">
-      <rect>
-       <x>306</x>
-       <y>100</y>
-       <width>1040</width>
-       <height>1</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">background-color:#A0A0A0;</string>
-     </property>
-     <property name="text">
-      <string/>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_12">
-     <property name="geometry">
-      <rect>
-       <x>331</x>
-       <y>270</y>
-       <width>101</width>
-       <height>44</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="layoutDirection">
-      <enum>Qt::LeftToRight</enum>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">color: #000000;
-background-color:#ffffff;
-font-size: 11pt</string>
-     </property>
-     <property name="text">
-      <string>Observation</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-    </widget>
-    <widget class="QPlainTextEdit" name="txtObservation">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="geometry">
-      <rect>
-       <x>490</x>
-       <y>280</y>
-       <width>855</width>
-       <height>341</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QPlainTextEdit{
-border: 1px;
-border-radius:6;
-padding: 3;
-border-color: darkgray;
-border-style: solid;
-background-color: palette(base);
-}
-
- QPlainTextEdit:hover{
-	 border:1px solid #000;	
-}
-  QPlainTextEdit:focus{
-    border-color:dodgerBlue;
-  }</string>
-     </property>
-    </widget>
-    <widget class="QComboBox" name="cboxSelectOOD">
+    <widget class="QComboBox" name="cDutyPNo">
      <property name="geometry">
       <rect>
        <x>490</x>
@@ -655,380 +752,27 @@ QComboBox:hover{
   }
 </string>
      </property>
-     <property name="frame">
-      <bool>true</bool>
-     </property>
-    </widget>
-    <widget class="QDateEdit" name="dtObservationDate">
-     <property name="geometry">
-      <rect>
-       <x>490</x>
-       <y>228</y>
-       <width>345</width>
-       <height>38</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QDateEdit{ 
-border-width: 1px;
-border-color: #aaa;
-border-style: solid;
-border-radius:6; 
-}
-QDateEdit:hover{
-border:1px solid #000;	
-transition:.3s;
-}
-QDateEdit:focus{
-border-color:dodgerBlue;
-box-shadow:0 0 8px 0 dodgerBlue;
-}
-QDateEdit::drop-down:button{
-background-color:transparent;
-}
-QDateEdit::down-arrow {
- 
-    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);
-    width: 25px;
-    height: 9px;
-}
-
-QCalendarWidget QToolButton {
-font-family: Segoe UI;
-height: 30px;
-width: 60px;
-color:#000;
-font-size: 9pt;
-icon-size: 25px, 25px;
-}
-QCalendarWidget QMenu {
-width: 130px;
-left: 20px;
-color: #000;
-font-size: 9pt;
-background-color: #fff;
-selection-color:#fff;
-selection-background-color:#0164E9;
-}
-
-</string>
+     <property name="editable">
+      <bool>false</bool>
      </property>
      <property name="frame">
       <bool>true</bool>
      </property>
-     <property name="buttonSymbols">
-      <enum>QAbstractSpinBox::NoButtons</enum>
-     </property>
-     <property name="calendarPopup">
-      <bool>true</bool>
-     </property>
-     <property name="date">
-      <date>
-       <year>2020</year>
-       <month>5</month>
-       <day>21</day>
-      </date>
-     </property>
     </widget>
-    <widget class="QPushButton" name="btnAddOODObservation">
+    <widget class="QLabel" name="label_4">
      <property name="geometry">
       <rect>
-       <x>1075</x>
-       <y>650</y>
-       <width>271</width>
-       <height>44</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="cursor">
-      <cursorShape>PointingHandCursor</cursorShape>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QPushButton
-{
-    color: #ffffff;
-    background-color:#4154A0;
-    border-width: 1px;
-    border-color: #4154A0;
-    border-style: solid;
-    border-radius: 6;
-    padding: 3px;
-    font-size: 11pt;
-    padding-left: 5px;
-    padding-right: 5px;
-    min-width: 40px;
-}
-
-QPushButton:hover
-{
-    background-color:#384889
-}
-QPushButton:pressed
-{
-    background-color: #384889;
- 	border-width: 3px;
-    border-color: #5C70BC;
-    border-style: solid;
-    border-radius: 6;
-
-}</string>
-     </property>
-     <property name="text">
-      <string>Add New OOD Observation Entry</string>
-     </property>
-     <property name="icon">
-      <iconset resource="../IconResource.qrc">
-       <normaloff>:/images/add.png</normaloff>:/images/add.png</iconset>
-     </property>
-     <property name="iconSize">
-      <size>
-       <width>25</width>
-       <height>25</height>
-      </size>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="pushButton">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="geometry">
-      <rect>
-       <x>1080</x>
-       <y>5</y>
-       <width>260</width>
-       <height>35</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="styleSheet">
-      <string notr="true"> text-align: right;
-    color: #ffffff;
-    background-color:#222222;</string>
-     </property>
-     <property name="text">
-      <string>OOD Observation Book</string>
-     </property>
-     <property name="icon">
-      <iconset resource="../IconResource.qrc">
-       <normaloff>:/images/oodObserve.png</normaloff>:/images/oodObserve.png</iconset>
-     </property>
-     <property name="iconSize">
-      <size>
-       <width>32</width>
-       <height>32</height>
-      </size>
-     </property>
-    </widget>
-    <widget class="QLabel" name="lblDataEntrySuccessful">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="geometry">
-      <rect>
-       <x>331</x>
-       <y>630</y>
-       <width>361</width>
-       <height>44</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="layoutDirection">
-      <enum>Qt::LeftToRight</enum>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">color: green;
-background-color:#ffffff;
-font-size: 11pt</string>
-     </property>
-     <property name="text">
-      <string>Details Saved Successfully!</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="pushButton_2">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="geometry">
-      <rect>
-       <x>331</x>
-       <y>680</y>
-       <width>100</width>
-       <height>80</height>
+       <x>10</x>
+       <y>245</y>
+       <width>270</width>
+       <height>2</height>
       </rect>
      </property>
      <property name="styleSheet">
-      <string notr="true"> border:1px solid #fff;
-    border-radius:4px;
-    outline:none;</string>
+      <string notr="true">background-color:#4154A0;</string>
      </property>
      <property name="text">
       <string/>
-     </property>
-     <property name="icon">
-      <iconset resource="../IconResource.qrc">
-       <normaloff>:/images/logoMTIP.png</normaloff>:/images/logoMTIP.png</iconset>
-     </property>
-     <property name="iconSize">
-      <size>
-       <width>200</width>
-       <height>200</height>
-      </size>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="navViewPPE">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>690</y>
-       <width>270</width>
-       <height>44</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="cursor">
-      <cursorShape>PointingHandCursor</cursorShape>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QPushButton 
-{
-    text-align: left;
-    color: #ffffff;
-    background-color:#2F3C71;
-    border-width: 1px;
-    border-color: #2F3C71;
-    border-style: solid;
-    border-radius: 6;
-    padding: 3px;
-    font-size: 11pt;
-    padding-left: 5px;
-    padding-right: 5px;
-    min-width: 40px;
-}
-
-QPushButton:hover
-{
-    background-color:#4154A0;
-}
-QPushButton:pressed
-{
-    background-color: #384889;
- 	border-width: 3px;
-    border-color: #5C70BC;
-    border-style: solid;
-    border-radius: 6;
-
-}</string>
-     </property>
-     <property name="text">
-      <string>Small Arm and PPE Book</string>
-     </property>
-     <property name="icon">
-      <iconset resource="../IconResource.qrc">
-       <normaloff>:/images/armPPE.png</normaloff>:/images/armPPE.png</iconset>
-     </property>
-     <property name="iconSize">
-      <size>
-       <width>25</width>
-       <height>25</height>
-      </size>
-     </property>
-     <property name="flat">
-      <bool>false</bool>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="navViewDuty">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>514</y>
-       <width>270</width>
-       <height>44</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="cursor">
-      <cursorShape>PointingHandCursor</cursorShape>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QPushButton 
-{
-    text-align: left;
-    color: #ffffff;
-    background-color:#2F3C71;
-    border-width: 1px;
-    border-color: #2F3C71;
-    border-style: solid;
-    border-radius: 6;
-    padding: 3px;
-    font-size: 11pt;
-    padding-left: 5px;
-    padding-right: 5px;
-    min-width: 40px;
-}
-
-QPushButton:hover
-{
-    background-color:#4154A0;
-}
-QPushButton:pressed
-{
-    background-color: #384889;
- 	border-width: 3px;
-    border-color: #5C70BC;
-    border-style: solid;
-    border-radius: 6;
-
-}</string>
-     </property>
-     <property name="text">
-      <string>Duty Book</string>
-     </property>
-     <property name="icon">
-      <iconset resource="../IconResource.qrc">
-       <normaloff>:/images/duty.png</normaloff>:/images/duty.png</iconset>
-     </property>
-     <property name="iconSize">
-      <size>
-       <width>25</width>
-       <height>25</height>
-      </size>
-     </property>
-     <property name="flat">
-      <bool>false</bool>
      </property>
     </widget>
     <widget class="QPushButton" name="navViewGangway">
@@ -1086,6 +830,72 @@ QPushButton:pressed
      <property name="icon">
       <iconset resource="../IconResource.qrc">
        <normaloff>:/images/gangway.png</normaloff>:/images/gangway.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewImpKey">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>296</y>
+       <width>270</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>Important Key Book</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/impKey.png</normaloff>:/images/impKey.png</iconset>
      </property>
      <property name="iconSize">
       <size>
@@ -1163,342 +973,6 @@ QPushButton:pressed
       <bool>false</bool>
      </property>
     </widget>
-    <widget class="QPushButton" name="navViewGenKey">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>338</y>
-       <width>270</width>
-       <height>44</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="cursor">
-      <cursorShape>PointingHandCursor</cursorShape>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QPushButton 
-{
-    text-align: left;
-    color: #ffffff;
-    background-color:#2F3C71;
-    border-width: 1px;
-    border-color: #2F3C71;
-    border-style: solid;
-    border-radius: 6;
-    padding: 3px;
-    font-size: 11pt;
-    padding-left: 5px;
-    padding-right: 5px;
-    min-width: 40px;
-}
-
-QPushButton:hover
-{
-    background-color:#4154A0;
-}
-
-QPushButton:pressed
-{
-    background-color: #384889;
- 	border-width: 3px;
-    border-color: #5C70BC;
-    border-style: solid;
-    border-radius: 6;
-
-}</string>
-     </property>
-     <property name="text">
-      <string>General Key Book</string>
-     </property>
-     <property name="icon">
-      <iconset resource="../IconResource.qrc">
-       <normaloff>:/images/genKey.png</normaloff>:/images/genKey.png</iconset>
-     </property>
-     <property name="iconSize">
-      <size>
-       <width>25</width>
-       <height>25</height>
-      </size>
-     </property>
-     <property name="flat">
-      <bool>false</bool>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="navViewImpKey">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>294</y>
-       <width>270</width>
-       <height>44</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="cursor">
-      <cursorShape>PointingHandCursor</cursorShape>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QPushButton 
-{
-    text-align: left;
-    color: #ffffff;
-    background-color:#2F3C71;
-    border-width: 1px;
-    border-color: #2F3C71;
-    border-style: solid;
-    border-radius: 6;
-    padding: 3px;
-    font-size: 11pt;
-    padding-left: 5px;
-    padding-right: 5px;
-    min-width: 40px;
-}
-
-QPushButton:hover
-{
-    background-color:#4154A0;
-}
-QPushButton:pressed
-{
-    background-color: #384889;
- 	border-width: 3px;
-    border-color: #5C70BC;
-    border-style: solid;
-    border-radius: 6;
-
-}</string>
-     </property>
-     <property name="text">
-      <string>Important Key Book</string>
-     </property>
-     <property name="icon">
-      <iconset resource="../IconResource.qrc">
-       <normaloff>:/images/impKey.png</normaloff>:/images/impKey.png</iconset>
-     </property>
-     <property name="iconSize">
-      <size>
-       <width>25</width>
-       <height>25</height>
-      </size>
-     </property>
-     <property name="flat">
-      <bool>false</bool>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="navViewVisitor">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>382</y>
-       <width>270</width>
-       <height>44</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="cursor">
-      <cursorShape>PointingHandCursor</cursorShape>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QPushButton 
-{
-    text-align: left;
-    color: #ffffff;
-    background-color:#2F3C71;
-    border-width: 1px;
-    border-color: #2F3C71;
-    border-style: solid;
-    border-radius: 6;
-    padding: 3px;
-    font-size: 11pt;
-    padding-left: 5px;
-    padding-right: 5px;
-    min-width: 40px;
-}
-
-QPushButton:hover
-{
-    background-color:#4154A0;
-}
-
-QPushButton:pressed
-{
-    background-color: #384889;
- 	border-width: 3px;
-    border-color: #5C70BC;
-    border-style: solid;
-    border-radius: 6;
-}</string>
-     </property>
-     <property name="text">
-      <string>Visitor Book</string>
-     </property>
-     <property name="icon">
-      <iconset resource="../IconResource.qrc">
-       <normaloff>:/images/visitor.png</normaloff>:/images/visitor.png</iconset>
-     </property>
-     <property name="iconSize">
-      <size>
-       <width>25</width>
-       <height>25</height>
-      </size>
-     </property>
-     <property name="flat">
-      <bool>false</bool>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="navViewTransport">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>426</y>
-       <width>270</width>
-       <height>44</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="cursor">
-      <cursorShape>PointingHandCursor</cursorShape>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QPushButton 
-{
-    text-align: left;
-    color: #ffffff;
-    background-color:#2F3C71;
-    border-width: 1px;
-    border-color: #2F3C71;
-    border-style: solid;
-    border-radius: 6;
-    padding: 3px;
-    font-size: 11pt;
-    padding-left: 5px;
-    padding-right: 5px;
-    min-width: 40px;
-}
-
-QPushButton:hover
-{
-    background-color:#4154A0;
-}
-
-QPushButton:pressed
-{
-    background-color: #384889;
- 	border-width: 3px;
-    border-color: #5C70BC;
-    border-style: solid;
-    border-radius: 6;
-
-}</string>
-     </property>
-     <property name="text">
-      <string>Transport Book</string>
-     </property>
-     <property name="icon">
-      <iconset resource="../IconResource.qrc">
-       <normaloff>:/images/transport.png</normaloff>:/images/transport.png</iconset>
-     </property>
-     <property name="iconSize">
-      <size>
-       <width>25</width>
-       <height>25</height>
-      </size>
-     </property>
-     <property name="flat">
-      <bool>false</bool>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="navViewOOD">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>602</y>
-       <width>270</width>
-       <height>44</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="cursor">
-      <cursorShape>PointingHandCursor</cursorShape>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QPushButton 
-{
-    text-align: left;
-    color: #ffffff;
-    background-color:#2F3C71;
-    border-width: 1px;
-    border-color: #2F3C71;
-    border-style: solid;
-    border-radius: 6;
-    padding: 3px;
-    font-size: 11pt;
-    padding-left: 5px;
-    padding-right: 5px;
-    min-width: 40px;
-}
-
-QPushButton:hover
-{
-    background-color:#4154A0;
-}
-QPushButton:active
-{
-    background-color:#4154A0;
-}
-QPushButton:pressed
-{
-    background-color: #384889;
- 	border-width: 3px;
-    border-color: #5C70BC;
-    border-style: solid;
-    border-radius: 6;
-
-}</string>
-     </property>
-     <property name="text">
-      <string>OOD Observation Book</string>
-     </property>
-     <property name="icon">
-      <iconset resource="../IconResource.qrc">
-       <normaloff>:/images/oodObserve.png</normaloff>:/images/oodObserve.png</iconset>
-     </property>
-     <property name="iconSize">
-      <size>
-       <width>25</width>
-       <height>25</height>
-      </size>
-     </property>
-     <property name="flat">
-      <bool>false</bool>
-     </property>
-    </widget>
     <widget class="QPushButton" name="navViewNight">
      <property name="geometry">
       <rect>
@@ -1554,6 +1028,72 @@ QPushButton:pressed
      <property name="icon">
       <iconset resource="../IconResource.qrc">
        <normaloff>:/images/night.png</normaloff>:/images/night.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewTransport">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>426</y>
+       <width>270</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>Transport Book</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/transport.png</normaloff>:/images/transport.png</iconset>
      </property>
      <property name="iconSize">
       <size>
@@ -1632,12 +1172,12 @@ QPushButton:pressed
       <bool>false</bool>
      </property>
     </widget>
-    <widget class="QLabel" name="lblOODRank">
+    <widget class="QPushButton" name="navViewMOB">
      <property name="geometry">
       <rect>
-       <x>490</x>
-       <y>182</y>
-       <width>345</width>
+       <x>10</x>
+       <y>110</y>
+       <width>270</width>
        <height>44</height>
       </rect>
      </property>
@@ -1647,19 +1187,275 @@ QPushButton:pressed
        <pointsize>11</pointsize>
       </font>
      </property>
-     <property name="layoutDirection">
-      <enum>Qt::LeftToRight</enum>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
      </property>
      <property name="styleSheet">
-      <string notr="true">color: #000000;
-background-color:#ffffff;
-font-size: 11pt</string>
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
      </property>
      <property name="text">
-      <string>OOD Rank</string>
+      <string>Man Over Board</string>
      </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/mob.png</normaloff>:/images/mob.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>32</width>
+       <height>32</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewPPE">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>690</y>
+       <width>270</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:active
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>Small Arm and PPE Book</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/armPPE.png</normaloff>:/images/armPPE.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewGenKey">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>338</y>
+       <width>270</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>General Key Book</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/genKey.png</normaloff>:/images/genKey.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>290</width>
+       <height>768</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-image: url(null);
+background-color:#2F3C71;</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewLocation">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>22</y>
+       <width>270</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>Personnel Location</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/locate.png</normaloff>:/images/locate.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
      </property>
     </widget>
     <widget class="QPushButton" name="navViewState">
@@ -1728,40 +1524,418 @@ QPushButton:pressed
       <bool>false</bool>
      </property>
     </widget>
+    <widget class="QPushButton" name="navViewMangement">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>66</y>
+       <width>270</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>Personnel Management System</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/personnel.png</normaloff>:/images/personnel.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>32</width>
+       <height>32</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewOOD">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>602</y>
+       <width>270</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>OOD Observation Book</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/oodObserve.png</normaloff>:/images/oodObserve.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewCMS">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>154</y>
+       <width>270</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>SRE Call Management System</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/sreCall.png</normaloff>:/images/sreCall.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewVisitor">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>382</y>
+       <width>270</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+}</string>
+     </property>
+     <property name="text">
+      <string>Visitor Book</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/visitor.png</normaloff>:/images/visitor.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewDuty">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>514</y>
+       <width>270</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>Duty Book</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/duty.png</normaloff>:/images/duty.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
     <zorder>label_2</zorder>
-    <zorder>label</zorder>
-    <zorder>navViewOODObservationDetails</zorder>
-    <zorder>label_4</zorder>
-    <zorder>navViewMOB</zorder>
-    <zorder>navViewLocation</zorder>
-    <zorder>navViewManagement</zorder>
-    <zorder>navViewCMS</zorder>
-    <zorder>label_6</zorder>
-    <zorder>label_7</zorder>
-    <zorder>label_8</zorder>
-    <zorder>label_9</zorder>
-    <zorder>label_13</zorder>
-    <zorder>label_12</zorder>
-    <zorder>txtObservation</zorder>
-    <zorder>cboxSelectOOD</zorder>
-    <zorder>dtObservationDate</zorder>
-    <zorder>btnAddOODObservation</zorder>
-    <zorder>pushButton</zorder>
     <zorder>lblDataEntrySuccessful</zorder>
+    <zorder>pushButton</zorder>
     <zorder>pushButton_2</zorder>
-    <zorder>navViewPPE</zorder>
+    <zorder>label_14</zorder>
+    <zorder>label_12</zorder>
+    <zorder>label_16</zorder>
+    <zorder>tmIn</zorder>
+    <zorder>edtDutyPlace</zorder>
+    <zorder>tmOut</zorder>
+    <zorder>btnAddDuty</zorder>
+    <zorder>label_11</zorder>
+    <zorder>lblIDutyName</zorder>
+    <zorder>lblDutyRank</zorder>
+    <zorder>label_10</zorder>
+    <zorder>label_9</zorder>
+    <zorder>cDutyPNo</zorder>
+    <zorder>label</zorder>
+    <zorder>navViewCMS</zorder>
+    <zorder>navViewState</zorder>
     <zorder>navViewDuty</zorder>
+    <zorder>navViewDutyDetails</zorder>
     <zorder>navViewGangway</zorder>
-    <zorder>navViewPunishment</zorder>
+    <zorder>navViewMangement</zorder>
     <zorder>navViewGenKey</zorder>
     <zorder>navViewImpKey</zorder>
-    <zorder>navViewVisitor</zorder>
-    <zorder>navViewTransport</zorder>
+    <zorder>navViewLocation</zorder>
+    <zorder>navViewMOB</zorder>
     <zorder>navViewOOD</zorder>
+    <zorder>navViewPunishment</zorder>
     <zorder>navViewNight</zorder>
+    <zorder>navViewPPE</zorder>
     <zorder>navViewPersonnel</zorder>
-    <zorder>lblOODRank</zorder>
-    <zorder>navViewState</zorder>
+    <zorder>navViewTransport</zorder>
+    <zorder>navViewVisitor</zorder>
+    <zorder>label_4</zorder>
+   </widget>
+   <widget class="QLabel" name="label_13">
+    <property name="geometry">
+     <rect>
+      <x>306</x>
+      <y>100</y>
+      <width>1040</width>
+      <height>1</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color:#A0A0A0;</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_6">
+    <property name="geometry">
+     <rect>
+      <x>306</x>
+      <y>60</y>
+      <width>221</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Segoe UI</family>
+      <pointsize>11</pointsize>
+     </font>
+    </property>
+    <property name="layoutDirection">
+     <enum>Qt::LeftToRight</enum>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+    </property>
+    <property name="text">
+     <string>Enter Duty Details</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+    </property>
    </widget>
   </widget>
  </widget>

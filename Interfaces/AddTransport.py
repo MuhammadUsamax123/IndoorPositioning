@@ -1,5 +1,17 @@
-class AddPersonnelData(object):
-    def setup_AddPersonnelData(self, MainWindow):
+# -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file 'C:\Users\home\Desktop\IndoorPosition\Interfaces\AddTransport.ui'
+#
+# Created by: PyQt5 UI code generator 5.13.0
+#
+# WARNING! All changes made in this file will be lost!
+
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+
+class Ui_MainWindow(object):
+    def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1366, 765)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -22,14 +34,14 @@ class AddPersonnelData(object):
 "background-color:#222222;")
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
-        self.navViewPersonnelDetails = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnelDetails.setGeometry(QtCore.QRect(1075, 668, 271, 44))
+        self.navViewTransportDetails = QtWidgets.QPushButton(self.frame)
+        self.navViewTransportDetails.setGeometry(QtCore.QRect(1075, 120, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewPersonnelDetails.setFont(font)
-        self.navViewPersonnelDetails.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewPersonnelDetails.setStyleSheet("QPushButton\n"
+        self.navViewTransportDetails.setFont(font)
+        self.navViewTransportDetails.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewTransportDetails.setStyleSheet("QPushButton\n"
 "{\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
@@ -59,9 +71,9 @@ class AddPersonnelData(object):
 "}")
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(":/images/viewDetails.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewPersonnelDetails.setIcon(icon)
-        self.navViewPersonnelDetails.setIconSize(QtCore.QSize(25, 25))
-        self.navViewPersonnelDetails.setObjectName("navViewPersonnelDetails")
+        self.navViewTransportDetails.setIcon(icon)
+        self.navViewTransportDetails.setIconSize(QtCore.QSize(25, 25))
+        self.navViewTransportDetails.setObjectName("navViewTransportDetails")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
         self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
         font = QtGui.QFont()
@@ -105,7 +117,7 @@ class AddPersonnelData(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 292, 270, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -173,6 +185,8 @@ class AddPersonnelData(object):
 "{\n"
 "    background-color:#4154A0;\n"
 "}\n"
+"\n"
+"\n"
 "QPushButton:pressed\n"
 "{\n"
 "    background-color: #384889;\n"
@@ -215,7 +229,6 @@ class AddPersonnelData(object):
 "{\n"
 "    background-color:#4154A0;\n"
 "}\n"
-"\n"
 "QPushButton:pressed\n"
 "{\n"
 "    background-color: #384889;\n"
@@ -254,6 +267,10 @@ class AddPersonnelData(object):
 "}\n"
 "\n"
 "QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:active\n"
 "{\n"
 "    background-color:#4154A0;\n"
 "}\n"
@@ -655,127 +672,9 @@ class AddPersonnelData(object):
         self.navViewCMS.setIconSize(QtCore.QSize(25, 25))
         self.navViewCMS.setFlat(False)
         self.navViewCMS.setObjectName("navViewCMS")
-        self.label_7 = QtWidgets.QLabel(self.frame)
-        self.label_7.setGeometry(QtCore.QRect(331, 138, 191, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.label_7.setFont(font)
-        self.label_7.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.label_7.setStyleSheet("color: #000000;\n"
-"background-color:#ffffff;\n"
-"font-size: 11pt")
-        self.label_7.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.label_7.setObjectName("label_7")
-        self.edtID = QtWidgets.QLineEdit(self.frame)
-        self.edtID.setGeometry(QtCore.QRect(522, 140, 345, 38))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.edtID.setFont(font)
-        self.edtID.setStyleSheet("QLineEdit{\n"
-"    border:1px solid #aaa;\n"
-"    border-radius:4px;\n"
-"    outline:none;\n"
-"    padding:6px;\n"
-"    box-sizing:border-box;\n"
-"    transition:.3s;\n"
-"  }\n"
-"  QLineEdit:hover{\n"
-"     border:1px solid #000;    \n"
-"     transition:.3s;\n"
-"}\n"
-"  QLineEdit:focus{\n"
-"    border-color:dodgerBlue;\n"
-"    box-shadow:0 0 8px 0 dodgerBlue;\n"
-"  }")
-        self.edtID.setObjectName("edtID")
-        self.label_8 = QtWidgets.QLabel(self.frame)
-        self.label_8.setGeometry(QtCore.QRect(331, 182, 191, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.label_8.setFont(font)
-        self.label_8.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.label_8.setStyleSheet("color: #000000;\n"
-"background-color:#ffffff;\n"
-"font-size: 11pt")
-        self.label_8.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.label_8.setObjectName("label_8")
-        self.edtPNO = QtWidgets.QLineEdit(self.frame)
-        self.edtPNO.setGeometry(QtCore.QRect(522, 184, 345, 38))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.edtPNO.setFont(font)
-        self.edtPNO.setStyleSheet("QLineEdit{\n"
-"    border:1px solid #aaa;\n"
-"    border-radius:4px;\n"
-"    outline:none;\n"
-"    padding:6px;\n"
-"    box-sizing:border-box;\n"
-"    transition:.3s;\n"
-"  }\n"
-"  QLineEdit:hover{\n"
-"     border:1px solid #000;    \n"
-"     transition:.3s;\n"
-"}\n"
-"  QLineEdit:focus{\n"
-"    border-color:dodgerBlue;\n"
-"    box-shadow:0 0 8px 0 dodgerBlue;\n"
-"  }")
-        self.edtPNO.setObjectName("edtPNO")
-        self.label_9 = QtWidgets.QLabel(self.frame)
-        self.label_9.setGeometry(QtCore.QRect(331, 226, 191, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.label_9.setFont(font)
-        self.label_9.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.label_9.setStyleSheet("color: #000000;\n"
-"background-color:#ffffff;\n"
-"font-size: 11pt")
-        self.label_9.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.label_9.setObjectName("label_9")
-        self.label_10 = QtWidgets.QLabel(self.frame)
-        self.label_10.setGeometry(QtCore.QRect(331, 270, 191, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.label_10.setFont(font)
-        self.label_10.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.label_10.setStyleSheet("color: #000000;\n"
-"background-color:#ffffff;\n"
-"font-size: 11pt")
-        self.label_10.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.label_10.setObjectName("label_10")
-        self.label_11 = QtWidgets.QLabel(self.frame)
-        self.label_11.setGeometry(QtCore.QRect(331, 314, 191, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.label_11.setFont(font)
-        self.label_11.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.label_11.setStyleSheet("color: #000000;\n"
-"background-color:#ffffff;\n"
-"font-size: 11pt")
-        self.label_11.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.label_11.setObjectName("label_11")
-        self.label_12 = QtWidgets.QLabel(self.frame)
-        self.label_12.setGeometry(QtCore.QRect(331, 358, 191, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.label_12.setFont(font)
-        self.label_12.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.label_12.setStyleSheet("color: #000000;\n"
-"background-color:#ffffff;\n"
-"font-size: 11pt")
-        self.label_12.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.label_12.setObjectName("label_12")
         self.lblDataEntrySuccessful = QtWidgets.QLabel(self.frame)
         self.lblDataEntrySuccessful.setEnabled(True)
-        self.lblDataEntrySuccessful.setGeometry(QtCore.QRect(331, 412, 361, 44))
+        self.lblDataEntrySuccessful.setGeometry(QtCore.QRect(331, 500, 361, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -796,9 +695,7 @@ class AddPersonnelData(object):
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
 "    background-color:#222222;")
-        icon15 = QtGui.QIcon()
-        icon15.addPixmap(QtGui.QPixmap(":/images/personnelData.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.pushButton.setIcon(icon15)
+        self.pushButton.setIcon(icon5)
         self.pushButton.setIconSize(QtCore.QSize(32, 32))
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.frame)
@@ -808,13 +705,13 @@ class AddPersonnelData(object):
 "    border-radius:4px;\n"
 "    outline:none;")
         self.pushButton_2.setText("")
-        icon16 = QtGui.QIcon()
-        icon16.addPixmap(QtGui.QPixmap(":/images/logoMTIP.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.pushButton_2.setIcon(icon16)
+        icon15 = QtGui.QIcon()
+        icon15.addPixmap(QtGui.QPixmap(":/images/logoMTIP.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_2.setIcon(icon15)
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 252, 270, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -840,9 +737,415 @@ class AddPersonnelData(object):
 "{\n"
 "    background-color:#4154A0;\n"
 "}\n"
-"QPushButton:active\n"
+"\n"
+"QPushButton:pressed\n"
 "{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon16 = QtGui.QIcon()
+        icon16.addPixmap(QtGui.QPixmap(":/images/personnelData.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPersonnel.setIcon(icon16)
+        self.navViewPersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPersonnel.setFlat(False)
+        self.navViewPersonnel.setObjectName("navViewPersonnel")
+        self.edtCarName = QtWidgets.QLineEdit(self.frame)
+        self.edtCarName.setGeometry(QtCore.QRect(490, 184, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.edtCarName.setFont(font)
+        self.edtCarName.setStyleSheet("QLineEdit{\n"
+"    border:1px solid #aaa;\n"
+"    border-radius:4px;\n"
+"    outline:none;\n"
+"    padding:6px;\n"
+"    box-sizing:border-box;\n"
+"    transition:.3s;\n"
+"  }\n"
+"  QLineEdit:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QLineEdit:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"  }")
+        self.edtCarName.setObjectName("edtCarName")
+        self.edtSlipNo = QtWidgets.QLineEdit(self.frame)
+        self.edtSlipNo.setGeometry(QtCore.QRect(490, 272, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.edtSlipNo.setFont(font)
+        self.edtSlipNo.setStyleSheet("QLineEdit{\n"
+"    border:1px solid #aaa;\n"
+"    border-radius:4px;\n"
+"    outline:none;\n"
+"    padding:6px;\n"
+"    box-sizing:border-box;\n"
+"    transition:.3s;\n"
+"  }\n"
+"  QLineEdit:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QLineEdit:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"  }")
+        self.edtSlipNo.setObjectName("edtSlipNo")
+        self.label_14 = QtWidgets.QLabel(self.frame)
+        self.label_14.setGeometry(QtCore.QRect(331, 446, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_14.setFont(font)
+        self.label_14.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_14.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_14.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_14.setObjectName("label_14")
+        self.label_11 = QtWidgets.QLabel(self.frame)
+        self.label_11.setGeometry(QtCore.QRect(331, 314, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_11.setFont(font)
+        self.label_11.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_11.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_11.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_11.setObjectName("label_11")
+        self.label_10 = QtWidgets.QLabel(self.frame)
+        self.label_10.setGeometry(QtCore.QRect(331, 270, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_10.setFont(font)
+        self.label_10.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_10.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_10.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_10.setObjectName("label_10")
+        self.label_8 = QtWidgets.QLabel(self.frame)
+        self.label_8.setGeometry(QtCore.QRect(331, 182, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_8.setFont(font)
+        self.label_8.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_8.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_8.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_8.setObjectName("label_8")
+        self.label_9 = QtWidgets.QLabel(self.frame)
+        self.label_9.setGeometry(QtCore.QRect(331, 226, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_9.setFont(font)
+        self.label_9.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_9.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_9.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_9.setObjectName("label_9")
+        self.edtDriverName = QtWidgets.QLineEdit(self.frame)
+        self.edtDriverName.setGeometry(QtCore.QRect(490, 228, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.edtDriverName.setFont(font)
+        self.edtDriverName.setStyleSheet("QLineEdit{\n"
+"    border:1px solid #aaa;\n"
+"    border-radius:4px;\n"
+"    outline:none;\n"
+"    padding:6px;\n"
+"    box-sizing:border-box;\n"
+"    transition:.3s;\n"
+"  }\n"
+"  QLineEdit:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QLineEdit:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"  }")
+        self.edtDriverName.setObjectName("edtDriverName")
+        self.label_12 = QtWidgets.QLabel(self.frame)
+        self.label_12.setGeometry(QtCore.QRect(331, 358, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_12.setFont(font)
+        self.label_12.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_12.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_12.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_12.setObjectName("label_12")
+        self.label_7 = QtWidgets.QLabel(self.frame)
+        self.label_7.setGeometry(QtCore.QRect(331, 138, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_7.setFont(font)
+        self.label_7.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_7.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_7.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_7.setObjectName("label_7")
+        self.edtCarNo = QtWidgets.QLineEdit(self.frame)
+        self.edtCarNo.setGeometry(QtCore.QRect(490, 140, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.edtCarNo.setFont(font)
+        self.edtCarNo.setStyleSheet("QLineEdit{\n"
+"    border:1px solid #aaa;\n"
+"    border-radius:4px;\n"
+"    outline:none;\n"
+"    padding:6px;\n"
+"    box-sizing:border-box;\n"
+"    transition:.3s;\n"
+"  }\n"
+"  QLineEdit:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QLineEdit:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"  }")
+        self.edtCarNo.setObjectName("edtCarNo")
+        self.label_16 = QtWidgets.QLabel(self.frame)
+        self.label_16.setGeometry(QtCore.QRect(331, 402, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_16.setFont(font)
+        self.label_16.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_16.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_16.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_16.setObjectName("label_16")
+        self.tmIn = QtWidgets.QTimeEdit(self.frame)
+        self.tmIn.setGeometry(QtCore.QRect(490, 404, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.tmIn.setFont(font)
+        self.tmIn.setStyleSheet("QTimeEdit{\n"
+"    border:1px solid #aaa;\n"
+"    border-radius:6px;\n"
+"    outline:none;\n"
+"    padding:6px;\n"
+"    box-sizing:border-box;\n"
+"    transition:.3s;\n"
+"  }\n"
+"  QTimeEdit:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QTimeEdit:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"border-radius: 6;\n"
+"  }\n"
+"    QTimeEdit::up-button{\n"
+" subcontrol-origin: border;\n"
+"subcontrol-position: top right;\n"
+"width: 25px;\n"
+" border: none;\n"
+"image: url(:/images/dropUpTime.png);\n"
+"}\n"
+"QTimeEdit::down-button {\n"
+" subcontrol-origin: border;\n"
+" subcontrol-position: bottom right;\n"
+" width: 25px;\n"
+" border: none;\n"
+"\n"
+"image: url(:/images/dropDownTime.png);\n"
+"\n"
+"}\n"
+"QTimeEdit::down-button:hover {\n"
+" border: 1px solid rgba(0, 0, 0, 0%);\n"
+"border-bottom: 1px solid rgb(0, 0, 0);\n"
+" border-right: 1px solid rgb(0, 0, 0);\n"
+"background-color:#e6e6e6;\n"
+"    \n"
+"}\n"
+"QTimeEdit::up-button:hover {\n"
+" border: 1px solid rgba(0, 0, 0, 0%);\n"
+"border-top: 1px solid rgb(0, 0, 0);\n"
+" border-right: 1px solid rgb(0, 0, 0);\n"
+"background-color:#e6e6e6;\n"
+"\n"
+"}\n"
+"QTimeEdit::up-button:focus{\n"
+" border: 1px solid rgba(0, 0, 0, 0%);\n"
+"border-top: 1px solid dodgerBlue;\n"
+" border-right: 1px solid dodgerBlue;\n"
+"\n"
+"}\n"
+"QTimeEdit::down-button:focus{\n"
+" border: 1px solid rgba(0, 0, 0, 0%);\n"
+"border-bottom: 1px solid dodgerBlue;\n"
+" border-right: 1px solid dodgerBlue;\n"
+"\n"
+"}")
+        self.tmIn.setCalendarPopup(False)
+        self.tmIn.setObjectName("tmIn")
+        self.edtMeterReading = QtWidgets.QLineEdit(self.frame)
+        self.edtMeterReading.setGeometry(QtCore.QRect(490, 316, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.edtMeterReading.setFont(font)
+        self.edtMeterReading.setStyleSheet("QLineEdit{\n"
+"    border:1px solid #aaa;\n"
+"    border-radius:4px;\n"
+"    outline:none;\n"
+"    padding:6px;\n"
+"    box-sizing:border-box;\n"
+"    transition:.3s;\n"
+"  }\n"
+"  QLineEdit:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QLineEdit:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"  }")
+        self.edtMeterReading.setObjectName("edtMeterReading")
+        self.edtVisitArea = QtWidgets.QLineEdit(self.frame)
+        self.edtVisitArea.setGeometry(QtCore.QRect(490, 360, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.edtVisitArea.setFont(font)
+        self.edtVisitArea.setStyleSheet("QLineEdit{\n"
+"    border:1px solid #aaa;\n"
+"    border-radius:4px;\n"
+"    outline:none;\n"
+"    padding:6px;\n"
+"    box-sizing:border-box;\n"
+"    transition:.3s;\n"
+"  }\n"
+"  QLineEdit:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QLineEdit:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"  }")
+        self.edtVisitArea.setObjectName("edtVisitArea")
+        self.tmOut = QtWidgets.QTimeEdit(self.frame)
+        self.tmOut.setGeometry(QtCore.QRect(490, 448, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.tmOut.setFont(font)
+        self.tmOut.setStyleSheet("QTimeEdit{\n"
+"    border:1px solid #aaa;\n"
+"    border-radius:6px;\n"
+"    outline:none;\n"
+"    padding:6px;\n"
+"    box-sizing:border-box;\n"
+"    transition:.3s;\n"
+"  }\n"
+"  QTimeEdit:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QTimeEdit:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"border-radius: 6;\n"
+"  }\n"
+"    QTimeEdit::up-button{\n"
+" subcontrol-origin: border;\n"
+"subcontrol-position: top right;\n"
+"width: 25px;\n"
+" border: none;\n"
+"image: url(:/images/dropUpTime.png);\n"
+"}\n"
+"QTimeEdit::down-button {\n"
+" subcontrol-origin: border;\n"
+" subcontrol-position: bottom right;\n"
+" width: 25px;\n"
+" border: none;\n"
+"\n"
+"image: url(:/images/dropDownTime.png);\n"
+"\n"
+"}\n"
+"QTimeEdit::down-button:hover {\n"
+" border: 1px solid rgba(0, 0, 0, 0%);\n"
+"border-bottom: 1px solid rgb(0, 0, 0);\n"
+" border-right: 1px solid rgb(0, 0, 0);\n"
+"background-color:#e6e6e6;\n"
+"    \n"
+"}\n"
+"QTimeEdit::up-button:hover {\n"
+" border: 1px solid rgba(0, 0, 0, 0%);\n"
+"border-top: 1px solid rgb(0, 0, 0);\n"
+" border-right: 1px solid rgb(0, 0, 0);\n"
+"background-color:#e6e6e6;\n"
+"\n"
+"}\n"
+"QTimeEdit::up-button:focus{\n"
+" border: 1px solid rgba(0, 0, 0, 0%);\n"
+"border-top: 1px solid dodgerBlue;\n"
+" border-right: 1px solid dodgerBlue;\n"
+"\n"
+"}\n"
+"QTimeEdit::down-button:focus{\n"
+" border: 1px solid rgba(0, 0, 0, 0%);\n"
+"border-bottom: 1px solid dodgerBlue;\n"
+" border-right: 1px solid dodgerBlue;\n"
+"\n"
+"}")
+        self.tmOut.setCalendarPopup(False)
+        self.tmOut.setObjectName("tmOut")
+        self.btnAddTransport = QtWidgets.QPushButton(self.frame)
+        self.btnAddTransport.setGeometry(QtCore.QRect(564, 521, 271, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnAddTransport.setFont(font)
+        self.btnAddTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnAddTransport.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
 "}\n"
 "QPushButton:pressed\n"
 "{\n"
@@ -853,102 +1156,11 @@ class AddPersonnelData(object):
 "    border-radius: 6;\n"
 "\n"
 "}")
-        self.navViewPersonnel.setIcon(icon15)
-        self.navViewPersonnel.setIconSize(QtCore.QSize(25, 25))
-        self.navViewPersonnel.setFlat(False)
-        self.navViewPersonnel.setObjectName("navViewPersonnel")
-        self.edtRank = QtWidgets.QLineEdit(self.frame)
-        self.edtRank.setGeometry(QtCore.QRect(522, 228, 345, 38))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.edtRank.setFont(font)
-        self.edtRank.setStyleSheet("QLineEdit{\n"
-"    border:1px solid #aaa;\n"
-"    border-radius:4px;\n"
-"    outline:none;\n"
-"    padding:6px;\n"
-"    box-sizing:border-box;\n"
-"    transition:.3s;\n"
-"  }\n"
-"  QLineEdit:hover{\n"
-"     border:1px solid #000;    \n"
-"     transition:.3s;\n"
-"}\n"
-"  QLineEdit:focus{\n"
-"    border-color:dodgerBlue;\n"
-"    box-shadow:0 0 8px 0 dodgerBlue;\n"
-"  }")
-        self.edtRank.setObjectName("edtRank")
-        self.edtName = QtWidgets.QLineEdit(self.frame)
-        self.edtName.setGeometry(QtCore.QRect(522, 272, 345, 38))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.edtName.setFont(font)
-        self.edtName.setStyleSheet("QLineEdit{\n"
-"    border:1px solid #aaa;\n"
-"    border-radius:4px;\n"
-"    outline:none;\n"
-"    padding:6px;\n"
-"    box-sizing:border-box;\n"
-"    transition:.3s;\n"
-"  }\n"
-"  QLineEdit:hover{\n"
-"     border:1px solid #000;    \n"
-"     transition:.3s;\n"
-"}\n"
-"  QLineEdit:focus{\n"
-"    border-color:dodgerBlue;\n"
-"    box-shadow:0 0 8px 0 dodgerBlue;\n"
-"  }")
-        self.edtName.setObjectName("edtName")
-        self.edtDepartment = QtWidgets.QLineEdit(self.frame)
-        self.edtDepartment.setGeometry(QtCore.QRect(522, 316, 345, 38))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.edtDepartment.setFont(font)
-        self.edtDepartment.setStyleSheet("QLineEdit{\n"
-"    border:1px solid #aaa;\n"
-"    border-radius:4px;\n"
-"    outline:none;\n"
-"    padding:6px;\n"
-"    box-sizing:border-box;\n"
-"    transition:.3s;\n"
-"  }\n"
-"  QLineEdit:hover{\n"
-"     border:1px solid #000;    \n"
-"     transition:.3s;\n"
-"}\n"
-"  QLineEdit:focus{\n"
-"    border-color:dodgerBlue;\n"
-"    box-shadow:0 0 8px 0 dodgerBlue;\n"
-"  }")
-        self.edtDepartment.setObjectName("edtDepartment")
-        self.edtBloodGroup = QtWidgets.QLineEdit(self.frame)
-        self.edtBloodGroup.setGeometry(QtCore.QRect(522, 360, 345, 38))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.edtBloodGroup.setFont(font)
-        self.edtBloodGroup.setStyleSheet("QLineEdit{\n"
-"    border:1px solid #aaa;\n"
-"    border-radius:4px;\n"
-"    outline:none;\n"
-"    padding:6px;\n"
-"    box-sizing:border-box;\n"
-"    transition:.3s;\n"
-"  }\n"
-"  QLineEdit:hover{\n"
-"     border:1px solid #000;    \n"
-"     transition:.3s;\n"
-"}\n"
-"  QLineEdit:focus{\n"
-"    border-color:dodgerBlue;\n"
-"    box-shadow:0 0 8px 0 dodgerBlue;\n"
-"  }")
-        self.edtBloodGroup.setObjectName("edtBloodGroup")
+        icon17 = QtGui.QIcon()
+        icon17.addPixmap(QtGui.QPixmap(":/images/add.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnAddTransport.setIcon(icon17)
+        self.btnAddTransport.setIconSize(QtCore.QSize(25, 25))
+        self.btnAddTransport.setObjectName("btnAddTransport")
         self.navViewState = QtWidgets.QPushButton(self.frame)
         self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
         font = QtGui.QFont()
@@ -985,15 +1197,15 @@ class AddPersonnelData(object):
 "    border-radius: 6;\n"
 "\n"
 "}")
-        icon17 = QtGui.QIcon()
-        icon17.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon17)
+        icon18 = QtGui.QIcon()
+        icon18.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewState.setIcon(icon18)
         self.navViewState.setIconSize(QtCore.QSize(25, 25))
         self.navViewState.setFlat(False)
         self.navViewState.setObjectName("navViewState")
         self.label_2.raise_()
         self.label.raise_()
-        self.navViewPersonnelDetails.raise_()
+        self.navViewTransportDetails.raise_()
         self.navViewPunishment.raise_()
         self.navViewImpKey.raise_()
         self.navViewGenKey.raise_()
@@ -1009,22 +1221,27 @@ class AddPersonnelData(object):
         self.navViewPPE.raise_()
         self.navViewOOD.raise_()
         self.navViewCMS.raise_()
-        self.label_7.raise_()
-        self.edtID.raise_()
-        self.label_8.raise_()
-        self.edtPNO.raise_()
-        self.label_9.raise_()
-        self.label_10.raise_()
-        self.label_11.raise_()
-        self.label_12.raise_()
         self.lblDataEntrySuccessful.raise_()
         self.pushButton.raise_()
         self.pushButton_2.raise_()
         self.navViewPersonnel.raise_()
-        self.edtRank.raise_()
-        self.edtName.raise_()
-        self.edtDepartment.raise_()
-        self.edtBloodGroup.raise_()
+        self.edtCarName.raise_()
+        self.edtSlipNo.raise_()
+        self.label_14.raise_()
+        self.label_11.raise_()
+        self.label_10.raise_()
+        self.label_8.raise_()
+        self.label_9.raise_()
+        self.edtDriverName.raise_()
+        self.label_12.raise_()
+        self.label_7.raise_()
+        self.edtCarNo.raise_()
+        self.label_16.raise_()
+        self.tmIn.raise_()
+        self.edtMeterReading.raise_()
+        self.edtVisitArea.raise_()
+        self.tmOut.raise_()
+        self.btnAddTransport.raise_()
         self.navViewState.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
         self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
@@ -1043,46 +1260,6 @@ class AddPersonnelData(object):
 "font-size: 11pt")
         self.label_6.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.label_6.setObjectName("label_6")
-        self.btnAddPersonnelEntry = QtWidgets.QPushButton(self.centralwidget)
-        self.btnAddPersonnelEntry.setGeometry(QtCore.QRect(592, 433, 271, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.btnAddPersonnelEntry.setFont(font)
-        self.btnAddPersonnelEntry.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddPersonnelEntry.setStyleSheet("QPushButton\n"
-"{\n"
-"    color: #ffffff;\n"
-"    background-color:#4154A0;\n"
-"    border-width: 1px;\n"
-"    border-color: #4154A0;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"    padding: 3px;\n"
-"    font-size: 11pt;\n"
-"    padding-left: 5px;\n"
-"    padding-right: 5px;\n"
-"    min-width: 40px;\n"
-"}\n"
-"\n"
-"QPushButton:hover\n"
-"{\n"
-"    background-color:#384889\n"
-"}\n"
-"QPushButton:pressed\n"
-"{\n"
-"    background-color: #384889;\n"
-"     border-width: 3px;\n"
-"    border-color: #5C70BC;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"\n"
-"}")
-        icon18 = QtGui.QIcon()
-        icon18.addPixmap(QtGui.QPixmap(":/images/add.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.btnAddPersonnelEntry.setIcon(icon18)
-        self.btnAddPersonnelEntry.setIconSize(QtCore.QSize(25, 25))
-        self.btnAddPersonnelEntry.setObjectName("btnAddPersonnelEntry")
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
@@ -1091,7 +1268,7 @@ class AddPersonnelData(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.navViewPersonnelDetails.setText(_translate("MainWindow", "View Personnel Details"))
+        self.navViewTransportDetails.setText(_translate("MainWindow", "View Transport Details"))
         self.navViewPunishment.setText(_translate("MainWindow", "Punishment Book"))
         self.navViewImpKey.setText(_translate("MainWindow", "Important Key Book"))
         self.navViewGenKey.setText(_translate("MainWindow", "General Key Book"))
@@ -1106,15 +1283,28 @@ class AddPersonnelData(object):
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
-        self.label_7.setText(_translate("MainWindow", "ID.No"))
-        self.label_8.setText(_translate("MainWindow", "P.No/ O.No"))
-        self.label_9.setText(_translate("MainWindow", "Rank/Rate"))
-        self.label_10.setText(_translate("MainWindow", "Name"))
-        self.label_11.setText(_translate("MainWindow", "Department"))
-        self.label_12.setText(_translate("MainWindow", "Blood Group"))
         self.lblDataEntrySuccessful.setText(_translate("MainWindow", "Details Saved Successfully!"))
-        self.pushButton.setText(_translate("MainWindow", "Personnel Data Book"))
+        self.pushButton.setText(_translate("MainWindow", "Transport Book"))
         self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
+        self.label_14.setText(_translate("MainWindow", "Time Out"))
+        self.label_11.setText(_translate("MainWindow", "Meter Reading"))
+        self.label_10.setText(_translate("MainWindow", "Slip No."))
+        self.label_8.setText(_translate("MainWindow", "Car Name"))
+        self.label_9.setText(_translate("MainWindow", "Driver Name"))
+        self.label_12.setText(_translate("MainWindow", "Area to Visit"))
+        self.label_7.setText(_translate("MainWindow", "Car No."))
+        self.label_16.setText(_translate("MainWindow", "Time in"))
+        self.btnAddTransport.setText(_translate("MainWindow", "Add New Transport Entry"))
         self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
-        self.label_6.setText(_translate("MainWindow", "Enter Personnel Details"))
-        self.btnAddPersonnelEntry.setText(_translate("MainWindow", "Add New Personnel Entry"))
+        self.label_6.setText(_translate("MainWindow", "Enter Transport Details"))
+import IconResource_rc
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    MainWindow = QtWidgets.QMainWindow()
+    ui = Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
+    sys.exit(app.exec_())
