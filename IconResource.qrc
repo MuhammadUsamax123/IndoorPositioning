@@ -23,5 +23,7 @@
     <file>images/personnelData.png</file>
     <file>images/logoMTIP.png</file>
     <file>images/armoryState.png</file>
+    <file>images/manageArmory.png</file>
+    <file>images/shipDefault.png</file>
 </qresource>
 </RCC>
