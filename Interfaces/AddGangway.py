@@ -289,7 +289,7 @@ class AddGangway(object):
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_12 = QtWidgets.QLabel(self.frame)
-        self.label_12.setGeometry(QtCore.QRect(331, 532, 101, 44))
+        self.label_12.setGeometry(QtCore.QRect(331, 444, 101, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -302,7 +302,7 @@ class AddGangway(object):
         self.label_12.setObjectName("label_12")
         self.txtRemarks = QtWidgets.QPlainTextEdit(self.frame)
         self.txtRemarks.setEnabled(True)
-        self.txtRemarks.setGeometry(QtCore.QRect(490, 534, 345, 88))
+        self.txtRemarks.setGeometry(QtCore.QRect(490, 446, 345, 88))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -428,7 +428,7 @@ class AddGangway(object):
         self.pushButton.setObjectName("pushButton")
         self.lblDataEntrySuccessful = QtWidgets.QLabel(self.frame)
         self.lblDataEntrySuccessful.setEnabled(True)
-        self.lblDataEntrySuccessful.setGeometry(QtCore.QRect(331, 630, 361, 44))
+        self.lblDataEntrySuccessful.setGeometry(QtCore.QRect(331, 549, 361, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -1157,78 +1157,8 @@ class AddGangway(object):
 "}")
         self.tmReceive.setCalendarPopup(False)
         self.tmReceive.setObjectName("tmReceive")
-        self.lblIssuingRank = QtWidgets.QLabel(self.frame)
-        self.lblIssuingRank.setGeometry(QtCore.QRect(490, 488, 345, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.lblIssuingRank.setFont(font)
-        self.lblIssuingRank.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.lblIssuingRank.setStyleSheet("color: #000000;\n"
-"background-color:#ffffff;\n"
-"font-size: 11pt")
-        self.lblIssuingRank.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.lblIssuingRank.setObjectName("lblIssuingRank")
-        self.label_27 = QtWidgets.QLabel(self.frame)
-        self.label_27.setGeometry(QtCore.QRect(331, 444, 159, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.label_27.setFont(font)
-        self.label_27.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.label_27.setStyleSheet("color: #000000;\n"
-"background-color:#ffffff;\n"
-"font-size: 11pt")
-        self.label_27.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.label_27.setObjectName("label_27")
-        self.label_28 = QtWidgets.QLabel(self.frame)
-        self.label_28.setGeometry(QtCore.QRect(331, 488, 159, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.label_28.setFont(font)
-        self.label_28.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.label_28.setStyleSheet("color: #000000;\n"
-"background-color:#ffffff;\n"
-"font-size: 11pt")
-        self.label_28.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.label_28.setObjectName("label_28")
-        self.cboxIssuingName = QtWidgets.QComboBox(self.frame)
-        self.cboxIssuingName.setGeometry(QtCore.QRect(490, 446, 345, 38))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        font.setKerning(True)
-        self.cboxIssuingName.setFont(font)
-        self.cboxIssuingName.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.cboxIssuingName.setStyleSheet("QComboBox{ border-width: 1px;\n"
-" border-color: #aaa;\n"
-" border-style: solid;\n"
-"border-radius:6; \n"
-"}\n"
-"\n"
-"QComboBox::drop-down:button{\n"
-"background-color:transparent;\n"
-"}\n"
-"QComboBox::down-arrow {\n"
-" \n"
-"    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);\n"
-"    width: 25px;\n"
-"    height: 9px;\n"
-"}\n"
-"QComboBox:hover{\n"
-"     border:1px solid #000;    \n"
-"     transition:.3s;\n"
-"}\n"
-"  QComboBox:focus{\n"
-"    border-color:dodgerBlue;\n"
-"    box-shadow:0 0 8px 0 dodgerBlue;\n"
-"  }\n"
-"")
-        self.cboxIssuingName.setFrame(True)
-        self.cboxIssuingName.setObjectName("cboxIssuingName")
         self.btnAddGangway = QtWidgets.QPushButton(self.frame)
-        self.btnAddGangway.setGeometry(QtCore.QRect(565, 651, 271, 44))
+        self.btnAddGangway.setGeometry(QtCore.QRect(565, 570, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -1308,10 +1238,6 @@ class AddGangway(object):
         self.label_14.raise_()
         self.label_15.raise_()
         self.tmReceive.raise_()
-        self.lblIssuingRank.raise_()
-        self.label_27.raise_()
-        self.label_28.raise_()
-        self.cboxIssuingName.raise_()
         self.btnAddGangway.raise_()
         MainWindow.setCentralWidget(self.centralwidget)
 
@@ -1350,7 +1276,4 @@ class AddGangway(object):
         self.label_11.setText(_translate("MainWindow", "No. of Quality"))
         self.label_14.setText(_translate("MainWindow", "Place"))
         self.label_15.setText(_translate("MainWindow", "Time of Receiving"))
-        self.lblIssuingRank.setText(_translate("MainWindow", "OOD Rank"))
-        self.label_27.setText(_translate("MainWindow", "Issuing Person Name"))
-        self.label_28.setText(_translate("MainWindow", "Issuing Person Rank:"))
         self.btnAddGangway.setText(_translate("MainWindow", "Add New Gangway Entry"))

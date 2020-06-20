@@ -548,7 +548,7 @@ font-size: 11pt</string>
      <property name="geometry">
       <rect>
        <x>331</x>
-       <y>532</y>
+       <y>444</y>
        <width>101</width>
        <height>44</height>
       </rect>
@@ -581,7 +581,7 @@ font-size: 11pt</string>
      <property name="geometry">
       <rect>
        <x>490</x>
-       <y>534</y>
+       <y>446</y>
        <width>345</width>
        <height>88</height>
       </rect>
@@ -780,7 +780,7 @@ selection-background-color:#0164E9;
      <property name="geometry">
       <rect>
        <x>331</x>
-       <y>630</y>
+       <y>549</y>
        <width>361</width>
        <height>44</height>
       </rect>
@@ -1969,150 +1969,11 @@ border-bottom: 1px solid dodgerBlue;
       <bool>false</bool>
      </property>
     </widget>
-    <widget class="QLabel" name="lblIssuingRank">
-     <property name="geometry">
-      <rect>
-       <x>490</x>
-       <y>488</y>
-       <width>345</width>
-       <height>44</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="layoutDirection">
-      <enum>Qt::LeftToRight</enum>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">color: #000000;
-background-color:#ffffff;
-font-size: 11pt</string>
-     </property>
-     <property name="text">
-      <string>OOD Rank</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_27">
-     <property name="geometry">
-      <rect>
-       <x>331</x>
-       <y>444</y>
-       <width>159</width>
-       <height>44</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="layoutDirection">
-      <enum>Qt::LeftToRight</enum>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">color: #000000;
-background-color:#ffffff;
-font-size: 11pt</string>
-     </property>
-     <property name="text">
-      <string>Issuing Person Name</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_28">
-     <property name="geometry">
-      <rect>
-       <x>331</x>
-       <y>488</y>
-       <width>159</width>
-       <height>44</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="layoutDirection">
-      <enum>Qt::LeftToRight</enum>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">color: #000000;
-background-color:#ffffff;
-font-size: 11pt</string>
-     </property>
-     <property name="text">
-      <string>Issuing Person Rank:</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-    </widget>
-    <widget class="QComboBox" name="cboxIssuingName">
-     <property name="geometry">
-      <rect>
-       <x>490</x>
-       <y>446</y>
-       <width>345</width>
-       <height>38</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-       <kerning>true</kerning>
-      </font>
-     </property>
-     <property name="cursor">
-      <cursorShape>PointingHandCursor</cursorShape>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QComboBox{ border-width: 1px;
- border-color: #aaa;
- border-style: solid;
-border-radius:6; 
-}
-
-QComboBox::drop-down:button{
-background-color:transparent;
-}
-QComboBox::down-arrow {
- 
-    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);
-    width: 25px;
-    height: 9px;
-}
-QComboBox:hover{
-	 border:1px solid #000;	
- 	transition:.3s;
-}
-  QComboBox:focus{
-    border-color:dodgerBlue;
-    box-shadow:0 0 8px 0 dodgerBlue;
-  }
-</string>
-     </property>
-     <property name="frame">
-      <bool>true</bool>
-     </property>
-    </widget>
     <widget class="QPushButton" name="btnAddGangway">
      <property name="geometry">
       <rect>
        <x>565</x>
-       <y>651</y>
+       <y>570</y>
        <width>271</width>
        <height>44</height>
       </rect>
@@ -2211,10 +2072,6 @@ QPushButton:pressed
     <zorder>label_14</zorder>
     <zorder>label_15</zorder>
     <zorder>tmReceive</zorder>
-    <zorder>lblIssuingRank</zorder>
-    <zorder>label_27</zorder>
-    <zorder>label_28</zorder>
-    <zorder>cboxIssuingName</zorder>
     <zorder>btnAddGangway</zorder>
    </widget>
   </widget>

@@ -1078,7 +1078,7 @@ QPushButton:pressed
      <property name="geometry">
       <rect>
        <x>331</x>
-       <y>632</y>
+       <y>588</y>
        <width>361</width>
        <height>44</height>
       </rect>
@@ -1311,7 +1311,7 @@ QPushButton:pressed
      <property name="geometry">
       <rect>
        <x>331</x>
-       <y>578</y>
+       <y>534</y>
        <width>151</width>
        <height>44</height>
       </rect>
@@ -1341,7 +1341,7 @@ font-size: 11pt</string>
      <property name="geometry">
       <rect>
        <x>331</x>
-       <y>534</y>
+       <y>490</y>
        <width>151</width>
        <height>44</height>
       </rect>
@@ -1371,7 +1371,7 @@ font-size: 11pt</string>
      <property name="geometry">
       <rect>
        <x>490</x>
-       <y>448</y>
+       <y>404</y>
        <width>345</width>
        <height>38</height>
       </rect>
@@ -1465,7 +1465,7 @@ font-size: 11pt</string>
      <property name="geometry">
       <rect>
        <x>490</x>
-       <y>580</y>
+       <y>536</y>
        <width>345</width>
        <height>38</height>
       </rect>
@@ -1593,7 +1593,7 @@ font-size: 11pt</string>
      <property name="geometry">
       <rect>
        <x>331</x>
-       <y>446</y>
+       <y>402</y>
        <width>151</width>
        <height>44</height>
       </rect>
@@ -1687,7 +1687,7 @@ font-size: 11pt</string>
      <property name="geometry">
       <rect>
        <x>490</x>
-       <y>536</y>
+       <y>492</y>
        <width>345</width>
        <height>38</height>
       </rect>
@@ -1764,7 +1764,7 @@ border-bottom: 1px solid dodgerBlue;
      <property name="geometry">
       <rect>
        <x>331</x>
-       <y>490</y>
+       <y>446</y>
        <width>151</width>
        <height>44</height>
       </rect>
@@ -1794,7 +1794,7 @@ font-size: 11pt</string>
      <property name="geometry">
       <rect>
        <x>490</x>
-       <y>492</y>
+       <y>448</y>
        <width>345</width>
        <height>38</height>
       </rect>
@@ -1923,7 +1923,7 @@ QComboBox:hover{
      <property name="geometry">
       <rect>
        <x>850</x>
-       <y>536</y>
+       <y>492</y>
        <width>51</width>
        <height>38</height>
       </rect>
@@ -1978,71 +1978,11 @@ QComboBox:hover{
       </property>
      </item>
     </widget>
-    <widget class="QLabel" name="label_17">
-     <property name="geometry">
-      <rect>
-       <x>331</x>
-       <y>358</y>
-       <width>51</width>
-       <height>44</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="layoutDirection">
-      <enum>Qt::LeftToRight</enum>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">color: #000000;
-background-color:#ffffff;
-font-size: 11pt</string>
-     </property>
-     <property name="text">
-      <string>P.NO:</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-    </widget>
-    <widget class="QLabel" name="lblPNO">
-     <property name="geometry">
-      <rect>
-       <x>490</x>
-       <y>358</y>
-       <width>345</width>
-       <height>44</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="layoutDirection">
-      <enum>Qt::LeftToRight</enum>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">color: #000000;
-background-color:#ffffff;
-font-size: 11pt</string>
-     </property>
-     <property name="text">
-      <string>P.NO from Database</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-    </widget>
     <widget class="QLabel" name="label_19">
      <property name="geometry">
       <rect>
        <x>331</x>
-       <y>402</y>
+       <y>358</y>
        <width>81</width>
        <height>44</height>
       </rect>
@@ -2072,7 +2012,7 @@ font-size: 11pt</string>
      <property name="geometry">
       <rect>
        <x>490</x>
-       <y>402</y>
+       <y>358</y>
        <width>345</width>
        <height>44</height>
       </rect>
@@ -2205,8 +2145,6 @@ QPushButton:pressed
     <zorder>tmIn</zorder>
     <zorder>cBoxPersName</zorder>
     <zorder>cBoxInterval</zorder>
-    <zorder>label_17</zorder>
-    <zorder>lblPNO</zorder>
     <zorder>label_19</zorder>
     <zorder>lblRank</zorder>
     <zorder>navViewState</zorder>
@@ -2261,7 +2199,7 @@ font-size: 11pt</string>
     <property name="geometry">
      <rect>
       <x>564</x>
-      <y>653</y>
+      <y>609</y>
       <width>271</width>
       <height>44</height>
      </rect>

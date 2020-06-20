@@ -1541,7 +1541,7 @@ font-size: 11pt</string>
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="lblArnRank">
+    <widget class="QLabel" name="lblArmRank">
      <property name="geometry">
       <rect>
        <x>490</x>
@@ -1881,7 +1881,7 @@ font-size: 11pt</string>
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
      </property>
     </widget>
-    <widget class="QComboBox" name="cBocBPJacket">
+    <widget class="QComboBox" name="cBoxBPJacket">
      <property name="geometry">
       <rect>
        <x>490</x>
@@ -2247,7 +2247,7 @@ QPushButton:pressed
     <zorder>pushButton_2</zorder>
     <zorder>cBoxArmPNO</zorder>
     <zorder>lblArmName</zorder>
-    <zorder>lblArnRank</zorder>
+    <zorder>lblArmRank</zorder>
     <zorder>edtRegNo</zorder>
     <zorder>label_12</zorder>
     <zorder>cBoxWeaponType</zorder>
@@ -2256,7 +2256,7 @@ QPushButton:pressed
     <zorder>label_15</zorder>
     <zorder>label_16</zorder>
     <zorder>label_17</zorder>
-    <zorder>cBocBPJacket</zorder>
+    <zorder>cBoxBPJacket</zorder>
     <zorder>label_18</zorder>
     <zorder>cBoxAmmoType</zorder>
     <zorder>edtQuantity</zorder>

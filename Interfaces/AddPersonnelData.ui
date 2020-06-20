@@ -1487,40 +1487,6 @@ QPushButton:pressed
       <bool>false</bool>
      </property>
     </widget>
-    <widget class="QLineEdit" name="edtRank">
-     <property name="geometry">
-      <rect>
-       <x>522</x>
-       <y>228</y>
-       <width>345</width>
-       <height>38</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QLineEdit{
-    border:1px solid #aaa;
-    border-radius:4px;
-    outline:none;
-    padding:6px;
-    box-sizing:border-box;
-    transition:.3s;
-  }
-  QLineEdit:hover{
-	 border:1px solid #000;	
- 	transition:.3s;
-}
-  QLineEdit:focus{
-    border-color:dodgerBlue;
-    box-shadow:0 0 8px 0 dodgerBlue;
-  }</string>
-     </property>
-    </widget>
     <widget class="QLineEdit" name="edtName">
      <property name="geometry">
       <rect>
@@ -1689,6 +1655,108 @@ QPushButton:pressed
       <bool>false</bool>
      </property>
     </widget>
+    <widget class="QComboBox" name="cBoxRank">
+     <property name="geometry">
+      <rect>
+       <x>522</x>
+       <y>228</y>
+       <width>345</width>
+       <height>38</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+       <kerning>true</kerning>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QComboBox{ border-width: 1px;
+ border-color: #aaa;
+ border-style: solid;
+border-radius:6; 
+}
+
+QComboBox::drop-down:button{
+background-color:transparent;
+}
+QComboBox::down-arrow {
+ 
+    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);
+    width: 25px;
+    height: 9px;
+}
+QComboBox:hover{
+	 border:1px solid #000;	
+ 	transition:.3s;
+}
+  QComboBox:focus{
+    border-color:dodgerBlue;
+    box-shadow:0 0 8px 0 dodgerBlue;
+  }
+</string>
+     </property>
+     <property name="editable">
+      <bool>false</bool>
+     </property>
+     <property name="frame">
+      <bool>true</bool>
+     </property>
+     <item>
+      <property name="text">
+       <string>MIDSHIPMAN</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>SUB LIEUTENANT</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>LIEUTENANT</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>LIEUTENANT COMMANDER</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>COMMANDER</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>CAPTAIN</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>COMMODORE</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>REAR ADMIRAL</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>VICE ADMIRAL</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>ADMIRAL</string>
+      </property>
+     </item>
+    </widget>
     <zorder>label_2</zorder>
     <zorder>label</zorder>
     <zorder>navViewPersonnelDetails</zorder>
@@ -1719,11 +1787,11 @@ QPushButton:pressed
     <zorder>pushButton</zorder>
     <zorder>pushButton_2</zorder>
     <zorder>navViewPersonnel</zorder>
-    <zorder>edtRank</zorder>
     <zorder>edtName</zorder>
     <zorder>edtDepartment</zorder>
     <zorder>edtBloodGroup</zorder>
     <zorder>navViewState</zorder>
+    <zorder>cBoxRank</zorder>
    </widget>
    <widget class="QLabel" name="label_13">
     <property name="geometry">

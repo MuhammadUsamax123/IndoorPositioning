@@ -105,6 +105,11 @@ QPushButton:hover
 {
     background-color:#4154A0;
 }
+
+QPushButton:active
+{
+    background-color:#4154A0;
+}
 QPushButton:pressed
 {
     background-color: #384889;
@@ -716,11 +721,6 @@ QPushButton:hover
 {
     background-color:#4154A0;
 }
-
-QPushButton:active
-{
-    background-color:#4154A0;
-}
 QPushButton:pressed
 {
     background-color: #384889;
@@ -1036,11 +1036,11 @@ QPushButton:pressed
     background-color:#222222;</string>
      </property>
      <property name="text">
-      <string>Personnel Location</string>
+      <string>Punishment Book</string>
      </property>
      <property name="icon">
       <iconset resource="../IconResource.qrc">
-       <normaloff>:/images/personnel.png</normaloff>:/images/personnel.png</iconset>
+       <normaloff>:/images/punishment.png</normaloff>:/images/punishment.png</iconset>
      </property>
      <property name="iconSize">
       <size>
@@ -1147,6 +1147,68 @@ QPushButton:pressed
       <bool>false</bool>
      </property>
     </widget>
+    <widget class="QPushButton" name="btnAddPunishment">
+     <property name="geometry">
+      <rect>
+       <x>1075</x>
+       <y>630</y>
+       <width>271</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton
+{
+    color: #ffffff;
+    background-color:#4154A0;
+    border-width: 1px;
+    border-color: #4154A0;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#384889
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>Add New Punishment Entry</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/add.png</normaloff>:/images/add.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+    </widget>
     <widget class="QPushButton" name="navViewState">
      <property name="geometry">
       <rect>
@@ -1213,169 +1275,35 @@ QPushButton:pressed
       <bool>false</bool>
      </property>
     </widget>
-    <widget class="QScrollArea" name="scrollArea">
+    <widget class="QTableView" name="tblDetails">
      <property name="geometry">
       <rect>
        <x>306</x>
-       <y>60</y>
+       <y>120</y>
        <width>1040</width>
-       <height>540</height>
+       <height>500</height>
       </rect>
      </property>
-     <property name="widgetResizable">
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="editTriggers">
+      <set>QAbstractItemView::NoEditTriggers</set>
+     </property>
+     <property name="alternatingRowColors">
       <bool>true</bool>
      </property>
-     <widget class="QWidget" name="scrollAreaWidgetContents_4">
-      <property name="geometry">
-       <rect>
-        <x>0</x>
-        <y>0</y>
-        <width>1038</width>
-        <height>538</height>
-       </rect>
-      </property>
-      <widget class="QPushButton" name="btnshipImage">
-       <property name="geometry">
-        <rect>
-         <x>0</x>
-         <y>0</y>
-         <width>1040</width>
-         <height>540</height>
-        </rect>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">border:1px solid #fff;
-outline:none;</string>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="icon">
-        <iconset resource="../IconResource.qrc">
-         <normaloff>:/images/shipDefault.png</normaloff>:/images/shipDefault.png</iconset>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>1040</width>
-         <height>520</height>
-        </size>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="btnzoomIn">
-       <property name="geometry">
-        <rect>
-         <x>980</x>
-         <y>10</y>
-         <width>52</width>
-         <height>44</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>Segoe UI</family>
-         <pointsize>11</pointsize>
-        </font>
-       </property>
-       <property name="cursor">
-        <cursorShape>PointingHandCursor</cursorShape>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">QPushButton
-{
-    color: #ffffff;
-    background-color:#D1D1D1;
-    border-width: 1px;
-    border-color: #DADCDE;
-    border-style: solid;
-    padding: 3px;
-    font-size: 11pt;
-    padding-left: 5px;
-    padding-right: 5px;
-    min-width: 40px;
-}
-
-QPushButton:hover
-{
-    background-color:#C8C8C9
-}
-QPushButton:pressed
-{
-    background-color: #D1D1D1;
- 	border-width: 3px;
-    border-color: #D1D1D1;
-    border-style: solid;
-    border-radius: 6;
-
-}</string>
-       </property>
-       <property name="text">
-        <string>Z+</string>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>25</width>
-         <height>25</height>
-        </size>
-       </property>
-      </widget>
-      <widget class="QPushButton" name="btnzoomIn_2">
-       <property name="geometry">
-        <rect>
-         <x>980</x>
-         <y>60</y>
-         <width>52</width>
-         <height>44</height>
-        </rect>
-       </property>
-       <property name="font">
-        <font>
-         <family>Segoe UI</family>
-         <pointsize>11</pointsize>
-        </font>
-       </property>
-       <property name="cursor">
-        <cursorShape>PointingHandCursor</cursorShape>
-       </property>
-       <property name="styleSheet">
-        <string notr="true">QPushButton
-{
-    color: #ffffff;
-    background-color:#D1D1D1;
-    border-width: 1px;
-    border-color: #DADCDE;
-    border-style: solid;
-    padding: 3px;
-    font-size: 11pt;
-    padding-left: 5px;
-    padding-right: 5px;
-    min-width: 40px;
-}
-
-QPushButton:hover
-{
-    background-color:#C8C8C9
-}
-QPushButton:pressed
-{
-    background-color: #D1D1D1;
- 	border-width: 3px;
-    border-color: #D1D1D1;
-    border-style: solid;
-    border-radius: 6;
-
-}</string>
-       </property>
-       <property name="text">
-        <string>Z-</string>
-       </property>
-       <property name="iconSize">
-        <size>
-         <width>25</width>
-         <height>25</height>
-        </size>
-       </property>
-      </widget>
-     </widget>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::NoSelection</enum>
+     </property>
+     <property name="selectionBehavior">
+      <enum>QAbstractItemView::SelectRows</enum>
+     </property>
+     <property name="textElideMode">
+      <enum>Qt::ElideMiddle</enum>
+     </property>
     </widget>
     <zorder>label_2</zorder>
     <zorder>label</zorder>
@@ -1397,8 +1325,55 @@ QPushButton:pressed
     <zorder>pushButton</zorder>
     <zorder>pushButton_2</zorder>
     <zorder>navViewPersonnel</zorder>
+    <zorder>btnAddPunishment</zorder>
     <zorder>navViewState</zorder>
-    <zorder>scrollArea</zorder>
+    <zorder>tblDetails</zorder>
+   </widget>
+   <widget class="QLabel" name="label_13">
+    <property name="geometry">
+     <rect>
+      <x>306</x>
+      <y>100</y>
+      <width>1040</width>
+      <height>1</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color:#A0A0A0;</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_6">
+    <property name="geometry">
+     <rect>
+      <x>306</x>
+      <y>60</y>
+      <width>221</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Segoe UI</family>
+      <pointsize>11</pointsize>
+     </font>
+    </property>
+    <property name="layoutDirection">
+     <enum>Qt::LeftToRight</enum>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+    </property>
+    <property name="text">
+     <string>View Punishment Details</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+    </property>
    </widget>
   </widget>
  </widget>
