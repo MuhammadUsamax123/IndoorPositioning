@@ -25,5 +25,7 @@
     <file>images/armoryState.png</file>
     <file>images/manageArmory.png</file>
     <file>images/shipDefault.png</file>
+    <file>images/saveChanges.png</file>
+    <file>images/call.png</file>
 </qresource>
 </RCC>
