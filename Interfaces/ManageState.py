@@ -1,5 +1,17 @@
-class ManageState(object):
-    def setup_ManageState(self, MainWindow):
+# -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file 'C:\Users\home\Desktop\IndoorPosition\Interfaces\ViewState.ui'
+#
+# Created by: PyQt5 UI code generator 5.13.0
+#
+# WARNING! All changes made in this file will be lost!
+
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+
+class Ui_MainWindow(object):
+    def setupUi(self, MainWindow):k
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1366, 765)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -905,3 +917,55 @@ class ManageState(object):
         self.navViewArmoryDetails.setText(_translate("MainWindow", "View Armory State Details"))
         self.lblDataEntrySuccessful.setText(_translate("MainWindow", "Changes Saved Successfully!"))
         self.label_6.setText(_translate("MainWindow", "Manage Armory State"))
+        disableHideMarkers(self)
+def disableHideMarkers(self):
+            self.btnMarker1Room1.hide()
+            self.btnMarker2Room1.hide()
+            self.btnMarker3Room1.hide()
+            self.btnMarker1Room2.hide()
+            self.btnMarker2Room2.hide()
+            self.btnMarker3Room2.hide()
+            self.btnMarker1Room3.hide()
+            self.btnMarker2Room3.hide()
+            self.btnMarker3Room3.hide()
+
+            self.btnMarker1Room1.setEnabled(False)
+            self.btnMarker2Room1.setEnabled(False)
+            self.btnMarker3Room1.setEnabled(False)
+            self.btnMarker1Room2.setEnabled(False)
+            self.btnMarker2Room2.setEnabled(False)
+            self.btnMarker3Room2.setEnabled(False)
+            self.btnMarker1Room3.setEnabled(False)
+            self.btnMarker2Room3.setEnabled(False)
+            self.btnMarker3Room3.setEnabled(False)
+            
+def enableShowMarkers(self).
+            self.btnMarker1Room1.show()
+            self.btnMarker2Room1.show()
+            self.btnMarker3Room1.show()
+            self.btnMarker1Room2.show()
+            self.btnMarker2Room2.show()
+            self.btnMarker3Room2.show()
+            self.btnMarker1Room3.show()
+            self.btnMarker2Room3.show()
+            self.btnMarker3Room3.show()
+
+            self.btnMarker1Room1.setEnabled(True)
+            self.btnMarker2Room1.setEnabled(True)
+            self.btnMarker3Room1.setEnabled(True)
+            self.btnMarker1Room2.setEnabled(True)
+            self.btnMarker2Room2.setEnabled(True)
+            self.btnMarker3Room2.setEnabled(True)
+            self.btnMarker1Room3.setEnabled(True)
+            self.btnMarker2Room3.setEnabled(True)
+            self.btnMarker3Room3.setEnabled(True)
+        import IconResource_rc
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    MainWindow = QtWidgets.QMainWindow()
+    ui = Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
+    sys.exit(app.exec_())

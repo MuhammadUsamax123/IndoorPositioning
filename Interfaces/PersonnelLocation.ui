@@ -1036,7 +1036,7 @@ QPushButton:pressed
     background-color:#222222;</string>
      </property>
      <property name="text">
-      <string>Personnel Location</string>
+      <string>Personnel Management System</string>
      </property>
      <property name="icon">
       <iconset resource="../IconResource.qrc">
@@ -1219,7 +1219,7 @@ QPushButton:pressed
        <x>306</x>
        <y>60</y>
        <width>1040</width>
-       <height>540</height>
+       <height>551</height>
       </rect>
      </property>
      <property name="widgetResizable">
@@ -1231,21 +1231,26 @@ QPushButton:pressed
         <x>0</x>
         <y>0</y>
         <width>1038</width>
-        <height>538</height>
+        <height>549</height>
        </rect>
       </property>
       <widget class="QPushButton" name="btnshipImage">
        <property name="geometry">
         <rect>
-         <x>0</x>
-         <y>0</y>
-         <width>1040</width>
-         <height>540</height>
+         <x>-10</x>
+         <y>-10</y>
+         <width>1060</width>
+         <height>569</height>
         </rect>
+       </property>
+       <property name="layoutDirection">
+        <enum>Qt::RightToLeft</enum>
        </property>
        <property name="styleSheet">
         <string notr="true">border:1px solid #fff;
-outline:none;</string>
+outline:none;
+background-color:#AADAFF;
+color:#AADAFF;</string>
        </property>
        <property name="text">
         <string/>
@@ -1261,12 +1266,12 @@ outline:none;</string>
         </size>
        </property>
       </widget>
-      <widget class="QPushButton" name="btnzoomIn">
+      <widget class="QPushButton" name="btnZoomIn">
        <property name="geometry">
         <rect>
-         <x>980</x>
-         <y>10</y>
-         <width>52</width>
+         <x>989</x>
+         <y>6</y>
+         <width>44</width>
          <height>44</height>
         </rect>
        </property>
@@ -1282,34 +1287,38 @@ outline:none;</string>
        <property name="styleSheet">
         <string notr="true">QPushButton
 {
-    color: #ffffff;
-    background-color:#D1D1D1;
+    color: #000000;
+    background-color:#ffffff;
     border-width: 1px;
-    border-color: #DADCDE;
+    border-color: #A5A5A5;
     border-style: solid;
+    border-radius: 6;
     padding: 3px;
     font-size: 11pt;
     padding-left: 5px;
     padding-right: 5px;
-    min-width: 40px;
 }
 
 QPushButton:hover
 {
-    background-color:#C8C8C9
+    background-color:#E5E5E5
 }
 QPushButton:pressed
 {
     background-color: #D1D1D1;
  	border-width: 3px;
-    border-color: #D1D1D1;
+    border-color: #E5E5E5;
     border-style: solid;
     border-radius: 6;
 
 }</string>
        </property>
        <property name="text">
-        <string>Z+</string>
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/zoomIn.png</normaloff>:/images/zoomIn.png</iconset>
        </property>
        <property name="iconSize">
         <size>
@@ -1318,12 +1327,12 @@ QPushButton:pressed
         </size>
        </property>
       </widget>
-      <widget class="QPushButton" name="btnzoomIn_2">
+      <widget class="QPushButton" name="btnZoomOut">
        <property name="geometry">
         <rect>
-         <x>980</x>
-         <y>60</y>
-         <width>52</width>
+         <x>989</x>
+         <y>56</y>
+         <width>44</width>
          <height>44</height>
         </rect>
        </property>
@@ -1339,34 +1348,38 @@ QPushButton:pressed
        <property name="styleSheet">
         <string notr="true">QPushButton
 {
-    color: #ffffff;
-    background-color:#D1D1D1;
+    color: #000000;
+    background-color:#ffffff;
     border-width: 1px;
-    border-color: #DADCDE;
+    border-color: #A5A5A5;
     border-style: solid;
+    border-radius: 6;
     padding: 3px;
     font-size: 11pt;
     padding-left: 5px;
     padding-right: 5px;
-    min-width: 40px;
 }
 
 QPushButton:hover
 {
-    background-color:#C8C8C9
+    background-color:#E5E5E5
 }
 QPushButton:pressed
 {
     background-color: #D1D1D1;
  	border-width: 3px;
-    border-color: #D1D1D1;
+    border-color: #E5E5E5;
     border-style: solid;
     border-radius: 6;
 
 }</string>
        </property>
        <property name="text">
-        <string>Z-</string>
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/zoomOut.png</normaloff>:/images/zoomOut.png</iconset>
        </property>
        <property name="iconSize">
         <size>
@@ -1375,7 +1388,568 @@ QPushButton:pressed
         </size>
        </property>
       </widget>
+      <widget class="QPushButton" name="btnMoveRight">
+       <property name="geometry">
+        <rect>
+         <x>989</x>
+         <y>500</y>
+         <width>44</width>
+         <height>44</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+    color: #000000;
+    background-color:#ffffff;
+    border-width: 1px;
+    border-color: #A5A5A5;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+QPushButton:hover
+{
+    background-color:#E5E5E5
+}
+QPushButton:pressed
+{
+    background-color: #D1D1D1;
+ 	border-width: 3px;
+    border-color: #E5E5E5;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/moveRight.png</normaloff>:/images/moveRight.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>25</width>
+         <height>25</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnMoveLeft">
+       <property name="geometry">
+        <rect>
+         <x>939</x>
+         <y>500</y>
+         <width>44</width>
+         <height>44</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+    color: #000000;
+    background-color:#ffffff;
+    border-width: 1px;
+    border-color: #A5A5A5;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+QPushButton:hover
+{
+    background-color:#E5E5E5
+}
+QPushButton:pressed
+{
+    background-color: #D1D1D1;
+ 	border-width: 3px;
+    border-color: #E5E5E5;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/moveLeft.png</normaloff>:/images/moveLeft.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>25</width>
+         <height>25</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnMarker2Room2">
+       <property name="geometry">
+        <rect>
+         <x>580</x>
+         <y>162</y>
+         <width>51</width>
+         <height>101</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+   
+    background-color:transparent;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/markerRoom3.png</normaloff>:/images/markerRoom3.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>75</width>
+         <height>75</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnMarker1Room2">
+       <property name="geometry">
+        <rect>
+         <x>541</x>
+         <y>162</y>
+         <width>51</width>
+         <height>101</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+   
+    background-color:transparent;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/markerRoom3.png</normaloff>:/images/markerRoom3.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>75</width>
+         <height>75</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnMarker3Room1">
+       <property name="geometry">
+        <rect>
+         <x>486</x>
+         <y>163</y>
+         <width>51</width>
+         <height>101</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+   
+    background-color:transparent;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/markerRoom2.png</normaloff>:/images/markerRoom2.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>75</width>
+         <height>75</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnMarker2Room1">
+       <property name="geometry">
+        <rect>
+         <x>423</x>
+         <y>240</y>
+         <width>101</width>
+         <height>51</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+   
+    background-color:transparent;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/markerRoomLeft2.png</normaloff>:/images/markerRoomLeft2.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>75</width>
+         <height>75</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnMarker1Room3">
+       <property name="geometry">
+        <rect>
+         <x>530</x>
+         <y>298</y>
+         <width>51</width>
+         <height>101</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+   
+    background-color:transparent;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/markerRoom1.png</normaloff>:/images/markerRoom1.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>75</width>
+         <height>75</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnMarker2Room3">
+       <property name="geometry">
+        <rect>
+         <x>570</x>
+         <y>298</y>
+         <width>51</width>
+         <height>101</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="layoutDirection">
+        <enum>Qt::RightToLeft</enum>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+   
+    background-color:transparent;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/markerRoom1.png</normaloff>:/images/markerRoom1.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>75</width>
+         <height>75</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnMarker1Room1">
+       <property name="geometry">
+        <rect>
+         <x>486</x>
+         <y>258</y>
+         <width>51</width>
+         <height>101</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+   
+    background-color:transparent;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/markerRoomDown2.png</normaloff>:/images/markerRoomDown2.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>75</width>
+         <height>75</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnMarker3Room3">
+       <property name="geometry">
+        <rect>
+         <x>593</x>
+         <y>286</y>
+         <width>101</width>
+         <height>51</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+   
+    background-color:transparent;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/markerRoomRight1.png</normaloff>:/images/markerRoomRight1.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>75</width>
+         <height>75</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnMarker3Room2">
+       <property name="geometry">
+        <rect>
+         <x>593</x>
+         <y>240</y>
+         <width>101</width>
+         <height>51</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+   
+    background-color:transparent;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/markerRoomRight3.png</normaloff>:/images/markerRoomRight3.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>75</width>
+         <height>75</height>
+        </size>
+       </property>
+      </widget>
+      <zorder>btnshipImage</zorder>
+      <zorder>btnMarker2Room2</zorder>
+      <zorder>btnMarker1Room2</zorder>
+      <zorder>btnMarker3Room1</zorder>
+      <zorder>btnMarker2Room1</zorder>
+      <zorder>btnMarker1Room3</zorder>
+      <zorder>btnMarker2Room3</zorder>
+      <zorder>btnMarker1Room1</zorder>
+      <zorder>btnMarker3Room3</zorder>
+      <zorder>btnMarker3Room2</zorder>
+      <zorder>btnMoveLeft</zorder>
+      <zorder>btnMoveRight</zorder>
+      <zorder>btnZoomIn</zorder>
+      <zorder>btnZoomOut</zorder>
      </widget>
+    </widget>
+    <widget class="QPushButton" name="navViewGenKeyDetails">
+     <property name="geometry">
+      <rect>
+       <x>1075</x>
+       <y>620</y>
+       <width>271</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton
+{
+    color: #ffffff;
+    background-color:#4154A0;
+    border-width: 1px;
+    border-color: #4154A0;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#384889
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>Search for MOB</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/viewDetails.png</normaloff>:/images/viewDetails.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
     </widget>
     <zorder>label_2</zorder>
     <zorder>label</zorder>
@@ -1399,6 +1973,7 @@ QPushButton:pressed
     <zorder>navViewPersonnel</zorder>
     <zorder>navViewState</zorder>
     <zorder>scrollArea</zorder>
+    <zorder>navViewGenKeyDetails</zorder>
    </widget>
   </widget>
  </widget>

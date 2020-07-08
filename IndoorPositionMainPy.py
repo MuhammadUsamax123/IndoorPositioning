@@ -6,100 +6,15 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-
+from scapy.all import ARP, Ether, srp
+import threading
+import time
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sqlite3
 from PyQt5.QtSql import QSqlQueryModel,QSqlDatabase,QSqlQuery
 db = QSqlDatabase.addDatabase("QSQLITE")
 db.setDatabaseName("IndoorPositionDatabase.DB")
 
-class BtnCall(QtWidgets.QPushButton):
-    def __init__(self, parent):
-        super().__init__(parent)
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.setFont(font)
-        if(parent.val==True):
-                self.setEnabled(True)
-        else:
-                self.setEnabled(False)
-        self.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.setStyleSheet("QPushButton\n"
-"{\n"
-"    color: #000000;\n"
-"    background-color:#ffffff;\n"
-"    border-width: 1px;\n"
-" border-color: #aaa;\n"
-"    border-style: solid;\n"
-"    padding: 3px;\n"
-"    font-size: 11pt;\n"
-"    padding-left: 5px;\n"
-"    padding-right: 5px;\n"
-"    min-width: 40px;\n"
-"}\n"
-"\n"
-"QPushButton:hover\n"
-"{\n"
-"    background-color:#DADADA\n"
-"}\n"
-"QPushButton:disabled\n"
-"{\n"
-"    color:#5D5D5D\n"
-"}\n"
-"QPushButton:pressed\n"
-"{\n"
-"    background-color: #BBBBBB;\n"
-"     border-width: 3px;\n"
-"    border-color: #C1C1C1;\n"
-"    border-style: solid;\n"
-"\n"
-"}")
-        icon17 = QtGui.QIcon()
-        icon17.addPixmap(QtGui.QPixmap(":/images/call.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.setIcon(icon17)
-        self.setIconSize(QtCore.QSize(25, 25))
-        self.setText("Call")
-
-class ComboStatus(QtWidgets.QComboBox):
-    def __init__(self, parent):
-        super().__init__(parent)
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        font.setKerning(True)
-        self.setFont(font)
-        self.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.setStyleSheet("QComboBox{ border-width: 1px;\n"
-" height: 38px;\n"
-" border-color: #aaa;\n"
-" border-style: solid;\n"
-"}\n"
-"\n"
-"QComboBox::drop-down:button{\n"
-"background-color:transparent;\n"
-"}\n"
-"QComboBox::down-arrow {\n"
-" \n"
-"    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);\n"
-"    width: 25px;\n"
-"    height: 9px;\n"
-"}\n"
-"QComboBox:hover{\n"
-"     border:1px solid #000;    \n"
-
-"}\n"
-"  QComboBox:focus{\n"
-"    border-color:dodgerBlue;\n"
-
-"  }\n"
-"")
-        self.setEditable(False)
-        self.setFrame(True)
-        itemArray=["Present", "Shifa","Casual Leave","Personal Leave", "Sick Leave"]
-        self.addItems(itemArray)
-
-            
 def connectDB():
         conn=sqlite3.connect('IndoorPositionDatabase.DB')
         return conn
@@ -119,6 +34,7 @@ def createTable():
         c.execute("CREATE TABLE IF NOT EXISTS OODObservationBook('OOD Name' TEXT,'OOD Rank/ Rate' TEXT,Date TEXT,Observation TEXT) ")
         c.execute("CREATE TABLE IF NOT EXISTS NightRoundBook(Time TEXT, 'Cells Visited in Water' TEXT, 'Temperature of Cells' TEXT, Report TEXT, 'Petty Officer Name' TEXT, 'Officer on Watch Name' TEXT, 'Officer on Round Name' TEXT)")
         c.execute("CREATE TABLE IF NOT EXISTS ArmPPEBook('P No./ O No.' TEXT, Name TEXT, 'Rank/ Rate' TEXT, 'Weapon Type' TEXT, 'Registration No.' TEXT, 'Spare Magazine' TEXT,'Ammo Type' TEXT,'Quantity' TEXT,'SL Pouch' TEXT, 'Ammo Consumed' TEXT,'Bullet Proof Jacket' TEXT)")
+        c.execute("CREATE TABLE IF NOT EXISTS Login(userName TEXT, password TEXT, loginAs TEXT)")
         return conn
 def insertData(self,query):
         try:
@@ -212,14 +128,17 @@ def resetOODGUI(self):
                 self.lblOODRank.setText(self.listOODRank[0])
 
         
-        
+def resetLoginGUI(self):
+        self.edtUsername.clear()
+        self.edtPassword.clear()
+        self.cBoxLoginAs.setCurrentIndex(0)
 def resetPersonnelDataGUI(self):
         self.edtID.clear()
         self.edtPNO.clear()
         self.cBoxRank.setCurrentIndex(0)
+        self.cBoxDepartment.setCurrentIndex(0)
+        self.cBoxBloodGroup.setCurrentIndex(0)
         self.edtName.clear()
-        self.edtDepartment.clear()
-        self.edtBloodGroup.clear()
 def resetTransportGUI(self):
         self.edtCarNo.clear()
         self.edtCarName.clear()
@@ -268,20 +187,20 @@ def resetDutyGUI(self):
         self.lblDutyName.clear()
         self.lblDutyRank.clear()
         self.edtDutyPlace.clear()
-        cbDutyPNo=fillComboBoxData("SELECT [P No./ O No.] FROM PersonnelDataBook")
+        cbDutyPNo=fillComboBoxData("SELECT [P No./ O No.] FROM PersonnelDataBook WHERE [Rank/ Rate]='II Rank' OR[Rank/ Rate]='I Rank' OR[Rank/ Rate]='Ldg' OR[Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer'")
         if(len(cbDutyPNo)!=0):
                 self.cBoxDutyPNo.addItems(cbDutyPNo)
         
                
 
-        cbDutyName=fillComboBoxData("SELECT Name FROM PersonnelDataBook")
+        cbDutyName=fillComboBoxData("SELECT Name FROM PersonnelDataBook WHERE [Rank/ Rate]='II Rank' OR[Rank/ Rate]='I Rank' OR[Rank/ Rate]='Ldg' OR[Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer'")
         if(len(cbDutyName)!=0):
                 self.listDutyName=cbDutyName.copy()
                 self.lblDutyName.setText(self.listDutyName[0])
         
                 
 
-        cbDutyRank=fillComboBoxData("Select [Rank/ Rate] FROM PersonnelDataBook")
+        cbDutyRank=fillComboBoxData("SELECT [Rank/ Rate] FROM PersonnelDataBook WHERE [Rank/ Rate]='II Rank' OR[Rank/ Rate]='I Rank' OR[Rank/ Rate]='Ldg' OR[Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer'")
         if(len(cbDutyRank)!=0):
                 self.listDutyRank= cbDutyRank.copy()
                 self.lblDutyRank.setText(self.listDutyRank[0])
@@ -651,6 +570,302 @@ def resetManageCallGUI(self):
                         
         for colCount in range(8):
                 self.tblDetails.setColumnWidth(colCount, 250)
+def zoomIn(self):
+            if(self.zoomLimit==0):
+                    self.btnMarker1Room1.setGeometry(QtCore.QRect(472, 258, 51, 101))
+                    self.btnMarker2Room1.setGeometry(QtCore.QRect(409, 240, 101, 51))
+                    self.btnMarker3Room1.setGeometry(QtCore.QRect(472, 157, 51, 101))
+                    self.btnMarker1Room2.setGeometry(QtCore.QRect(541, 157, 51, 101))
+                    self.btnMarker2Room2.setGeometry(QtCore.QRect(592, 157, 51, 101))
+                    self.btnMarker3Room2.setGeometry(QtCore.QRect(604, 240, 101, 51))
+                    self.btnMarker1Room3.setGeometry(QtCore.QRect(526, 307, 51, 101))
+                    self.btnMarker2Room3.setGeometry(QtCore.QRect(575, 307, 51, 101))
+                    self.btnMarker3Room3.setGeometry(QtCore.QRect(604, 295, 101, 51))
+                    self.btnshipImage.setText("")
+                    self.btnshipImage.setIconSize(QtCore.QSize(1280, 650))
+                    self.btnMoveLeft.setEnabled(True)
+                    self.btnMoveRight.setEnabled(True)
+                    self.btnZoomOut.setEnabled(True)
+                    self.zoomLimit+=1
+            elif(self.zoomLimit==1):
+                    self.btnMarker1Room1.setGeometry(QtCore.QRect(469, 258, 51, 101))
+                    self.btnMarker2Room1.setGeometry(QtCore.QRect(406, 238, 101, 51))
+                    self.btnMarker3Room1.setGeometry(QtCore.QRect(469, 150, 51, 101))
+                    self.btnMarker1Room2.setGeometry(QtCore.QRect(551, 150, 51, 101))
+                    self.btnMarker2Room2.setGeometry(QtCore.QRect(614, 150, 51, 101))
+                    self.btnMarker3Room2.setGeometry(QtCore.QRect(627, 238, 101, 51))
+                    self.btnMarker1Room3.setGeometry(QtCore.QRect(534, 315, 51, 101))
+                    self.btnMarker2Room3.setGeometry(QtCore.QRect(593, 315, 51, 101))
+                    self.btnMarker3Room3.setGeometry(QtCore.QRect(627, 303, 101, 51))
+                    self.btnshipImage.setText("")
+                    self.btnshipImage.setIconSize(QtCore.QSize(1540, 853))
+                    self.btnMoveLeft.setEnabled(True)
+                    self.btnMoveRight.setEnabled(True)
+                    self.zoomLimit+=1
+            elif(self.zoomLimit==2):
+                    self.btnMarker1Room1.setGeometry(QtCore.QRect(466, 258, 51, 101))
+                    self.btnMarker2Room1.setGeometry(QtCore.QRect(403, 235, 101, 51))
+                    self.btnMarker3Room1.setGeometry(QtCore.QRect(466, 143, 51, 101))
+                    self.btnMarker1Room2.setGeometry(QtCore.QRect(562, 143, 51, 101))
+                    self.btnMarker2Room2.setGeometry(QtCore.QRect(637, 143, 51, 101))
+                    self.btnMarker3Room2.setGeometry(QtCore.QRect(649, 235, 101, 51))
+                    self.btnMarker1Room3.setGeometry(QtCore.QRect(542, 327, 51, 101))
+                    self.btnMarker2Room3.setGeometry(QtCore.QRect(612, 327, 51, 101))
+                    self.btnMarker3Room3.setGeometry(QtCore.QRect(649, 313, 101, 51))
+                    self.btnshipImage.setText("")
+                    self.btnMoveLeft.setEnabled(True)
+                    self.btnMoveRight.setEnabled(True)
+                    self.zoomLimit+=1
+                    self.btnshipImage.setIconSize(QtCore.QSize(1800, 995))
+                    self.btnZoomIn.setEnabled(False)
+def zoomOut(self):
+            if(self.zoomLimit==1):
+                    self.btnMarker1Room1.setGeometry(QtCore.QRect(476, 258, 51, 101))
+                    self.btnMarker2Room1.setGeometry(QtCore.QRect(413, 240, 101, 51))
+                    self.btnMarker3Room1.setGeometry(QtCore.QRect(476, 163, 51, 101))
+                    self.btnMarker1Room2.setGeometry(QtCore.QRect(531, 163, 51, 101))
+                    self.btnMarker2Room2.setGeometry(QtCore.QRect(570, 163, 51, 101))
+                    self.btnMarker3Room2.setGeometry(QtCore.QRect(583, 240, 101, 51))
+                    self.btnMarker1Room3.setGeometry(QtCore.QRect(520, 298, 51, 101))
+                    self.btnMarker2Room3.setGeometry(QtCore.QRect(560, 298, 51, 101))
+                    self.btnMarker3Room3.setGeometry(QtCore.QRect(583, 286, 101, 51))
+                    self.btnshipImage.setText("")
+                    self.btnshipImage.setIconSize(QtCore.QSize(1040, 520))
+                    self.btnZoomOut.setEnabled(False)
+                    self.btnMoveLeft.setEnabled(False)
+                    self.btnMoveRight.setEnabled(False)
+                    self.zoomLimit-=1
+
+            elif(self.zoomLimit==2):
+                    self.btnMarker1Room1.setGeometry(QtCore.QRect(472, 258, 51, 101))
+                    self.btnMarker2Room1.setGeometry(QtCore.QRect(409, 240, 101, 51))
+                    self.btnMarker3Room1.setGeometry(QtCore.QRect(472, 157, 51, 101))
+                    self.btnMarker1Room2.setGeometry(QtCore.QRect(541, 157, 51, 101))
+                    self.btnMarker2Room2.setGeometry(QtCore.QRect(592, 157, 51, 101))
+                    self.btnMarker3Room2.setGeometry(QtCore.QRect(604, 240, 101, 51))
+                    self.btnMarker1Room3.setGeometry(QtCore.QRect(526, 307, 51, 101))
+                    self.btnMarker2Room3.setGeometry(QtCore.QRect(575, 307, 51, 101))
+                    self.btnMarker3Room3.setGeometry(QtCore.QRect(604, 295, 101, 51))
+                    self.btnshipImage.setText("")
+                    self.btnMoveLeft.setEnabled(True)
+                    self.btnMoveRight.setEnabled(True)
+                    self.btnshipImage.setIconSize(QtCore.QSize(1280, 650))
+                    self.zoomLimit-=1
+
+            elif(self.zoomLimit==3):
+                    self.btnMarker1Room1.setGeometry(QtCore.QRect(469, 258, 51, 101))
+                    self.btnMarker2Room1.setGeometry(QtCore.QRect(406, 238, 101, 51))
+                    self.btnMarker3Room1.setGeometry(QtCore.QRect(469, 150, 51, 101))
+                    self.btnMarker1Room2.setGeometry(QtCore.QRect(551, 150, 51, 101))
+                    self.btnMarker2Room2.setGeometry(QtCore.QRect(614, 150, 51, 101))
+                    self.btnMarker3Room2.setGeometry(QtCore.QRect(627, 238, 101, 51))
+                    self.btnMarker1Room3.setGeometry(QtCore.QRect(534, 315, 51, 101))
+                    self.btnMarker2Room3.setGeometry(QtCore.QRect(593, 315, 51, 101))
+                    self.btnMarker3Room3.setGeometry(QtCore.QRect(627, 303, 101, 51))
+                    self.btnshipImage.setText("")
+                    self.btnMoveLeft.setEnabled(True)
+                    self.btnMoveRight.setEnabled(True)
+                    self.btnshipImage.setIconSize(QtCore.QSize(1540, 780))
+                    self.btnZoomIn.setEnabled(True)
+                    self.zoomLimit-=1
+def moveLeft(self):
+            if(self.moveLimit<self.zoomLimit):
+                    self.btnshipImage.setLayoutDirection(QtCore.Qt.LeftToRight)
+                    self.moveText+=self.moveText
+                    self.btnshipImage.setText(self.moveText)
+                    if(self.moveLimit==0 and self.zoomLimit==1):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(344, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(281, 240, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(344, 157, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(413, 157, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(463, 157, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(476, 240, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(398, 307, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(447, 307, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(476, 295, 101, 51))
+                        
+                    elif(self.moveLimit==0 and self.zoomLimit==2):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(341, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(278, 238, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(341, 150, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(423, 150, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(486, 150, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(499, 238, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(406, 315, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(465, 315, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(499, 303, 101, 51))
+
+                    elif(self.moveLimit==1 and self.zoomLimit==2):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(215, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(152, 238, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(215, 150, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(296, 150, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(360, 150, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(373, 238, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(280, 315, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(339, 315, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(373,303, 101, 51))
+
+                    elif(self.moveLimit==0 and self.zoomLimit==3):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(338, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(275, 235, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(338, 143, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(434, 143, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(509, 143, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(521, 235, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(414, 327, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(484, 327, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(521, 313, 101, 51))
+
+                    elif(self.moveLimit==1 and self.zoomLimit==3):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(212, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(149, 235, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(212, 143, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(308, 143, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(383, 143, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(395, 235, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(288, 327, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(358, 327, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(395, 313, 101, 51))
+
+                    elif(self.moveLimit==2 and self.zoomLimit==3):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(-40, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(-103, 235, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(-40, 143, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(56, 143, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(131, 143, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(143, 235, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(36, 327, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(106, 327, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(143, 313, 101, 51))
+                                
+                    self.moveLimit+=1
+            if(self.moveLimit<self.zoomLimit):
+                    pass
+            else:
+                    self.moveText="*********************"
+                    self.btnMoveLeft.setEnabled(False)
+                    self.btnMoveRight.setEnabled(True)
+                    self.moveLimit=0
+def moveRight(self):
+            if(self.moveLimit<self.zoomLimit):
+                    self.btnshipImage.setLayoutDirection(QtCore.Qt.RightToLeft)
+                    self.moveText+=self.moveText
+                    self.btnshipImage.setText(self.moveText)
+                    if(self.moveLimit==0 and self.zoomLimit==1):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(601, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(541, 240, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(601, 157, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(670, 157, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(720, 157, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(732, 240, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(655, 307, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(703, 307, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(732, 295, 101, 51))
+                        
+                    elif(self.moveLimit==0 and self.zoomLimit==2):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(597, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(534, 238, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(597, 150, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(679, 150, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(742, 150, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(755, 238, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(662, 315, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(719, 315, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(755, 303, 101, 51))
+
+                    elif(self.moveLimit==1 and self.zoomLimit==2):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(723, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(660, 238, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(723, 150, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(805, 150, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(868, 150, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(881, 238, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(788, 315, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(845, 315, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(881, 303, 101, 51))
+
+                    elif(self.moveLimit==0 and self.zoomLimit==3):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(594, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(531, 235, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(594, 143, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(690, 143, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(765, 143, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(777, 235, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(670, 327, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(740, 327, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(777, 313, 101, 51))
+
+                    elif(self.moveLimit==1 and self.zoomLimit==3):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(720, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(657, 235, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(720, 143, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(816, 143, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(891, 143, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(903, 235, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(796, 327, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(866, 327, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(903, 313, 101, 51))
+
+                    elif(self.moveLimit==2 and self.zoomLimit==3):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(972, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(909, 235, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(972, 143, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(1068, 143, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(1143, 143, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(1155, 235, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(1048, 327, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(1118, 327, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(1155, 313, 101, 51))
+                    self.moveLimit+=1
+            if(self.moveLimit<self.zoomLimit):
+                    pass
+            else:
+                    self.moveText="*********************"
+                    self.btnMoveRight.setEnabled(False)
+                    self.btnMoveLeft.setEnabled(True)
+                    self.moveLimit=0
+def disableHideMarkers(self):
+            self.btnMarker1Room1.hide()
+            self.btnMarker2Room1.hide()
+            self.btnMarker3Room1.hide()
+            self.btnMarker1Room2.hide()
+            self.btnMarker2Room2.hide()
+            self.btnMarker3Room2.hide()
+            self.btnMarker1Room3.hide()
+            self.btnMarker2Room3.hide()
+            self.btnMarker3Room3.hide()
+
+            self.btnMarker1Room1.setEnabled(False)
+            self.btnMarker2Room1.setEnabled(False)
+            self.btnMarker3Room1.setEnabled(False)
+            self.btnMarker1Room2.setEnabled(False)
+            self.btnMarker2Room2.setEnabled(False)
+            self.btnMarker3Room2.setEnabled(False)
+            self.btnMarker1Room3.setEnabled(False)
+            self.btnMarker2Room3.setEnabled(False)
+            self.btnMarker3Room3.setEnabled(False)
+            
+def enableShowMarkers(self):
+            self.btnMarker1Room1.show()
+            self.btnMarker2Room1.show()
+            self.btnMarker3Room1.show()
+            self.btnMarker1Room2.show()
+            self.btnMarker2Room2.show()
+            self.btnMarker3Room2.show()
+            self.btnMarker1Room3.show()
+            self.btnMarker2Room3.show()
+            self.btnMarker3Room3.show()
+
+            self.btnMarker1Room1.setEnabled(True)
+            self.btnMarker2Room1.setEnabled(True)
+            self.btnMarker3Room1.setEnabled(True)
+            self.btnMarker1Room2.setEnabled(True)
+            self.btnMarker2Room2.setEnabled(True)
+            self.btnMarker3Room2.setEnabled(True)
+            self.btnMarker1Room3.setEnabled(True)
+            self.btnMarker2Room3.setEnabled(True)
+            self.btnMarker3Room3.setEnabled(True)
 ################################################################### App Class ##########################################################################
 
 class App(QtWidgets.QMainWindow):
@@ -691,6 +906,11 @@ class App(QtWidgets.QMainWindow):
         self.viewstate= ViewStateWidget()
         self.managestate= ManageStateWidget()
         self.managecall= ManageCallWidget()
+        self.personnellocation= PersonnelLocationWidget()
+        self.personnelmanagement= PersonnelManagementWidget()
+        self.mob= MObWidget()
+        self.login= LoginWidget()
+        self.adminsettings= AdminSettingsWidget()
 
         self.stacked = QtWidgets.QStackedWidget()
         self.setCentralWidget(self.stacked)
@@ -721,6 +941,41 @@ class App(QtWidgets.QMainWindow):
         self.stacked.addWidget(self.viewstate)
         self.stacked.addWidget(self.managestate)
         self.stacked.addWidget(self.managecall)
+        self.stacked.addWidget(self.personnellocation)
+        self.stacked.addWidget(self.personnelmanagement)
+        self.stacked.addWidget(self.mob)
+        self.stacked.addWidget(self.login)
+        self.stacked.addWidget(self.adminsettings)
+
+    def disableAdvancedFunctionality(self):
+        self.viewpersonneldata.btnAddPersonnelData.setEnabled(False)
+        self.viewimportantkey.btnAddImpKey.setEnabled(False)        
+        self.viewgeneralkey.btnAddGenKey.setEnabled(False)
+        self.viewvisitor.btnAddVisitor.setEnabled(False)
+        self.viewtransport.btnAddTransport.setEnabled(False)
+        self.viewood.btnAddOOD.setEnabled(False)
+        self.viewduty.btnAddDuty.setEnabled(False)
+        self.viewpunish.btnAddPunishment.setEnabled(False)
+        self.viewgangway.btnAddGangway.setEnabled(False)
+        self.viewnightround.btnAddNight.setEnabled(False)
+        self.viewarmppe.btnAddArmPPE.setEnabled(False)
+        self.viewstate.navManageState.setEnabled(False)
+
+    def enableAdvancedFunctionality(self):
+            
+        self.viewpersonneldata.btnAddPersonnelData.setEnabled(True)
+        self.viewimportantkey.btnAddImpKey.setEnabled(True)        
+        self.viewgeneralkey.btnAddGenKey.setEnabled(True)
+        self.viewvisitor.btnAddVisitor.setEnabled(True)
+        self.viewtransport.btnAddTransport.setEnabled(True)
+        self.viewood.btnAddOOD.setEnabled(True)
+        self.viewduty.btnAddDuty.setEnabled(True)
+        self.viewpunish.btnAddPunishment.setEnabled(True)
+        self.viewgangway.btnAddGangway.setEnabled(True)
+        self.viewnightround.btnAddNight.setEnabled(True)
+        self.viewarmppe.btnAddArmPPE.setEnabled(True)
+        self.viewstate.navManageState.setEnabled(True)
+
 
     def change_view(self, option):
         viewQuerryString=""
@@ -825,6 +1080,114 @@ class App(QtWidgets.QMainWindow):
             self.managecall.lblDataEntrySuccessful.hide()
             resetManageCallGUI(self.managecall)
             self.stacked.setCurrentWidget(self.managecall)
+        elif(option==26):
+            self.personnellocation.btnMobError.hide()
+            self.stacked.setCurrentWidget(self.personnellocation)
+        elif(option==27):
+            self.personnelmanagement.btnMobError.hide()
+            disableHideMarkers(self.personnelmanagement)
+            self.stacked.setCurrentWidget(self.personnelmanagement)
+        elif(option==28):
+            disableHideMarkers(self.mob)
+            self.stacked.setCurrentWidget(self.mob)
+        elif(option==29):
+            resetLoginGUI(self.login)
+            self.login.lblDataEntrySuccessful.hide()
+            self.stacked.setCurrentWidget(self.login)
+        elif(option==30):
+            resetLoginGUI(self.adminsettings)
+            self.adminsettings.lblDataEntrySuccessful.hide()
+            self.stacked.setCurrentWidget(self.adminsettings)
+
+##################################################################### ComboBox and Button Widget Class########################################
+
+class BtnCall(QtWidgets.QPushButton):
+    def __init__(self, parent):
+        super().__init__(parent)
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.setFont(font)
+        if(parent.val==True):
+                self.setEnabled(True)
+        else:
+                self.setEnabled(False)
+        self.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #000000;\n"
+"    background-color:#ffffff;\n"
+"    border-width: 1px;\n"
+" border-color: #aaa;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#DADADA\n"
+"}\n"
+"QPushButton:disabled\n"
+"{\n"
+"    color:#5D5D5D\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #BBBBBB;\n"
+"     border-width: 3px;\n"
+"    border-color: #C1C1C1;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon17 = QtGui.QIcon()
+        icon17.addPixmap(QtGui.QPixmap(":/images/call.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.setIcon(icon17)
+        self.setIconSize(QtCore.QSize(25, 25))
+        self.setText("Call")
+
+class ComboStatus(QtWidgets.QComboBox):
+    def __init__(self, parent):
+        super().__init__(parent)
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        font.setKerning(True)
+        self.setFont(font)
+        self.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.setStyleSheet("QComboBox{ border-width: 1px;\n"
+" height: 38px;\n"
+" border-color: #aaa;\n"
+" border-style: solid;\n"
+"}\n"
+"\n"
+"QComboBox::drop-down:button{\n"
+"background-color:transparent;\n"
+"}\n"
+"QComboBox::down-arrow {\n"
+" \n"
+"    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);\n"
+"    width: 25px;\n"
+"    height: 9px;\n"
+"}\n"
+"QComboBox:hover{\n"
+"     border:1px solid #000;    \n"
+
+"}\n"
+"  QComboBox:focus{\n"
+"    border-color:dodgerBlue;\n"
+
+"  }\n"
+"")
+        self.setEditable(False)
+        self.setFrame(True)
+        itemArray=["Present", "Shifa","Casual Leave","Personal Leave", "Sick Leave"]
+        self.addItems(itemArray)
+
+            
 ################################################################### Add Important Key Interface ##########################################################################
 class AddImportantKey(object):
     def setup_AddImportantKey(self, MainWindow):
@@ -839,7 +1202,7 @@ class AddImportantKey(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet(
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -851,7 +1214,7 @@ class AddImportantKey(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewImpKeyDetails = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKeyDetails.setGeometry(QtCore.QRect(1075, 120, 271, 44))
+        self.navViewImpKeyDetails.setGeometry(QtCore.QRect(1065, 120, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -891,7 +1254,7 @@ class AddImportantKey(object):
         self.navViewImpKeyDetails.setIconSize(QtCore.QSize(25, 25))
         self.navViewImpKeyDetails.setObjectName("navViewImpKeyDetails")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -933,7 +1296,7 @@ class AddImportantKey(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -979,7 +1342,7 @@ class AddImportantKey(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -1022,7 +1385,7 @@ class AddImportantKey(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -1064,7 +1427,7 @@ class AddImportantKey(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -1106,7 +1469,7 @@ class AddImportantKey(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -1148,7 +1511,7 @@ class AddImportantKey(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -1190,7 +1553,7 @@ class AddImportantKey(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -1232,12 +1595,12 @@ class AddImportantKey(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -1279,7 +1642,7 @@ class AddImportantKey(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -1320,14 +1683,14 @@ class AddImportantKey(object):
         self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -1358,12 +1721,12 @@ class AddImportantKey(object):
 "}")
         icon11 = QtGui.QIcon()
         icon11.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon11)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
+        self.navViewManagement.setIcon(icon11)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -1405,7 +1768,7 @@ class AddImportantKey(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -1447,7 +1810,7 @@ class AddImportantKey(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -1780,7 +2143,7 @@ class AddImportantKey(object):
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.frame)
         self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setGeometry(QtCore.QRect(306, 680, 100, 80))
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
         self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
 "    border-radius:4px;\n"
 "    outline:none;")
@@ -1791,7 +2154,7 @@ class AddImportantKey(object):
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -1932,14 +2295,14 @@ class AddImportantKey(object):
         self.btnAddImpKey.setIcon(icon17)
         self.btnAddImpKey.setIconSize(QtCore.QSize(25, 25))
         self.btnAddImpKey.setObjectName("btnAddImpKey")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -1970,10 +2333,90 @@ class AddImportantKey(object):
 "}")
         icon18 = QtGui.QIcon()
         icon18.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon18)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon18)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.label_2.raise_()
         self.label.raise_()
         self.navViewImpKeyDetails.raise_()
@@ -1988,10 +2431,12 @@ class AddImportantKey(object):
         self.label_4.raise_()
         self.navViewMOB.raise_()
         self.navViewLocation.raise_()
-        self.navViewMangement.raise_()
+        self.navViewManagement.raise_()
         self.navViewPPE.raise_()
         self.navViewOOD.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.label_7.raise_()
         self.edtKeyNumber.raise_()
         self.label_8.raise_()
@@ -2011,14 +2456,14 @@ class AddImportantKey(object):
         self.lblIssuingName.raise_()
         self.lblIssuingRank.raise_()
         self.btnAddImpKey.raise_()
-        self.navViewState.raise_()
+        self.navViewStatePersonnel.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -2048,10 +2493,12 @@ class AddImportantKey(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
         self.label_7.setText(_translate("MainWindow", "Key Number"))
         self.label_8.setText(_translate("MainWindow", "Key Name"))
         self.label_9.setText(_translate("MainWindow", "Issuing Person P No./ O No."))
@@ -2065,7 +2512,7 @@ class AddImportantKey(object):
         self.lblIssuingName.setText(_translate("MainWindow", "Name"))
         self.lblIssuingRank.setText(_translate("MainWindow", "Name"))
         self.btnAddImpKey.setText(_translate("MainWindow", "Add New Important Key Entry"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.label_6.setText(_translate("MainWindow", "Enter Important Key Details"))
 
 #----------------------------------------backend for Add Important Key Interface----------------------------------------------
@@ -2080,8 +2527,12 @@ class AddImportantKey(object):
         self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
         self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
         self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
-        self.navViewState.clicked.connect(self.navViewStateMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
 
         self.navViewImpKeyDetails.clicked.connect(self.navViewImportantKeyMethod)
         self.btnAddImpKey.clicked.connect(self.addImportantKeyEntry)
@@ -2138,10 +2589,18 @@ class AddImportantKey(object):
              w.change_view(10) 
     def navViewArmPPEMethod(self):
              w.change_view(11) 
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23) 
     def navManageCallMethod(self):
              w.change_view(25) 
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29)  
 
 class AddImportantKeyWidget(QtWidgets.QMainWindow,AddImportantKey ):
     def __init__(self, parent=None):
@@ -2161,7 +2620,7 @@ class AddPersonnelData(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -2173,7 +2632,7 @@ class AddPersonnelData(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewPersonnelDetails = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnelDetails.setGeometry(QtCore.QRect(1075, 120, 271, 44))
+        self.navViewPersonnelDetails.setGeometry(QtCore.QRect(1065, 120, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -2213,7 +2672,7 @@ class AddPersonnelData(object):
         self.navViewPersonnelDetails.setIconSize(QtCore.QSize(25, 25))
         self.navViewPersonnelDetails.setObjectName("navViewPersonnelDetails")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -2255,7 +2714,7 @@ class AddPersonnelData(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -2297,7 +2756,7 @@ class AddPersonnelData(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -2339,7 +2798,7 @@ class AddPersonnelData(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -2381,7 +2840,7 @@ class AddPersonnelData(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -2423,7 +2882,7 @@ class AddPersonnelData(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -2465,7 +2924,7 @@ class AddPersonnelData(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -2507,7 +2966,7 @@ class AddPersonnelData(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -2549,12 +3008,12 @@ class AddPersonnelData(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -2596,7 +3055,7 @@ class AddPersonnelData(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -2637,14 +3096,14 @@ class AddPersonnelData(object):
         self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -2675,12 +3134,12 @@ class AddPersonnelData(object):
 "}")
         icon11 = QtGui.QIcon()
         icon11.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon11)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
+        self.navViewManagement.setIcon(icon11)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -2722,7 +3181,7 @@ class AddPersonnelData(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -2764,7 +3223,7 @@ class AddPersonnelData(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -2953,7 +3412,7 @@ class AddPersonnelData(object):
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.frame)
         self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setGeometry(QtCore.QRect(306, 680, 100, 80))
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
         self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
 "    border-radius:4px;\n"
 "    outline:none;")
@@ -2964,7 +3423,7 @@ class AddPersonnelData(object):
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -3030,60 +3489,93 @@ class AddPersonnelData(object):
 
 "  }")
         self.edtName.setObjectName("edtName")
-        self.edtDepartment = QtWidgets.QLineEdit(self.frame)
-        self.edtDepartment.setGeometry(QtCore.QRect(522, 316, 345, 38))
+        self.cBoxDepartment = QtWidgets.QComboBox(self.frame)
+        self.cBoxDepartment.setGeometry(QtCore.QRect(522, 316, 345, 38))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.edtDepartment.setFont(font)
-        self.edtDepartment.setStyleSheet("QLineEdit{\n"
-"    border:1px solid #aaa;\n"
-"    border-radius:4px;\n"
-"    outline:none;\n"
-"    padding:6px;\n"
-
-
-"  }\n"
-"  QLineEdit:hover{\n"
+        font.setKerning(True)
+        self.cBoxDepartment.setFont(font)
+        self.cBoxDepartment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.cBoxDepartment.setStyleSheet("QComboBox{ border-width: 1px;\n"
+" border-color: #aaa;\n"
+" border-style: solid;\n"
+"border-radius:6; \n"
+"}\n"
+"\n"
+"QComboBox::drop-down:button{\n"
+"background-color:transparent;\n"
+"}\n"
+"QComboBox::down-arrow {\n"
+" \n"
+"    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);\n"
+"    width: 25px;\n"
+"    height: 9px;\n"
+"}\n"
+"QComboBox:hover{\n"
 "     border:1px solid #000;    \n"
 
 "}\n"
-"  QLineEdit:focus{\n"
+"  QComboBox:focus{\n"
 "    border-color:dodgerBlue;\n"
 
-"  }")
-        self.edtDepartment.setObjectName("edtDepartment")
-        self.edtBloodGroup = QtWidgets.QLineEdit(self.frame)
-        self.edtBloodGroup.setGeometry(QtCore.QRect(522, 360, 345, 38))
+"  }\n"
+"")
+        self.cBoxDepartment.setEditable(False)
+        self.cBoxDepartment.setFrame(True)
+        self.cBoxDepartment.setObjectName("cBoxDepartment")
+       
+        self.cBoxBloodGroup = QtWidgets.QComboBox(self.frame)
+        self.cBoxBloodGroup.setGeometry(QtCore.QRect(522, 360, 345, 38))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.edtBloodGroup.setFont(font)
-        self.edtBloodGroup.setStyleSheet("QLineEdit{\n"
-"    border:1px solid #aaa;\n"
-"    border-radius:4px;\n"
-"    outline:none;\n"
-"    padding:6px;\n"
-
-
-"  }\n"
-"  QLineEdit:hover{\n"
+        font.setKerning(True)
+        self.cBoxBloodGroup.setFont(font)
+        self.cBoxBloodGroup.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.cBoxBloodGroup.setStyleSheet("QComboBox{ border-width: 1px;\n"
+" border-color: #aaa;\n"
+" border-style: solid;\n"
+"border-radius:6; \n"
+"}\n"
+"\n"
+"QComboBox::drop-down:button{\n"
+"background-color:transparent;\n"
+"}\n"
+"QComboBox::down-arrow {\n"
+" \n"
+"    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);\n"
+"    width: 25px;\n"
+"    height: 9px;\n"
+"}\n"
+"QComboBox:hover{\n"
 "     border:1px solid #000;    \n"
 
 "}\n"
-"  QLineEdit:focus{\n"
+"  QComboBox:focus{\n"
 "    border-color:dodgerBlue;\n"
 
-"  }")
-        self.edtBloodGroup.setObjectName("edtBloodGroup")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+"  }\n"
+"")
+        self.cBoxBloodGroup.setEditable(False)
+        self.cBoxBloodGroup.setFrame(True)
+        self.cBoxBloodGroup.setObjectName("cBoxBloodGroup")
+        self.cBoxBloodGroup.addItem("")
+        self.cBoxBloodGroup.addItem("")
+        self.cBoxBloodGroup.addItem("")
+        self.cBoxBloodGroup.addItem("")
+        self.cBoxBloodGroup.addItem("")
+        self.cBoxBloodGroup.addItem("")
+        self.cBoxBloodGroup.addItem("")
+        self.cBoxBloodGroup.addItem("")
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -3114,10 +3606,90 @@ class AddPersonnelData(object):
 "}")
         icon17 = QtGui.QIcon()
         icon17.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon17)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon17)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.cBoxRank = QtWidgets.QComboBox(self.frame)
         self.cBoxRank.setGeometry(QtCore.QRect(522, 228, 345, 38))
         font = QtGui.QFont()
@@ -3184,10 +3756,12 @@ class AddPersonnelData(object):
         self.label_4.raise_()
         self.navViewMOB.raise_()
         self.navViewLocation.raise_()
-        self.navViewMangement.raise_()
+        self.navViewManagement.raise_()
         self.navViewPPE.raise_()
         self.navViewOOD.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.label_7.raise_()
         self.edtID.raise_()
         self.label_8.raise_()
@@ -3201,17 +3775,17 @@ class AddPersonnelData(object):
         self.pushButton_2.raise_()
         self.navViewPersonnel.raise_()
         self.edtName.raise_()
-        self.edtDepartment.raise_()
-        self.edtBloodGroup.raise_()
-        self.navViewState.raise_()
+        self.cBoxDepartment.raise_()
+        self.cBoxBloodGroup.raise_()
+        self.navViewStatePersonnel.raise_()
         self.cBoxRank.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -3281,10 +3855,12 @@ class AddPersonnelData(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
         self.label_7.setText(_translate("MainWindow", "ID No."))
         self.label_8.setText(_translate("MainWindow", "P No./ O No."))
         self.label_9.setText(_translate("MainWindow", "Rank/Rate"))
@@ -3294,24 +3870,33 @@ class AddPersonnelData(object):
         self.lblDataEntrySuccessful.setText(_translate("MainWindow", "Details Saved Successfully!"))
         self.pushButton.setText(_translate("MainWindow", "Personnel Data Book"))
         self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
-        self.cBoxRank.setItemText(0, _translate("MainWindow", "Ordinary Seaman"))
-        self.cBoxRank.setItemText(1, _translate("MainWindow", "Able Seaman"))
-        self.cBoxRank.setItemText(2, _translate("MainWindow", "Leading Seaman"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
+        self.cBoxRank.setItemText(0, _translate("MainWindow", "II Rate"))
+        self.cBoxRank.setItemText(1, _translate("MainWindow", "I Rate"))
+        self.cBoxRank.setItemText(2, _translate("MainWindow", "Ldg"))
         self.cBoxRank.setItemText(3, _translate("MainWindow", "Petty Officer"))
         self.cBoxRank.setItemText(4, _translate("MainWindow", "Chief Petty Officer"))
         self.cBoxRank.setItemText(5, _translate("MainWindow", "Fleet Chief Petty Officer"))
         self.cBoxRank.setItemText(6, _translate("MainWindow", "Master Chief Petty Officer"))
-        self.cBoxRank.setItemText(7, _translate("MainWindow", "MidShipman"))
-        self.cBoxRank.setItemText(8, _translate("MainWindow", "Sub Lieutenant"))
+        self.cBoxRank.setItemText(7, _translate("MainWindow", "Acting S/Lieutenant"))
+        self.cBoxRank.setItemText(8, _translate("MainWindow", "Sub/Lieutenant"))
         self.cBoxRank.setItemText(9, _translate("MainWindow", "Lieutenant"))
-        self.cBoxRank.setItemText(10, _translate("MainWindow", "Lieutenant Commander"))
+        self.cBoxRank.setItemText(10, _translate("MainWindow", "Lieutenant Cdr"))
         self.cBoxRank.setItemText(11, _translate("MainWindow", "Commander"))
         self.cBoxRank.setItemText(12, _translate("MainWindow", "Captain"))
         self.cBoxRank.setItemText(13, _translate("MainWindow", "Commodore"))
-        self.cBoxRank.setItemText(14, _translate("MainWindow", "Rear Admiral"))
-        self.cBoxRank.setItemText(15, _translate("MainWindow", "Vice Admiral"))
+        self.cBoxRank.setItemText(14, _translate("MainWindow", "Rear-Admiral"))
+        self.cBoxRank.setItemText(15, _translate("MainWindow", "Vice-Admiral"))
         self.cBoxRank.setItemText(16, _translate("MainWindow", "Admiral"))
+        self.cBoxRank.setItemText(16, _translate("MainWindow", "Admiral of the Fleet"))
+        self.cBoxBloodGroup.setItemText(0, _translate("MainWindow", "A+"))
+        self.cBoxBloodGroup.setItemText(1, _translate("MainWindow", "O+"))
+        self.cBoxBloodGroup.setItemText(2, _translate("MainWindow", "B+"))
+        self.cBoxBloodGroup.setItemText(3, _translate("MainWindow", "AB+"))
+        self.cBoxBloodGroup.setItemText(4, _translate("MainWindow", "A-"))
+        self.cBoxBloodGroup.setItemText(5, _translate("MainWindow", "O-"))
+        self.cBoxBloodGroup.setItemText(6, _translate("MainWindow", "B-"))
+        self.cBoxBloodGroup.setItemText(7, _translate("MainWindow", "AB-"))
         self.label_6.setText(_translate("MainWindow", "Enter Personnel Details"))
         self.btnAddPersonnelEntry.setText(_translate("MainWindow", "Add New Personnel Entry"))
 
@@ -3326,8 +3911,12 @@ class AddPersonnelData(object):
         self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
         self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
         self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
-        self.navViewState.clicked.connect(self.navViewStateMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
 
         self.navViewPersonnelDetails.clicked.connect(self.navViewPersonnelMethod)
         self.btnAddPersonnelEntry.clicked.connect(self.addPersonnelDataEntry)
@@ -3335,15 +3924,15 @@ class AddPersonnelData(object):
         self.edtPNO.textEdited.connect(self.resetSuccess)
         self.cBoxRank.activated.connect(self.resetSuccess)
         self.edtName.textEdited.connect(self.resetSuccess)
-        self.edtDepartment.textEdited.connect(self.resetSuccess)
-        self.edtBloodGroup.textEdited.connect(self.resetSuccess)
+        self.cBoxDepartment.activated.connect(self.resetSuccess)
+        self.cBoxBloodGroup.activated.connect(self.resetSuccess)
     def addPersonnelDataEntry(self):
             persID=self.edtID.text()
             persPno=self.edtPNO.text()
             persRank=self.cBoxRank.currentText()
             persName=self.edtName.text()
-            persDepart=self.edtDepartment.text()
-            persBG=self.edtBloodGroup.text()
+            persDepart=self.cBoxDepartment.currentText()
+            persBG=self.cBoxBloodGroup.currentText()
             if(persID!="" and persPno!="" and persRank!="" and persName!="" and persDepart!="" and persBG!=""):
                     queryString="INSERT INTO PersonnelDataBook VALUES('"+persID+"',"+"'"+persPno+"',"+"'"+persRank+"',"+"'"+persName+"',"+"'"+persDepart+"',"+"'"+persBG+"')"
                     insertData(self,queryString)
@@ -3378,10 +3967,18 @@ class AddPersonnelData(object):
              w.change_view(10) 
     def navViewArmPPEMethod(self):
              w.change_view(11) 
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23) 
     def navManageCallMethod(self):
              w.change_view(25) 
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29)  
     def resetSuccess(self):
                 self.lblDataEntrySuccessful.hide()
                 self.lblDataEntrySuccessful.setStyleSheet("color: green;\n""background-color:#ffffff;\n""font-size: 11pt")
@@ -3406,7 +4003,7 @@ class AddGeneralKey(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet(
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -3418,7 +4015,7 @@ class AddGeneralKey(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewGenKeyDetails = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKeyDetails.setGeometry(QtCore.QRect(1075, 120, 271, 44))
+        self.navViewGenKeyDetails.setGeometry(QtCore.QRect(1065, 120, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -3458,7 +4055,7 @@ class AddGeneralKey(object):
         self.navViewGenKeyDetails.setIconSize(QtCore.QSize(25, 25))
         self.navViewGenKeyDetails.setObjectName("navViewGenKeyDetails")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -3500,7 +4097,7 @@ class AddGeneralKey(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -3542,7 +4139,7 @@ class AddGeneralKey(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -3589,7 +4186,7 @@ class AddGeneralKey(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -3631,7 +4228,7 @@ class AddGeneralKey(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -3673,7 +4270,7 @@ class AddGeneralKey(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -3715,7 +4312,7 @@ class AddGeneralKey(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -3757,7 +4354,7 @@ class AddGeneralKey(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -3799,12 +4396,12 @@ class AddGeneralKey(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -3846,7 +4443,7 @@ class AddGeneralKey(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -3887,14 +4484,14 @@ class AddGeneralKey(object):
         self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -3925,12 +4522,12 @@ class AddGeneralKey(object):
 "}")
         icon11 = QtGui.QIcon()
         icon11.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon11)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
+        self.navViewManagement.setIcon(icon11)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -3972,7 +4569,7 @@ class AddGeneralKey(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -4014,7 +4611,7 @@ class AddGeneralKey(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -4347,7 +4944,7 @@ class AddGeneralKey(object):
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.frame)
         self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setGeometry(QtCore.QRect(306, 680, 100, 80))
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
         self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
 "    border-radius:4px;\n"
 "    outline:none;")
@@ -4358,7 +4955,7 @@ class AddGeneralKey(object):
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -4499,14 +5096,14 @@ class AddGeneralKey(object):
         self.btnAddGenKey.setIcon(icon17)
         self.btnAddGenKey.setIconSize(QtCore.QSize(25, 25))
         self.btnAddGenKey.setObjectName("btnAddGenKey")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -4537,10 +5134,90 @@ class AddGeneralKey(object):
 "}")
         icon18 = QtGui.QIcon()
         icon18.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon18)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon18)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.label_2.raise_()
         self.label.raise_()
         self.navViewGenKeyDetails.raise_()
@@ -4555,10 +5232,12 @@ class AddGeneralKey(object):
         self.label_4.raise_()
         self.navViewMOB.raise_()
         self.navViewLocation.raise_()
-        self.navViewMangement.raise_()
+        self.navViewManagement.raise_()
         self.navViewPPE.raise_()
         self.navViewOOD.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.label_7.raise_()
         self.edtKeyNumber.raise_()
         self.label_8.raise_()
@@ -4578,14 +5257,14 @@ class AddGeneralKey(object):
         self.lblIssuingName.raise_()
         self.lblIssuingRank.raise_()
         self.btnAddGenKey.raise_()
-        self.navViewState.raise_()
+        self.navViewStatePersonnel.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -4615,10 +5294,12 @@ class AddGeneralKey(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
         self.label_7.setText(_translate("MainWindow", "Key Number"))
         self.label_8.setText(_translate("MainWindow", "Key Name"))
         self.label_9.setText(_translate("MainWindow", "Issuing Person P No./ O No."))
@@ -4632,7 +5313,7 @@ class AddGeneralKey(object):
         self.lblIssuingName.setText(_translate("MainWindow", "Name"))
         self.lblIssuingRank.setText(_translate("MainWindow", "Name"))
         self.btnAddGenKey.setText(_translate("MainWindow", "Add New General Key Entry"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.label_6.setText(_translate("MainWindow", "Enter General Key Details"))
 
 #----------------------------------------backend for Add General Key Interface----------------------------------------------
@@ -4647,8 +5328,12 @@ class AddGeneralKey(object):
         self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
         self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
         self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
-        self.navViewState.clicked.connect(self.navViewStateMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
 
         self.navViewGenKeyDetails.clicked.connect(self.navViewGeneralKeyMethod)
         self.btnAddGenKey.clicked.connect(self.addGeneralKeyEntry)
@@ -4705,10 +5390,18 @@ class AddGeneralKey(object):
              w.change_view(10) 
     def navViewArmPPEMethod(self):
              w.change_view(11) 
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23) 
     def navManageCallMethod(self):
              w.change_view(25) 
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29)  
 class AddGeneralKeyWidget(QtWidgets.QMainWindow,AddGeneralKey ):
     def __init__(self, parent=None):
         super(AddGeneralKeyWidget, self).__init__(parent)
@@ -4729,7 +5422,7 @@ class AddOOD(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet(
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -4741,7 +5434,7 @@ class AddOOD(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewOODObservationDetails = QtWidgets.QPushButton(self.frame)
-        self.navViewOODObservationDetails.setGeometry(QtCore.QRect(1075, 120, 271, 44))
+        self.navViewOODObservationDetails.setGeometry(QtCore.QRect(1065, 120, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -4781,12 +5474,12 @@ class AddOOD(object):
         self.navViewOODObservationDetails.setIconSize(QtCore.QSize(25, 25))
         self.navViewOODObservationDetails.setObjectName("navViewOODObservationDetails")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -4828,7 +5521,7 @@ class AddOOD(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -4870,7 +5563,7 @@ class AddOOD(object):
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
         self.navViewManagement = QtWidgets.QPushButton(self.frame)
-        self.navViewManagement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -4912,7 +5605,7 @@ class AddOOD(object):
         self.navViewManagement.setFlat(False)
         self.navViewManagement.setObjectName("navViewManagement")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -4954,7 +5647,7 @@ class AddOOD(object):
         self.navViewCMS.setFlat(False)
         self.navViewCMS.setObjectName("navViewCMS")
         self.label_6 = QtWidgets.QLabel(self.frame)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -5002,7 +5695,7 @@ class AddOOD(object):
         self.label_9.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.label_9.setObjectName("label_9")
         self.label_13 = QtWidgets.QLabel(self.frame)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
@@ -5129,7 +5822,7 @@ class AddOOD(object):
         self.dtObservationDate.setDate(QtCore.QDate(2020, 5, 21))
         self.dtObservationDate.setObjectName("dtObservationDate")
         self.btnAddOODObservation = QtWidgets.QPushButton(self.frame)
-        self.btnAddOODObservation.setGeometry(QtCore.QRect(1075, 650, 271, 44))
+        self.btnAddOODObservation.setGeometry(QtCore.QRect(1065, 650, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -5209,7 +5902,7 @@ class AddOOD(object):
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -5251,7 +5944,7 @@ class AddOOD(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -5293,7 +5986,7 @@ class AddOOD(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -5335,7 +6028,7 @@ class AddOOD(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -5377,7 +6070,7 @@ class AddOOD(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -5420,7 +6113,7 @@ class AddOOD(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -5462,7 +6155,7 @@ class AddOOD(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -5504,7 +6197,7 @@ class AddOOD(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -5547,7 +6240,7 @@ class AddOOD(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -5591,7 +6284,7 @@ class AddOOD(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -5633,7 +6326,7 @@ class AddOOD(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -5687,14 +6380,14 @@ class AddOOD(object):
 "font-size: 11pt")
         self.lblOODRank.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.lblOODRank.setObjectName("lblOODRank")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -5725,10 +6418,90 @@ class AddOOD(object):
 "}")
         icon18 = QtGui.QIcon()
         icon18.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon18)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon18)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.label_2.raise_()
         self.label.raise_()
         self.navViewOODObservationDetails.raise_()
@@ -5737,6 +6510,8 @@ class AddOOD(object):
         self.navViewLocation.raise_()
         self.navViewManagement.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.label_6.raise_()
         self.label_7.raise_()
         self.label_8.raise_()
@@ -5762,7 +6537,7 @@ class AddOOD(object):
         self.navViewNight.raise_()
         self.navViewPersonnel.raise_()
         self.lblOODRank.raise_()
-        self.navViewState.raise_()
+        self.navViewStatePersonnel.raise_()
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
@@ -5776,6 +6551,8 @@ class AddOOD(object):
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
         self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
         self.label_6.setText(_translate("MainWindow", "Enter OOD Observation Details"))
         self.label_7.setText(_translate("MainWindow", "OOD Name"))
         self.label_8.setText(_translate("MainWindow", "OOD Rank:"))
@@ -5796,7 +6573,7 @@ class AddOOD(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
         self.lblOODRank.setText(_translate("MainWindow", "OOD Rank/Rate:"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
 
 #----------------------------------------backend for Add OOD Interface----------------------------------------------
         resetOODGUI(self)
@@ -5810,8 +6587,12 @@ class AddOOD(object):
         self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
         self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
         self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
-        self.navViewState.clicked.connect(self.navViewStateMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
 
         self.navViewOODObservationDetails.clicked.connect(self.navViewOODMethod)
         self.cBoxSelectOOD.activated.connect(self.resetSuccess)
@@ -5865,10 +6646,18 @@ class AddOOD(object):
              w.change_view(10) 
     def navViewArmPPEMethod(self):
              w.change_view(11) 
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23) 
     def navManageCallMethod(self):
-             w.change_view(25) 
+             w.change_view(25)  
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29) 
 class AddOODWidget(QtWidgets.QMainWindow,AddOOD ):
     def __init__(self, parent=None):
         super(AddOODWidget, self).__init__(parent)
@@ -5891,7 +6680,7 @@ class AddTransport(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet(
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -5903,7 +6692,7 @@ class AddTransport(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewTransportDetails = QtWidgets.QPushButton(self.frame)
-        self.navViewTransportDetails.setGeometry(QtCore.QRect(1075, 120, 271, 44))
+        self.navViewTransportDetails.setGeometry(QtCore.QRect(1065, 120, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -5943,7 +6732,7 @@ class AddTransport(object):
         self.navViewTransportDetails.setIconSize(QtCore.QSize(25, 25))
         self.navViewTransportDetails.setObjectName("navViewTransportDetails")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -5985,7 +6774,7 @@ class AddTransport(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -6027,7 +6816,7 @@ class AddTransport(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -6071,7 +6860,7 @@ class AddTransport(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -6112,7 +6901,7 @@ class AddTransport(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -6158,7 +6947,7 @@ class AddTransport(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -6200,7 +6989,7 @@ class AddTransport(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -6242,7 +7031,7 @@ class AddTransport(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -6284,12 +7073,12 @@ class AddTransport(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -6331,7 +7120,7 @@ class AddTransport(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -6372,14 +7161,14 @@ class AddTransport(object):
         self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -6410,12 +7199,12 @@ class AddTransport(object):
 "}")
         icon11 = QtGui.QIcon()
         icon11.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon11)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
+        self.navViewManagement.setIcon(icon11)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -6457,7 +7246,7 @@ class AddTransport(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -6499,7 +7288,7 @@ class AddTransport(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -6568,7 +7357,7 @@ class AddTransport(object):
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.frame)
         self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setGeometry(QtCore.QRect(306, 680, 100, 80))
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
         self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
 "    border-radius:4px;\n"
 "    outline:none;")
@@ -6579,7 +7368,7 @@ class AddTransport(object):
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -7029,14 +7818,14 @@ class AddTransport(object):
         self.btnAddTransport.setIcon(icon17)
         self.btnAddTransport.setIconSize(QtCore.QSize(25, 25))
         self.btnAddTransport.setObjectName("btnAddTransport")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -7067,10 +7856,90 @@ class AddTransport(object):
 "}")
         icon18 = QtGui.QIcon()
         icon18.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon18)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon18)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.label_2.raise_()
         self.label.raise_()
         self.navViewTransportDetails.raise_()
@@ -7085,10 +7954,12 @@ class AddTransport(object):
         self.label_4.raise_()
         self.navViewMOB.raise_()
         self.navViewLocation.raise_()
-        self.navViewMangement.raise_()
+        self.navViewManagement.raise_()
         self.navViewPPE.raise_()
         self.navViewOOD.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.lblDataEntrySuccessful.raise_()
         self.pushButton.raise_()
         self.pushButton_2.raise_()
@@ -7110,14 +7981,14 @@ class AddTransport(object):
         self.edtVisitArea.raise_()
         self.tmOut.raise_()
         self.btnAddTransport.raise_()
-        self.navViewState.raise_()
+        self.navViewStatePersonnel.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -7147,10 +8018,12 @@ class AddTransport(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
         self.lblDataEntrySuccessful.setText(_translate("MainWindow", "Details Saved Successfully!"))
         self.pushButton.setText(_translate("MainWindow", "Transport Book"))
         self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
@@ -7163,7 +8036,7 @@ class AddTransport(object):
         self.label_7.setText(_translate("MainWindow", "Car No."))
         self.label_16.setText(_translate("MainWindow", "Time in"))
         self.btnAddTransport.setText(_translate("MainWindow", "Add New Transport Entry"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.label_6.setText(_translate("MainWindow", "Enter Transport Details"))
 
 #----------------------------------------backend for Add Transport Interface----------------------------------------------
@@ -7178,8 +8051,12 @@ class AddTransport(object):
         self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
         self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
         self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
-        self.navViewState.clicked.connect(self.navViewStateMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
 
         self.navViewTransportDetails.clicked.connect(self.navViewTransportMethod)
         self.btnAddTransport.clicked.connect(self.addTransportEntry)
@@ -7230,10 +8107,18 @@ class AddTransport(object):
              w.change_view(10) 
     def navViewArmPPEMethod(self):
              w.change_view(11) 
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23) 
     def navManageCallMethod(self):
-             w.change_view(25) 
+             w.change_view(25)  
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29) 
     def resetSuccess(self):
                 self.lblDataEntrySuccessful.hide()
                 self.lblDataEntrySuccessful.setStyleSheet("color: green;\n""background-color:#ffffff;\n""font-size: 11pt") 
@@ -7258,7 +8143,7 @@ class AddVisitor(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -7269,7 +8154,7 @@ class AddVisitor(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewVisitorDetails = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitorDetails.setGeometry(QtCore.QRect(1075, 120, 271, 44))
+        self.navViewVisitorDetails.setGeometry(QtCore.QRect(1065, 120, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -7309,7 +8194,7 @@ class AddVisitor(object):
         self.navViewVisitorDetails.setIconSize(QtCore.QSize(25, 25))
         self.navViewVisitorDetails.setObjectName("navViewVisitorDetails")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -7351,7 +8236,7 @@ class AddVisitor(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -7393,7 +8278,7 @@ class AddVisitor(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -7436,7 +8321,7 @@ class AddVisitor(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -7481,7 +8366,7 @@ class AddVisitor(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -7523,7 +8408,7 @@ class AddVisitor(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -7565,7 +8450,7 @@ class AddVisitor(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -7607,7 +8492,7 @@ class AddVisitor(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -7649,12 +8534,12 @@ class AddVisitor(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -7696,7 +8581,7 @@ class AddVisitor(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -7737,14 +8622,14 @@ class AddVisitor(object):
         self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -7775,12 +8660,12 @@ class AddVisitor(object):
 "}")
         icon11 = QtGui.QIcon()
         icon11.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon11)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
+        self.navViewManagement.setIcon(icon11)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -7822,7 +8707,7 @@ class AddVisitor(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -7864,7 +8749,7 @@ class AddVisitor(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -7933,7 +8818,7 @@ class AddVisitor(object):
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.frame)
         self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setGeometry(QtCore.QRect(306, 680, 100, 80))
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
         self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
 "    border-radius:4px;\n"
 "    outline:none;")
@@ -7944,7 +8829,7 @@ class AddVisitor(object):
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -8459,14 +9344,14 @@ class AddVisitor(object):
 "font-size: 11pt")
         self.lblRank.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.lblRank.setObjectName("lblRank")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -8497,10 +9382,90 @@ class AddVisitor(object):
 "}")
         icon17 = QtGui.QIcon()
         icon17.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon17)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon17)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.label_2.raise_()
         self.label.raise_()
         self.navViewVisitorDetails.raise_()
@@ -8515,10 +9480,12 @@ class AddVisitor(object):
         self.label_4.raise_()
         self.navViewMOB.raise_()
         self.navViewLocation.raise_()
-        self.navViewMangement.raise_()
+        self.navViewManagement.raise_()
         self.navViewPPE.raise_()
         self.navViewOOD.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.lblDataEntrySuccessful.raise_()
         self.pushButton.raise_()
         self.pushButton_2.raise_()
@@ -8544,14 +9511,14 @@ class AddVisitor(object):
         self.cBoxInterval.raise_()
         self.label_19.raise_()
         self.lblRank.raise_()
-        self.navViewState.raise_()
+        self.navViewStatePersonnel.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -8621,10 +9588,12 @@ class AddVisitor(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
         self.lblDataEntrySuccessful.setText(_translate("MainWindow", "Details Saved Successfully!"))
         self.pushButton.setText(_translate("MainWindow", "Visitor Book"))
         self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
@@ -8641,7 +9610,7 @@ class AddVisitor(object):
         self.cBoxInterval.setItemText(1, _translate("MainWindow", "hr"))
         self.label_19.setText(_translate("MainWindow", "Rank/ Rate:"))
         self.lblRank.setText(_translate("MainWindow", "Rank from Database"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.label_6.setText(_translate("MainWindow", "Enter Visitor Details"))
         self.btnAddVisitor.setText(_translate("MainWindow", "Add New Visitor Entry"))
 
@@ -8658,8 +9627,12 @@ class AddVisitor(object):
         self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
         self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
         self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
-        self.navViewState.clicked.connect(self.navViewStateMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
 
         self.navViewVisitorDetails.clicked.connect(self.navViewVisitorMethod)
         self.cBoxInterval.activated.connect(self.changeInterval)
@@ -8719,10 +9692,18 @@ class AddVisitor(object):
              w.change_view(10) 
     def navViewArmPPEMethod(self):
              w.change_view(11) 
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23) 
     def navManageCallMethod(self):
-             w.change_view(25) 
+             w.change_view(25)  
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29) 
     def resetSuccess(self):
                 self.lblDataEntrySuccessful.hide()
                 self.lblDataEntrySuccessful.setStyleSheet("color: green;\n""background-color:#ffffff;\n""font-size: 11pt") 
@@ -8752,7 +9733,7 @@ class AddDuty(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewDutyDetails = QtWidgets.QPushButton(self.frame)
-        self.navViewDutyDetails.setGeometry(QtCore.QRect(1075, 120, 271, 44))
+        self.navViewDutyDetails.setGeometry(QtCore.QRect(1065, 120, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -9160,12 +10141,12 @@ class AddDuty(object):
         self.cBoxDutyPNo.setFrame(True)
         self.cBoxDutyPNo.setObjectName("cBoxDutyPNo.")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -9207,7 +10188,7 @@ class AddDuty(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -9249,7 +10230,7 @@ class AddDuty(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -9291,7 +10272,7 @@ class AddDuty(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -9333,7 +10314,7 @@ class AddDuty(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -9375,7 +10356,7 @@ class AddDuty(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -9418,7 +10399,7 @@ class AddDuty(object):
         self.navViewPersonnel.setFlat(False)
         self.navViewPersonnel.setObjectName("navViewPersonnel")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -9460,7 +10441,7 @@ class AddDuty(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -9502,7 +10483,7 @@ class AddDuty(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -9545,13 +10526,13 @@ class AddDuty(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
         self.label.setObjectName("label")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -9592,14 +10573,14 @@ class AddDuty(object):
         self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -9630,18 +10611,98 @@ class AddDuty(object):
 "}")
         icon14 = QtGui.QIcon()
         icon14.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon14)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewStatePersonnel.setIcon(icon14)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -9672,12 +10733,12 @@ class AddDuty(object):
 "}")
         icon15 = QtGui.QIcon()
         icon15.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon15)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
+        self.navViewManagement.setIcon(icon15)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -9719,7 +10780,7 @@ class AddDuty(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -9761,7 +10822,7 @@ class AddDuty(object):
         self.navViewCMS.setFlat(False)
         self.navViewCMS.setObjectName("navViewCMS")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -9803,7 +10864,7 @@ class AddDuty(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -9865,11 +10926,13 @@ class AddDuty(object):
         self.cBoxDutyPNo.raise_()
         self.label.raise_()
         self.navViewCMS.raise_()
-        self.navViewState.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
+        self.navViewStatePersonnel.raise_()
         self.navViewDuty.raise_()
         self.navViewDutyDetails.raise_()
         self.navViewGangway.raise_()
-        self.navViewMangement.raise_()
+        self.navViewManagement.raise_()
         self.navViewGenKey.raise_()
         self.navViewImpKey.raise_()
         self.navViewLocation.raise_()
@@ -9883,12 +10946,12 @@ class AddDuty(object):
         self.navViewVisitor.raise_()
         self.label_4.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -9929,10 +10992,12 @@ class AddDuty(object):
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewGenKey.setText(_translate("MainWindow", "General Key Book"))
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
         self.navViewVisitor.setText(_translate("MainWindow", "Visitor Book"))
         self.navViewDuty.setText(_translate("MainWindow", "Duty Book"))
         self.label_6.setText(_translate("MainWindow", "Enter Duty Details"))
@@ -9951,8 +11016,12 @@ class AddDuty(object):
         self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
         self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
         self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
-        self.navViewState.clicked.connect(self.navViewStateMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
         
         self.navViewDutyDetails.clicked.connect(self.navViewDutyMethod)
         self.edtDutyPlace.textEdited.connect(self.resetSuccess)
@@ -10007,10 +11076,18 @@ class AddDuty(object):
              w.change_view(10) 
     def navViewArmPPEMethod(self):
              w.change_view(11) 
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23) 
     def navManageCallMethod(self):
-             w.change_view(25) 
+             w.change_view(25)  
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29) 
     def resetSuccess(self):
                 self.lblDataEntrySuccessful.hide()
                 self.lblDataEntrySuccessful.setStyleSheet("color: green;\n""background-color:#ffffff;\n""font-size: 11pt") 
@@ -10033,7 +11110,7 @@ class AddPunish(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -10045,7 +11122,7 @@ class AddPunish(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewPunishDetails = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishDetails.setGeometry(QtCore.QRect(1075, 120, 271, 44))
+        self.navViewPunishDetails.setGeometry(QtCore.QRect(1065, 120, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -10085,7 +11162,7 @@ class AddPunish(object):
         self.navViewPunishDetails.setIconSize(QtCore.QSize(25, 25))
         self.navViewPunishDetails.setObjectName("navViewPunishDetails")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -10131,7 +11208,7 @@ class AddPunish(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -10173,7 +11250,7 @@ class AddPunish(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -10217,7 +11294,7 @@ class AddPunish(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -10259,7 +11336,7 @@ class AddPunish(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -10301,7 +11378,7 @@ class AddPunish(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -10343,7 +11420,7 @@ class AddPunish(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -10385,7 +11462,7 @@ class AddPunish(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -10427,12 +11504,12 @@ class AddPunish(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -10474,7 +11551,7 @@ class AddPunish(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -10515,14 +11592,14 @@ class AddPunish(object):
         self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -10553,12 +11630,12 @@ class AddPunish(object):
 "}")
         icon11 = QtGui.QIcon()
         icon11.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon11)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
+        self.navViewManagement.setIcon(icon11)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -10600,7 +11677,7 @@ class AddPunish(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -10642,7 +11719,7 @@ class AddPunish(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -10759,7 +11836,7 @@ class AddPunish(object):
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.frame)
         self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setGeometry(QtCore.QRect(306, 680, 100, 80))
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
         self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
 "    border-radius:4px;\n"
 "    outline:none;")
@@ -10770,7 +11847,7 @@ class AddPunish(object):
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -10911,14 +11988,14 @@ class AddPunish(object):
         self.btnAddPunish.setIcon(icon17)
         self.btnAddPunish.setIconSize(QtCore.QSize(25, 25))
         self.btnAddPunish.setObjectName("btnAddPunish")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -10949,10 +12026,90 @@ class AddPunish(object):
 "}")
         icon18 = QtGui.QIcon()
         icon18.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon18)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon18)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.label_14 = QtWidgets.QLabel(self.frame)
         self.label_14.setGeometry(QtCore.QRect(321, 472, 515, 86))
         self.label_14.setStyleSheet("    background-color:#ffffff;\n"
@@ -11194,10 +12351,12 @@ class AddPunish(object):
         self.label_4.raise_()
         self.navViewMOB.raise_()
         self.navViewLocation.raise_()
-        self.navViewMangement.raise_()
+        self.navViewManagement.raise_()
         self.navViewPPE.raise_()
         self.navViewOOD.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.label_8.raise_()
         self.label_9.raise_()
         self.label_10.raise_()
@@ -11210,7 +12369,7 @@ class AddPunish(object):
         self.lblPunishName.raise_()
         self.lblPunishRank.raise_()
         self.btnAddPunish.raise_()
-        self.navViewState.raise_()
+        self.navViewStatePersonnel.raise_()
         self.label_14.raise_()
         self.chBoxMorning.raise_()
         self.chBoxAfternoon.raise_()
@@ -11224,12 +12383,12 @@ class AddPunish(object):
         self.label_17.raise_()
         self.dtPunishFinishDate.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -11271,10 +12430,12 @@ class AddPunish(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
         self.label_8.setText(_translate("MainWindow", "Punishment"))
         self.label_9.setText(_translate("MainWindow", "P No./ O No."))
         self.label_10.setText(_translate("MainWindow", "Name:"))
@@ -11285,7 +12446,7 @@ class AddPunish(object):
         self.lblPunishName.setText(_translate("MainWindow", "Name"))
         self.lblPunishRank.setText(_translate("MainWindow", "Name"))
         self.btnAddPunish.setText(_translate("MainWindow", "Add New Punishment Entry"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.chBoxMorning.setText(_translate("MainWindow", "05:00"))
         self.chBoxAfternoon.setText(_translate("MainWindow", "14:00"))
         self.chBoxEvening.setText(_translate("MainWindow", "16:00"))
@@ -11315,8 +12476,12 @@ class AddPunish(object):
         self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
         self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
         self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
-        self.navViewState.clicked.connect(self.navViewStateMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
 
         self.navViewPunishDetails.clicked.connect(self.navViewPunishMethod)
         self.cBoxPunishPNo.activated.connect(self.resetSuccess)
@@ -11403,10 +12568,18 @@ class AddPunish(object):
              w.change_view(10) 
     def navViewArmPPEMethod(self):
              w.change_view(11) 
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23) 
     def navManageCallMethod(self):
-             w.change_view(25) 
+             w.change_view(25)  
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29) 
     def resetSuccess(self):
                 self.lblDataEntrySuccessful.hide()
                 self.lblDataEntrySuccessful.setStyleSheet("color: green;\n""background-color:#ffffff;\n""font-size: 11pt") 
@@ -11429,7 +12602,7 @@ class AddGangway(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -11441,7 +12614,7 @@ class AddGangway(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewGangwayDetails = QtWidgets.QPushButton(self.frame)
-        self.navViewGangwayDetails.setGeometry(QtCore.QRect(1075, 120, 271, 44))
+        self.navViewGangwayDetails.setGeometry(QtCore.QRect(1065, 120, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -11481,12 +12654,12 @@ class AddGangway(object):
         self.navViewGangwayDetails.setIconSize(QtCore.QSize(25, 25))
         self.navViewGangwayDetails.setObjectName("navViewGangwayDetails")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -11528,7 +12701,7 @@ class AddGangway(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -11570,7 +12743,7 @@ class AddGangway(object):
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
         self.navViewManagement = QtWidgets.QPushButton(self.frame)
-        self.navViewManagement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -11612,7 +12785,7 @@ class AddGangway(object):
         self.navViewManagement.setFlat(False)
         self.navViewManagement.setObjectName("navViewManagement")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -11654,7 +12827,7 @@ class AddGangway(object):
         self.navViewCMS.setFlat(False)
         self.navViewCMS.setObjectName("navViewCMS")
         self.label_6 = QtWidgets.QLabel(self.frame)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -11702,7 +12875,7 @@ class AddGangway(object):
         self.label_9.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.label_9.setObjectName("label_9")
         self.label_13 = QtWidgets.QLabel(self.frame)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
@@ -11870,7 +13043,7 @@ class AddGangway(object):
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -11912,7 +13085,7 @@ class AddGangway(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -11954,7 +13127,7 @@ class AddGangway(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -11999,7 +13172,7 @@ class AddGangway(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -12041,7 +13214,7 @@ class AddGangway(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -12084,7 +13257,7 @@ class AddGangway(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -12126,7 +13299,7 @@ class AddGangway(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -12168,7 +13341,7 @@ class AddGangway(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -12211,7 +13384,7 @@ class AddGangway(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -12253,7 +13426,7 @@ class AddGangway(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -12295,7 +13468,7 @@ class AddGangway(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -12349,14 +13522,14 @@ class AddGangway(object):
 "font-size: 11pt")
         self.lblIssuedRank.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.lblIssuedRank.setObjectName("lblIssuedRank")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -12387,10 +13560,90 @@ class AddGangway(object):
 "}")
         icon17 = QtGui.QIcon()
         icon17.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon17)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon17)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.label_10 = QtWidgets.QLabel(self.frame)
         self.label_10.setGeometry(QtCore.QRect(331, 226, 159, 44))
         font = QtGui.QFont()
@@ -12623,6 +13876,8 @@ class AddGangway(object):
         self.navViewLocation.raise_()
         self.navViewManagement.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.label_6.raise_()
         self.label_7.raise_()
         self.label_8.raise_()
@@ -12647,7 +13902,7 @@ class AddGangway(object):
         self.navViewNight.raise_()
         self.navViewPersonnel.raise_()
         self.lblIssuedRank.raise_()
-        self.navViewState.raise_()
+        self.navViewStatePersonnel.raise_()
         self.label_10.raise_()
         self.edtQuality.raise_()
         self.label_11.raise_()
@@ -12670,6 +13925,8 @@ class AddGangway(object):
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
         self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
         self.label_6.setText(_translate("MainWindow", "Enter Gangway Details"))
         self.label_7.setText(_translate("MainWindow", "Issued Person Name"))
         self.label_8.setText(_translate("MainWindow", "Issued Person Rank:"))
@@ -12689,7 +13946,7 @@ class AddGangway(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
         self.lblIssuedRank.setText(_translate("MainWindow", "OOD Rank"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.label_10.setText(_translate("MainWindow", "Name of Article"))
         self.label_11.setText(_translate("MainWindow", "Quantity"))
         self.label_14.setText(_translate("MainWindow", "Place"))
@@ -12709,8 +13966,12 @@ class AddGangway(object):
         self.navViewPunishment.clicked.connect(self.navViewPunishMethod)
         self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
         self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
-        self.navViewState.clicked.connect(self.navViewStateMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
 
         self.navViewGangwayDetails.clicked.connect(self.navViewGangwayMethod)
         self.cBoxIssuedName.activated.connect(self.resetSuccess)
@@ -12765,10 +14026,18 @@ class AddGangway(object):
              w.change_view(10) 
     def navViewArmPPEMethod(self):
              w.change_view(11) 
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23) 
     def navManageCallMethod(self):
-             w.change_view(25) 
+             w.change_view(25)  
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29) 
     def resetSuccess(self):
                 self.lblDataEntrySuccessful.hide()
                 self.lblDataEntrySuccessful.setStyleSheet("color: green;\n""background-color:#ffffff;\n""font-size: 11pt") 
@@ -12792,7 +14061,7 @@ class AddNightRound(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -12804,7 +14073,7 @@ class AddNightRound(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewNightRoundDetails = QtWidgets.QPushButton(self.frame)
-        self.navViewNightRoundDetails.setGeometry(QtCore.QRect(1075, 120, 271, 44))
+        self.navViewNightRoundDetails.setGeometry(QtCore.QRect(1065, 120, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -12844,7 +14113,7 @@ class AddNightRound(object):
         self.navViewNightRoundDetails.setIconSize(QtCore.QSize(25, 25))
         self.navViewNightRoundDetails.setObjectName("navViewNightRoundDetails")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -12886,7 +14155,7 @@ class AddNightRound(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -12928,7 +14197,7 @@ class AddNightRound(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -12970,7 +14239,7 @@ class AddNightRound(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -13012,7 +14281,7 @@ class AddNightRound(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -13054,7 +14323,7 @@ class AddNightRound(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -13096,7 +14365,7 @@ class AddNightRound(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -13138,7 +14407,7 @@ class AddNightRound(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -13185,12 +14454,12 @@ class AddNightRound(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -13232,7 +14501,7 @@ class AddNightRound(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -13273,14 +14542,14 @@ class AddNightRound(object):
         self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -13311,12 +14580,12 @@ class AddNightRound(object):
 "}")
         icon11 = QtGui.QIcon()
         icon11.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon11)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
+        self.navViewManagement.setIcon(icon11)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -13358,7 +14627,7 @@ class AddNightRound(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -13400,7 +14669,7 @@ class AddNightRound(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -13630,7 +14899,7 @@ class AddNightRound(object):
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.frame)
         self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setGeometry(QtCore.QRect(306, 680, 100, 80))
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
         self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
 "    border-radius:4px;\n"
 "    outline:none;")
@@ -13641,7 +14910,7 @@ class AddNightRound(object):
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -13758,14 +15027,14 @@ class AddNightRound(object):
         self.btnAddNightRound.setIcon(icon17)
         self.btnAddNightRound.setIconSize(QtCore.QSize(25, 25))
         self.btnAddNightRound.setObjectName("btnAddNightRound")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -13796,10 +15065,90 @@ class AddNightRound(object):
 "}")
         icon18 = QtGui.QIcon()
         icon18.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon18)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon18)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.label_14 = QtWidgets.QLabel(self.frame)
         self.label_14.setGeometry(QtCore.QRect(331, 270, 191, 44))
         font = QtGui.QFont()
@@ -14003,10 +15352,12 @@ class AddNightRound(object):
         self.label_4.raise_()
         self.navViewMOB.raise_()
         self.navViewLocation.raise_()
-        self.navViewMangement.raise_()
+        self.navViewManagement.raise_()
         self.navViewPPE.raise_()
         self.navViewOOD.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.label_7.raise_()
         self.edtCellsVisited.raise_()
         self.label_8.raise_()
@@ -14020,7 +15371,7 @@ class AddNightRound(object):
         self.navViewPersonnel.raise_()
         self.cBoxPOName.raise_()
         self.btnAddNightRound.raise_()
-        self.navViewState.raise_()
+        self.navViewStatePersonnel.raise_()
         self.label_14.raise_()
         self.txtReport.raise_()
         self.cBoxWOName.raise_()
@@ -14033,12 +15384,12 @@ class AddNightRound(object):
         self.label_17.raise_()
         self.lblPORank.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -14080,10 +15431,12 @@ class AddNightRound(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
         self.label_7.setText(_translate("MainWindow", "Cells Visited in Water"))
         self.label_8.setText(_translate("MainWindow", "Temperature of Cells"))
         self.label_9.setText(_translate("MainWindow", "Petty Officer Name"))
@@ -14092,7 +15445,7 @@ class AddNightRound(object):
         self.pushButton.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
         self.btnAddNightRound.setText(_translate("MainWindow", "Add New Night Round Entry"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.label_14.setText(_translate("MainWindow", "Report"))
         self.label_11.setText(_translate("MainWindow", "Officer on Watch Name"))
         self.label_15.setText(_translate("MainWindow", "Officer on Round Name"))
@@ -14119,8 +15472,12 @@ class AddNightRound(object):
         self.navViewPunishment.clicked.connect(self.navViewPunishMethod)   
         self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
         self.navViewGangway.clicked.connect(self.navViewGangwayMethod) 
-        self.navViewState.clicked.connect(self.navViewStateMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
 
         self.navViewNightRoundDetails.clicked.connect(self.navViewNightRoundMethod)
         self.cBoxPOName.activated.connect(self.resetSuccess)
@@ -14182,10 +15539,18 @@ class AddNightRound(object):
              w.change_view(10) 
     def navViewArmPPEMethod(self):
              w.change_view(11)            
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23)   
     def navManageCallMethod(self):
-             w.change_view(25) 
+             w.change_view(25)  
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29) 
     def resetSuccess(self):
                 self.lblDataEntrySuccessful.hide()
                 self.lblDataEntrySuccessful.setStyleSheet("color: green;\n""background-color:#ffffff;\n""font-size: 11pt") 
@@ -14208,7 +15573,7 @@ class AddArmPPE(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -14220,7 +15585,7 @@ class AddArmPPE(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewArmPPEDetails = QtWidgets.QPushButton(self.frame)
-        self.navViewArmPPEDetails.setGeometry(QtCore.QRect(1075, 120, 271, 44))
+        self.navViewArmPPEDetails.setGeometry(QtCore.QRect(1065, 120, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -14260,7 +15625,7 @@ class AddArmPPE(object):
         self.navViewArmPPEDetails.setIconSize(QtCore.QSize(25, 25))
         self.navViewArmPPEDetails.setObjectName("navViewArmPPEDetails")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -14302,7 +15667,7 @@ class AddArmPPE(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -14344,7 +15709,7 @@ class AddArmPPE(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -14387,7 +15752,7 @@ class AddArmPPE(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -14429,7 +15794,7 @@ class AddArmPPE(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -14471,7 +15836,7 @@ class AddArmPPE(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -14513,7 +15878,7 @@ class AddArmPPE(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -14555,7 +15920,7 @@ class AddArmPPE(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -14597,12 +15962,12 @@ class AddArmPPE(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -14644,7 +16009,7 @@ class AddArmPPE(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -14685,14 +16050,14 @@ class AddArmPPE(object):
         self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -14723,12 +16088,12 @@ class AddArmPPE(object):
 "}")
         icon11 = QtGui.QIcon()
         icon11.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon11)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
+        self.navViewManagement.setIcon(icon11)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -14774,7 +16139,7 @@ class AddArmPPE(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -14816,7 +16181,7 @@ class AddArmPPE(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -15002,7 +16367,7 @@ class AddArmPPE(object):
         self.pushButton_2.setIconSize(QtCore.QSize(100, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -15368,14 +16733,14 @@ class AddArmPPE(object):
 
 "  }")
         self.edtQuantity.setObjectName("edtQuantity")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -15406,10 +16771,90 @@ class AddArmPPE(object):
 "}")
         icon17 = QtGui.QIcon()
         icon17.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon17)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon17)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.btnAddArmPPE = QtWidgets.QPushButton(self.frame)
         self.btnAddArmPPE.setGeometry(QtCore.QRect(564, 653, 271, 44))
         font = QtGui.QFont()
@@ -15483,6 +16928,8 @@ class AddArmPPE(object):
         self.label_4.raise_()
         self.navViewPersonnel.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.navViewVisitor.raise_()
         self.navViewGangway.raise_()
         self.navViewDuty.raise_()
@@ -15493,16 +16940,16 @@ class AddArmPPE(object):
         self.navViewNight.raise_()
         self.navViewPPE.raise_()
         self.navViewLocation.raise_()
-        self.navViewMangement.raise_()
-        self.navViewState.raise_()
+        self.navViewManagement.raise_()
+        self.navViewStatePersonnel.raise_()
         self.navViewGenKey.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -15532,10 +16979,12 @@ class AddArmPPE(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
         self.label_7.setText(_translate("MainWindow", "Sling Landyard Pounch"))
         self.label_8.setText(_translate("MainWindow", "Ammo. Consumed"))
         self.label_9.setText(_translate("MainWindow", "P No./ O No."))
@@ -15571,7 +17020,7 @@ class AddArmPPE(object):
         self.cBoxAmmoType.setItemText(3, _translate("MainWindow", "Cartridge, 5.56-mm, Blank, M200"))
         self.cBoxAmmoType.setItemText(4, _translate("MainWindow", "Cartridge, 5.56-mm, Ball, M855"))
         self.cBoxAmmoType.setItemText(5, _translate("MainWindow", "Cartridge, 5.56-mm, Tracer, M856"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.btnAddArmPPE.setText(_translate("MainWindow", "Add New Small Arm and PPE Entry"))
         self.label_6.setText(_translate("MainWindow", "Enter Small Arm and PPE Details"))
 
@@ -15589,8 +17038,12 @@ class AddArmPPE(object):
         self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
         self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
         self.navViewPunishment.clicked.connect(self.navViewPunishMethod)
-        self.navViewState.clicked.connect(self.navViewStateMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
 
         self.navViewArmPPEDetails.clicked.connect(self.navViewArmPPEMethod)
         self.cBoxArmPNo.activated.connect(self.setLabelText)
@@ -15653,10 +17106,18 @@ class AddArmPPE(object):
              w.change_view(10) 
     def navViewArmPPEMethod(self):
              w.change_view(11) 
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23) 
     def navManageCallMethod(self):
-             w.change_view(25) 
+             w.change_view(25)  
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29) 
     def resetSuccess(self):
                 self.lblDataEntrySuccessful.hide()
                 self.lblDataEntrySuccessful.setStyleSheet("color: green;\n""background-color:#ffffff;\n""font-size: 11pt") 
@@ -15680,7 +17141,7 @@ class ViewPersonnelData(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -15692,7 +17153,7 @@ class ViewPersonnelData(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -15734,7 +17195,7 @@ class ViewPersonnelData(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -15776,7 +17237,7 @@ class ViewPersonnelData(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -15819,7 +17280,7 @@ class ViewPersonnelData(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -15861,7 +17322,7 @@ class ViewPersonnelData(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -15903,7 +17364,7 @@ class ViewPersonnelData(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -15945,7 +17406,7 @@ class ViewPersonnelData(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -15987,7 +17448,7 @@ class ViewPersonnelData(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -16029,12 +17490,12 @@ class ViewPersonnelData(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -16076,7 +17537,7 @@ class ViewPersonnelData(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -16117,14 +17578,14 @@ class ViewPersonnelData(object):
         self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -16155,12 +17616,12 @@ class ViewPersonnelData(object):
 "}")
         icon10 = QtGui.QIcon()
         icon10.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon10)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
+        self.navViewManagement.setIcon(icon10)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -16202,7 +17663,7 @@ class ViewPersonnelData(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -16244,7 +17705,7 @@ class ViewPersonnelData(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -16302,7 +17763,7 @@ class ViewPersonnelData(object):
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.frame)
         self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setGeometry(QtCore.QRect(306, 680, 100, 80))
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
         self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
 "    border-radius:4px;\n"
 "    outline:none;")
@@ -16313,7 +17774,7 @@ class ViewPersonnelData(object):
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -16358,7 +17819,7 @@ class ViewPersonnelData(object):
         self.navViewPersonnel.setFlat(False)
         self.navViewPersonnel.setObjectName("navViewPersonnel")
         self.btnAddPersonnelData = QtWidgets.QPushButton(self.frame)
-        self.btnAddPersonnelData.setGeometry(QtCore.QRect(1075, 630, 271, 44))
+        self.btnAddPersonnelData.setGeometry(QtCore.QRect(1065, 630, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -16397,14 +17858,14 @@ class ViewPersonnelData(object):
         self.btnAddPersonnelData.setIcon(icon16)
         self.btnAddPersonnelData.setIconSize(QtCore.QSize(25, 25))
         self.btnAddPersonnelData.setObjectName("btnAddPersonnelData")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -16435,12 +17896,92 @@ class ViewPersonnelData(object):
 "}")
         icon17 = QtGui.QIcon()
         icon17.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon17)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon17)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.tblDetails = QtWidgets.QTableView(self.frame)
-        self.tblDetails.setGeometry(QtCore.QRect(306, 120, 1040, 500))
+        self.tblDetails.setGeometry(QtCore.QRect(326, 120, 1010, 500))
         font = QtGui.QFont()
         font.setPointSize(11)
         self.tblDetails.setFont(font)
@@ -16463,23 +18004,25 @@ class ViewPersonnelData(object):
         self.label_4.raise_()
         self.navViewMOB.raise_()
         self.navViewLocation.raise_()
-        self.navViewMangement.raise_()
+        self.navViewManagement.raise_()
         self.navViewPPE.raise_()
         self.navViewOOD.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.pushButton.raise_()
         self.pushButton_2.raise_()
         self.navViewPersonnel.raise_()
         self.btnAddPersonnelData.raise_()
-        self.navViewState.raise_()
+        self.navViewStatePersonnel.raise_()
         self.tblDetails.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -16508,14 +18051,16 @@ class ViewPersonnelData(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
         self.pushButton.setText(_translate("MainWindow", "Personnel Data Book"))
         self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
         self.btnAddPersonnelData.setText(_translate("MainWindow", "Add New Personnel Data Entry"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.label_6.setText(_translate("MainWindow", "View Personnel Data Details"))
 #----------------------------------------backend for View PersonnelData Interface--------------------------------------------
         self.navViewImpKey.clicked.connect(self.navViewImportantKeyMethod)
@@ -16528,8 +18073,12 @@ class ViewPersonnelData(object):
         self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
         self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
         self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
-        self.navViewState.clicked.connect(self.navViewStateMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
         self.btnAddPersonnelData.clicked.connect(self.navAddPersonnelMethod)
     def navViewPersonnelMethod(self):
              w.change_view(1)    
@@ -16555,10 +18104,18 @@ class ViewPersonnelData(object):
              w.change_view(11) 
     def navAddPersonnelMethod(self):
              w.change_view(12)
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23) 
     def navManageCallMethod(self):
-             w.change_view(25) 
+             w.change_view(25)  
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29) 
 class ViewPersonnelDataWidget(QtWidgets.QMainWindow,ViewPersonnelData ):
     def __init__(self, parent=None):
         super(ViewPersonnelDataWidget, self).__init__(parent)
@@ -16578,7 +18135,7 @@ class ViewImpKey(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -16590,7 +18147,7 @@ class ViewImpKey(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -16632,7 +18189,7 @@ class ViewImpKey(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -16678,7 +18235,7 @@ class ViewImpKey(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -16721,7 +18278,7 @@ class ViewImpKey(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -16763,7 +18320,7 @@ class ViewImpKey(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -16805,7 +18362,7 @@ class ViewImpKey(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -16847,7 +18404,7 @@ class ViewImpKey(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -16889,7 +18446,7 @@ class ViewImpKey(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -16931,12 +18488,12 @@ class ViewImpKey(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -16978,7 +18535,7 @@ class ViewImpKey(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -17019,14 +18576,14 @@ class ViewImpKey(object):
         self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -17057,12 +18614,12 @@ class ViewImpKey(object):
 "}")
         icon10 = QtGui.QIcon()
         icon10.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon10)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
+        self.navViewManagement.setIcon(icon10)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -17104,7 +18661,7 @@ class ViewImpKey(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -17146,7 +18703,7 @@ class ViewImpKey(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -17202,7 +18759,7 @@ class ViewImpKey(object):
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.frame)
         self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setGeometry(QtCore.QRect(306, 680, 100, 80))
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
         self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
 "    border-radius:4px;\n"
 "    outline:none;")
@@ -17213,7 +18770,7 @@ class ViewImpKey(object):
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -17256,7 +18813,7 @@ class ViewImpKey(object):
         self.navViewPersonnel.setFlat(False)
         self.navViewPersonnel.setObjectName("navViewPersonnel")
         self.btnAddImpKey = QtWidgets.QPushButton(self.frame)
-        self.btnAddImpKey.setGeometry(QtCore.QRect(1075, 630, 271, 44))
+        self.btnAddImpKey.setGeometry(QtCore.QRect(1065, 630, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -17295,14 +18852,14 @@ class ViewImpKey(object):
         self.btnAddImpKey.setIcon(icon16)
         self.btnAddImpKey.setIconSize(QtCore.QSize(25, 25))
         self.btnAddImpKey.setObjectName("btnAddImpKey")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -17333,12 +18890,92 @@ class ViewImpKey(object):
 "}")
         icon17 = QtGui.QIcon()
         icon17.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon17)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon17)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.tblDetails = QtWidgets.QTableView(self.frame)
-        self.tblDetails.setGeometry(QtCore.QRect(306, 120, 1040, 500))
+        self.tblDetails.setGeometry(QtCore.QRect(326, 120, 1010, 500))
         font = QtGui.QFont()
         font.setPointSize(11)
         self.tblDetails.setFont(font)
@@ -17361,23 +18998,25 @@ class ViewImpKey(object):
         self.label_4.raise_()
         self.navViewMOB.raise_()
         self.navViewLocation.raise_()
-        self.navViewMangement.raise_()
+        self.navViewManagement.raise_()
         self.navViewPPE.raise_()
         self.navViewOOD.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.pushButton.raise_()
         self.pushButton_2.raise_()
         self.navViewPersonnel.raise_()
         self.btnAddImpKey.raise_()
-        self.navViewState.raise_()
+        self.navViewStatePersonnel.raise_()
         self.tblDetails.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -17406,14 +19045,16 @@ class ViewImpKey(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
         self.pushButton.setText(_translate("MainWindow", "Important Key Book"))
         self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
         self.btnAddImpKey.setText(_translate("MainWindow", "Add New Important Key Entry"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.label_6.setText(_translate("MainWindow", "View Important Key Details"))
 
 #----------------------------------------backend for View Importantkey Interface--------------------------------------------
@@ -17427,9 +19068,13 @@ class ViewImpKey(object):
         self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
         self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
         self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
-        self.navViewState.clicked.connect(self.navViewStateMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
         self.btnAddImpKey.clicked.connect(self.navAddImportantKeyMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
     def navViewPersonnelMethod(self):
              w.change_view(1)    
     def navViewImportantKeyMethod(self):
@@ -17454,10 +19099,18 @@ class ViewImpKey(object):
              w.change_view(11) 
     def navAddImportantKeyMethod(self):
              w.change_view(13)
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23) 
     def navManageCallMethod(self):
-             w.change_view(25) 
+             w.change_view(25)  
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29) 
 class ViewImpKeyWidget(QtWidgets.QMainWindow,ViewImpKey ):
     def __init__(self, parent=None):
         super(ViewImpKeyWidget, self).__init__(parent)
@@ -17477,7 +19130,7 @@ class ViewGenKey(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -17489,7 +19142,7 @@ class ViewGenKey(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -17531,7 +19184,7 @@ class ViewGenKey(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -17573,7 +19226,7 @@ class ViewGenKey(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -17620,7 +19273,7 @@ class ViewGenKey(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -17662,7 +19315,7 @@ class ViewGenKey(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -17704,7 +19357,7 @@ class ViewGenKey(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -17746,7 +19399,7 @@ class ViewGenKey(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -17788,7 +19441,7 @@ class ViewGenKey(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -17830,12 +19483,12 @@ class ViewGenKey(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -17877,7 +19530,7 @@ class ViewGenKey(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -17918,14 +19571,14 @@ class ViewGenKey(object):
         self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -17956,12 +19609,12 @@ class ViewGenKey(object):
 "}")
         icon10 = QtGui.QIcon()
         icon10.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon10)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
+        self.navViewManagement.setIcon(icon10)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -18003,7 +19656,7 @@ class ViewGenKey(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -18045,7 +19698,7 @@ class ViewGenKey(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -18101,7 +19754,7 @@ class ViewGenKey(object):
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.frame)
         self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setGeometry(QtCore.QRect(306, 680, 100, 80))
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
         self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
 "    border-radius:4px;\n"
 "    outline:none;")
@@ -18112,7 +19765,7 @@ class ViewGenKey(object):
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -18155,7 +19808,7 @@ class ViewGenKey(object):
         self.navViewPersonnel.setFlat(False)
         self.navViewPersonnel.setObjectName("navViewPersonnel")
         self.btnAddGenKey = QtWidgets.QPushButton(self.frame)
-        self.btnAddGenKey.setGeometry(QtCore.QRect(1075, 630, 271, 44))
+        self.btnAddGenKey.setGeometry(QtCore.QRect(1065, 630, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -18194,14 +19847,14 @@ class ViewGenKey(object):
         self.btnAddGenKey.setIcon(icon16)
         self.btnAddGenKey.setIconSize(QtCore.QSize(25, 25))
         self.btnAddGenKey.setObjectName("btnAddGenKey")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -18232,12 +19885,92 @@ class ViewGenKey(object):
 "}")
         icon17 = QtGui.QIcon()
         icon17.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon17)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon17)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.tblDetails = QtWidgets.QTableView(self.frame)
-        self.tblDetails.setGeometry(QtCore.QRect(306, 120, 1040, 500))
+        self.tblDetails.setGeometry(QtCore.QRect(326, 120, 1010, 500))
         font = QtGui.QFont()
         font.setPointSize(11)
         self.tblDetails.setFont(font)
@@ -18260,23 +19993,25 @@ class ViewGenKey(object):
         self.label_4.raise_()
         self.navViewMOB.raise_()
         self.navViewLocation.raise_()
-        self.navViewMangement.raise_()
+        self.navViewManagement.raise_()
         self.navViewPPE.raise_()
         self.navViewOOD.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.pushButton.raise_()
         self.pushButton_2.raise_()
         self.navViewPersonnel.raise_()
         self.btnAddGenKey.raise_()
-        self.navViewState.raise_()
+        self.navViewStatePersonnel.raise_()
         self.tblDetails.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -18305,14 +20040,16 @@ class ViewGenKey(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
         self.pushButton.setText(_translate("MainWindow", "General Key Book"))
         self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
         self.btnAddGenKey.setText(_translate("MainWindow", "Add New General Key Entry"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.label_6.setText(_translate("MainWindow", "View General Key Details"))
 
 
@@ -18327,9 +20064,13 @@ class ViewGenKey(object):
         self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
         self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
         self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
-        self.navViewState.clicked.connect(self.navViewStateMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
         self.btnAddGenKey.clicked.connect(self.navAddGeneralKeyMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
     def navViewPersonnelMethod(self):
              w.change_view(1)    
     def navViewImportantKeyMethod(self):
@@ -18354,10 +20095,18 @@ class ViewGenKey(object):
              w.change_view(11)
     def navAddGeneralKeyMethod(self):
              w.change_view(14)   
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23) 
     def navManageCallMethod(self):
-             w.change_view(25) 
+             w.change_view(25)  
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29) 
 class ViewGenKeyWidget(QtWidgets.QMainWindow,ViewGenKey ):
     def __init__(self, parent=None):
         super(ViewGenKeyWidget, self).__init__(parent)
@@ -18377,7 +20126,7 @@ class ViewVisitor(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -18389,7 +20138,7 @@ class ViewVisitor(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -18431,7 +20180,7 @@ class ViewVisitor(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -18473,7 +20222,7 @@ class ViewVisitor(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -18516,7 +20265,7 @@ class ViewVisitor(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -18562,7 +20311,7 @@ class ViewVisitor(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -18604,7 +20353,7 @@ class ViewVisitor(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -18646,7 +20395,7 @@ class ViewVisitor(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -18688,7 +20437,7 @@ class ViewVisitor(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -18730,12 +20479,12 @@ class ViewVisitor(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -18777,7 +20526,7 @@ class ViewVisitor(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -18818,14 +20567,14 @@ class ViewVisitor(object):
         self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -18856,12 +20605,12 @@ class ViewVisitor(object):
 "}")
         icon10 = QtGui.QIcon()
         icon10.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon10)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
+        self.navViewManagement.setIcon(icon10)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -18903,7 +20652,7 @@ class ViewVisitor(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -18945,7 +20694,7 @@ class ViewVisitor(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -19001,7 +20750,7 @@ class ViewVisitor(object):
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.frame)
         self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setGeometry(QtCore.QRect(306, 680, 100, 80))
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
         self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
 "    border-radius:4px;\n"
 "    outline:none;")
@@ -19012,7 +20761,7 @@ class ViewVisitor(object):
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -19055,7 +20804,7 @@ class ViewVisitor(object):
         self.navViewPersonnel.setFlat(False)
         self.navViewPersonnel.setObjectName("navViewPersonnel")
         self.btnAddVisitor = QtWidgets.QPushButton(self.frame)
-        self.btnAddVisitor.setGeometry(QtCore.QRect(1075, 630, 271, 44))
+        self.btnAddVisitor.setGeometry(QtCore.QRect(1065, 630, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -19094,14 +20843,14 @@ class ViewVisitor(object):
         self.btnAddVisitor.setIcon(icon16)
         self.btnAddVisitor.setIconSize(QtCore.QSize(25, 25))
         self.btnAddVisitor.setObjectName("btnAddVisitor")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -19132,12 +20881,92 @@ class ViewVisitor(object):
 "}")
         icon17 = QtGui.QIcon()
         icon17.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon17)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon17)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.tblDetails = QtWidgets.QTableView(self.frame)
-        self.tblDetails.setGeometry(QtCore.QRect(306, 120, 1040, 500))
+        self.tblDetails.setGeometry(QtCore.QRect(326, 120, 1010, 500))
         font = QtGui.QFont()
         font.setPointSize(11)
         self.tblDetails.setFont(font)
@@ -19160,23 +20989,25 @@ class ViewVisitor(object):
         self.label_4.raise_()
         self.navViewMOB.raise_()
         self.navViewLocation.raise_()
-        self.navViewMangement.raise_()
+        self.navViewManagement.raise_()
         self.navViewPPE.raise_()
         self.navViewOOD.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.pushButton.raise_()
         self.pushButton_2.raise_()
         self.navViewPersonnel.raise_()
         self.btnAddVisitor.raise_()
-        self.navViewState.raise_()
+        self.navViewStatePersonnel.raise_()
         self.tblDetails.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -19205,14 +21036,16 @@ class ViewVisitor(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
         self.pushButton.setText(_translate("MainWindow", "Visitor Book"))
         self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
         self.btnAddVisitor.setText(_translate("MainWindow", "Add New Visitor Entry"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.label_6.setText(_translate("MainWindow", "View Visitor Details"))
 #----------------------------------------backend for View Visitor Interface--------------------------------------------
         self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
@@ -19225,9 +21058,13 @@ class ViewVisitor(object):
         self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
         self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
         self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
-        self.navViewState.clicked.connect(self.navViewStateMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
         self.btnAddVisitor.clicked.connect(self.navAddVisitorMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
     def navViewPersonnelMethod(self):
              w.change_view(1)    
     def navViewImportantKeyMethod(self):
@@ -19252,10 +21089,18 @@ class ViewVisitor(object):
              w.change_view(11) 
     def navAddVisitorMethod(self):
              w.change_view(15)
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23) 
     def navManageCallMethod(self):
-             w.change_view(25) 
+             w.change_view(25)  
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29) 
 class ViewVisitorWidget(QtWidgets.QMainWindow,ViewVisitor ):
     def __init__(self, parent=None):
         super(ViewVisitorWidget, self).__init__(parent)
@@ -19275,7 +21120,7 @@ class ViewTransport(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -19287,7 +21132,7 @@ class ViewTransport(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -19329,7 +21174,7 @@ class ViewTransport(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -19371,7 +21216,7 @@ class ViewTransport(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -19414,7 +21259,7 @@ class ViewTransport(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -19456,7 +21301,7 @@ class ViewTransport(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -19503,7 +21348,7 @@ class ViewTransport(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -19545,7 +21390,7 @@ class ViewTransport(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -19587,7 +21432,7 @@ class ViewTransport(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -19629,12 +21474,12 @@ class ViewTransport(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -19676,7 +21521,7 @@ class ViewTransport(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -19717,14 +21562,14 @@ class ViewTransport(object):
         self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -19755,12 +21600,12 @@ class ViewTransport(object):
 "}")
         icon10 = QtGui.QIcon()
         icon10.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon10)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
+        self.navViewManagement.setIcon(icon10)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -19802,7 +21647,7 @@ class ViewTransport(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -19844,7 +21689,7 @@ class ViewTransport(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -19900,7 +21745,7 @@ class ViewTransport(object):
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.frame)
         self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setGeometry(QtCore.QRect(306, 680, 100, 80))
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
         self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
 "    border-radius:4px;\n"
 "    outline:none;")
@@ -19911,7 +21756,7 @@ class ViewTransport(object):
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -19954,7 +21799,7 @@ class ViewTransport(object):
         self.navViewPersonnel.setFlat(False)
         self.navViewPersonnel.setObjectName("navViewPersonnel")
         self.btnAddTransport = QtWidgets.QPushButton(self.frame)
-        self.btnAddTransport.setGeometry(QtCore.QRect(1075, 630, 271, 44))
+        self.btnAddTransport.setGeometry(QtCore.QRect(1065, 630, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -19993,14 +21838,14 @@ class ViewTransport(object):
         self.btnAddTransport.setIcon(icon16)
         self.btnAddTransport.setIconSize(QtCore.QSize(25, 25))
         self.btnAddTransport.setObjectName("btnAddTransport")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -20031,12 +21876,92 @@ class ViewTransport(object):
 "}")
         icon17 = QtGui.QIcon()
         icon17.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon17)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon17)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.tblDetails = QtWidgets.QTableView(self.frame)
-        self.tblDetails.setGeometry(QtCore.QRect(306, 120, 1040, 500))
+        self.tblDetails.setGeometry(QtCore.QRect(326, 120, 1010, 500))
         font = QtGui.QFont()
         font.setPointSize(11)
         self.tblDetails.setFont(font)
@@ -20059,23 +21984,25 @@ class ViewTransport(object):
         self.label_4.raise_()
         self.navViewMOB.raise_()
         self.navViewLocation.raise_()
-        self.navViewMangement.raise_()
+        self.navViewManagement.raise_()
         self.navViewPPE.raise_()
         self.navViewOOD.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.pushButton.raise_()
         self.pushButton_2.raise_()
         self.navViewPersonnel.raise_()
         self.btnAddTransport.raise_()
-        self.navViewState.raise_()
+        self.navViewStatePersonnel.raise_()
         self.tblDetails.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -20104,14 +22031,16 @@ class ViewTransport(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
         self.pushButton.setText(_translate("MainWindow", "Transport Book"))
         self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
         self.btnAddTransport.setText(_translate("MainWindow", "Add New Trasnport Entry"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.label_6.setText(_translate("MainWindow", "View Transport Details"))
 #----------------------------------------backend for View Transport Interface--------------------------------------------
         self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
@@ -20124,9 +22053,13 @@ class ViewTransport(object):
         self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
         self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
         self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
-        self.navViewState.clicked.connect(self.navViewStateMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
         self.btnAddTransport.clicked.connect(self.navAddTransportMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
     def navViewPersonnelMethod(self):
              w.change_view(1)    
     def navViewImportantKeyMethod(self):
@@ -20151,10 +22084,18 @@ class ViewTransport(object):
              w.change_view(11) 
     def navAddTransportMethod(self):
              w.change_view(16) 
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23) 
     def navManageCallMethod(self):
-             w.change_view(25) 
+             w.change_view(25)  
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29) 
 class ViewTransportWidget(QtWidgets.QMainWindow,ViewTransport ):
     def __init__(self, parent=None):
         super(ViewTransportWidget, self).__init__(parent)
@@ -20174,7 +22115,7 @@ class ViewGangway(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -20186,7 +22127,7 @@ class ViewGangway(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -20228,7 +22169,7 @@ class ViewGangway(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -20270,7 +22211,7 @@ class ViewGangway(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -20313,7 +22254,7 @@ class ViewGangway(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -20355,7 +22296,7 @@ class ViewGangway(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -20397,7 +22338,7 @@ class ViewGangway(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -20444,7 +22385,7 @@ class ViewGangway(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -20486,7 +22427,7 @@ class ViewGangway(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -20528,12 +22469,12 @@ class ViewGangway(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -20575,7 +22516,7 @@ class ViewGangway(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -20616,14 +22557,14 @@ class ViewGangway(object):
         self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -20654,12 +22595,12 @@ class ViewGangway(object):
 "}")
         icon10 = QtGui.QIcon()
         icon10.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon10)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
+        self.navViewManagement.setIcon(icon10)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -20701,7 +22642,7 @@ class ViewGangway(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -20743,7 +22684,7 @@ class ViewGangway(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -20799,7 +22740,7 @@ class ViewGangway(object):
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.frame)
         self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setGeometry(QtCore.QRect(306, 680, 100, 80))
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
         self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
 "    border-radius:4px;\n"
 "    outline:none;")
@@ -20810,7 +22751,7 @@ class ViewGangway(object):
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -20853,7 +22794,7 @@ class ViewGangway(object):
         self.navViewPersonnel.setFlat(False)
         self.navViewPersonnel.setObjectName("navViewPersonnel")
         self.btnAddGangway = QtWidgets.QPushButton(self.frame)
-        self.btnAddGangway.setGeometry(QtCore.QRect(1075, 630, 271, 44))
+        self.btnAddGangway.setGeometry(QtCore.QRect(1065, 630, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -20892,14 +22833,14 @@ class ViewGangway(object):
         self.btnAddGangway.setIcon(icon16)
         self.btnAddGangway.setIconSize(QtCore.QSize(25, 25))
         self.btnAddGangway.setObjectName("btnAddGangway")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -20930,12 +22871,92 @@ class ViewGangway(object):
 "}")
         icon17 = QtGui.QIcon()
         icon17.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon17)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon17)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.tblDetails = QtWidgets.QTableView(self.frame)
-        self.tblDetails.setGeometry(QtCore.QRect(306, 120, 1040, 500))
+        self.tblDetails.setGeometry(QtCore.QRect(326, 120, 1010, 500))
         font = QtGui.QFont()
         font.setPointSize(11)
         self.tblDetails.setFont(font)
@@ -20958,23 +22979,25 @@ class ViewGangway(object):
         self.label_4.raise_()
         self.navViewMOB.raise_()
         self.navViewLocation.raise_()
-        self.navViewMangement.raise_()
+        self.navViewManagement.raise_()
         self.navViewPPE.raise_()
         self.navViewOOD.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.pushButton.raise_()
         self.pushButton_2.raise_()
         self.navViewPersonnel.raise_()
         self.btnAddGangway.raise_()
-        self.navViewState.raise_()
+        self.navViewStatePersonnel.raise_()
         self.tblDetails.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -21003,14 +23026,16 @@ class ViewGangway(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
         self.pushButton.setText(_translate("MainWindow", "Gangway  Book"))
         self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
         self.btnAddGangway.setText(_translate("MainWindow", "Add New Gangway Entry"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.label_6.setText(_translate("MainWindow", "View Gangway Details"))
 #----------------------------------------backend for View Gangway Interface--------------------------------------------
         self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
@@ -21023,9 +23048,13 @@ class ViewGangway(object):
         self.navViewPunishment.clicked.connect(self.navViewPunishMethod)
         self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
         self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
-        self.navViewState.clicked.connect(self.navViewStateMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
         self.btnAddGangway.clicked.connect(self.navAddGangwayMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
     def navViewPersonnelMethod(self):
              w.change_view(1)    
     def navViewImportantKeyMethod(self):
@@ -21050,10 +23079,18 @@ class ViewGangway(object):
              w.change_view(11) 
     def navAddGangwayMethod(self):
              w.change_view(17)
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23) 
     def navManageCallMethod(self):
-             w.change_view(25) 
+             w.change_view(25)  
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29) 
 class ViewGangwayWidget(QtWidgets.QMainWindow,ViewGangway ):
     def __init__(self, parent=None):
         super(ViewGangwayWidget, self).__init__(parent)
@@ -21073,7 +23110,7 @@ class ViewDuty(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -21085,7 +23122,7 @@ class ViewDuty(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -21127,7 +23164,7 @@ class ViewDuty(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -21169,7 +23206,7 @@ class ViewDuty(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -21212,7 +23249,7 @@ class ViewDuty(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -21255,7 +23292,7 @@ class ViewDuty(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -21297,7 +23334,7 @@ class ViewDuty(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -21339,7 +23376,7 @@ class ViewDuty(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -21385,7 +23422,7 @@ class ViewDuty(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -21427,12 +23464,12 @@ class ViewDuty(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -21474,7 +23511,7 @@ class ViewDuty(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -21515,14 +23552,14 @@ class ViewDuty(object):
         self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -21553,12 +23590,12 @@ class ViewDuty(object):
 "}")
         icon10 = QtGui.QIcon()
         icon10.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon10)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
+        self.navViewManagement.setIcon(icon10)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -21600,7 +23637,7 @@ class ViewDuty(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -21642,7 +23679,7 @@ class ViewDuty(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -21698,7 +23735,7 @@ class ViewDuty(object):
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.frame)
         self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setGeometry(QtCore.QRect(306, 680, 100, 80))
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
         self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
 "    border-radius:4px;\n"
 "    outline:none;")
@@ -21709,7 +23746,7 @@ class ViewDuty(object):
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -21752,7 +23789,7 @@ class ViewDuty(object):
         self.navViewPersonnel.setFlat(False)
         self.navViewPersonnel.setObjectName("navViewPersonnel")
         self.btnAddDuty = QtWidgets.QPushButton(self.frame)
-        self.btnAddDuty.setGeometry(QtCore.QRect(1075, 630, 271, 44))
+        self.btnAddDuty.setGeometry(QtCore.QRect(1065, 630, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -21791,14 +23828,14 @@ class ViewDuty(object):
         self.btnAddDuty.setIcon(icon16)
         self.btnAddDuty.setIconSize(QtCore.QSize(25, 25))
         self.btnAddDuty.setObjectName("btnAddDuty")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -21829,12 +23866,92 @@ class ViewDuty(object):
 "}")
         icon17 = QtGui.QIcon()
         icon17.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon17)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon17)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.tblDetails = QtWidgets.QTableView(self.frame)
-        self.tblDetails.setGeometry(QtCore.QRect(306, 120, 1040, 500))
+        self.tblDetails.setGeometry(QtCore.QRect(326, 120, 1010, 500))
         font = QtGui.QFont()
         font.setPointSize(11)
         self.tblDetails.setFont(font)
@@ -21857,23 +23974,25 @@ class ViewDuty(object):
         self.label_4.raise_()
         self.navViewMOB.raise_()
         self.navViewLocation.raise_()
-        self.navViewMangement.raise_()
+        self.navViewManagement.raise_()
         self.navViewPPE.raise_()
         self.navViewOOD.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.pushButton.raise_()
         self.pushButton_2.raise_()
         self.navViewPersonnel.raise_()
         self.btnAddDuty.raise_()
-        self.navViewState.raise_()
+        self.navViewStatePersonnel.raise_()
         self.tblDetails.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -21902,14 +24021,16 @@ class ViewDuty(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
         self.pushButton.setText(_translate("MainWindow", "Duty Book"))
         self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
         self.btnAddDuty.setText(_translate("MainWindow", "Add New Duty Entry"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.label_6.setText(_translate("MainWindow", "View Duty Details"))
 #----------------------------------------backend for View Duty Interface--------------------------------------------
         self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
@@ -21922,9 +24043,13 @@ class ViewDuty(object):
         self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
         self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
         self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
-        self.navViewState.clicked.connect(self.navViewStateMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
         self.btnAddDuty.clicked.connect(self.navAddDutyMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
     def navViewPersonnelMethod(self):
              w.change_view(1)    
     def navViewImportantKeyMethod(self):
@@ -21949,10 +24074,18 @@ class ViewDuty(object):
              w.change_view(11) 
     def navAddDutyMethod(self):
              w.change_view(18)
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23) 
     def navManageCallMethod(self):
-             w.change_view(25) 
+             w.change_view(25)  
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29) 
 class ViewDutyWidget(QtWidgets.QMainWindow,ViewDuty ):
     def __init__(self, parent=None):
         super(ViewDutyWidget, self).__init__(parent)
@@ -21972,7 +24105,7 @@ class ViewPunishment(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -21984,7 +24117,7 @@ class ViewPunishment(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -22031,7 +24164,7 @@ class ViewPunishment(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -22073,7 +24206,7 @@ class ViewPunishment(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -22116,7 +24249,7 @@ class ViewPunishment(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -22158,7 +24291,7 @@ class ViewPunishment(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -22200,7 +24333,7 @@ class ViewPunishment(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -22242,7 +24375,7 @@ class ViewPunishment(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -22284,7 +24417,7 @@ class ViewPunishment(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -22326,12 +24459,12 @@ class ViewPunishment(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -22373,7 +24506,7 @@ class ViewPunishment(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -22414,14 +24547,14 @@ class ViewPunishment(object):
         self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -22452,12 +24585,12 @@ class ViewPunishment(object):
 "}")
         icon10 = QtGui.QIcon()
         icon10.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon10)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
+        self.navViewManagement.setIcon(icon10)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -22499,7 +24632,7 @@ class ViewPunishment(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -22541,7 +24674,7 @@ class ViewPunishment(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -22597,7 +24730,7 @@ class ViewPunishment(object):
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.frame)
         self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setGeometry(QtCore.QRect(306, 680, 100, 80))
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
         self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
 "    border-radius:4px;\n"
 "    outline:none;")
@@ -22608,7 +24741,7 @@ class ViewPunishment(object):
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -22651,7 +24784,7 @@ class ViewPunishment(object):
         self.navViewPersonnel.setFlat(False)
         self.navViewPersonnel.setObjectName("navViewPersonnel")
         self.btnAddPunishment = QtWidgets.QPushButton(self.frame)
-        self.btnAddPunishment.setGeometry(QtCore.QRect(1075, 630, 271, 44))
+        self.btnAddPunishment.setGeometry(QtCore.QRect(1065, 630, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -22690,14 +24823,14 @@ class ViewPunishment(object):
         self.btnAddPunishment.setIcon(icon16)
         self.btnAddPunishment.setIconSize(QtCore.QSize(25, 25))
         self.btnAddPunishment.setObjectName("btnAddPunishment")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -22728,12 +24861,92 @@ class ViewPunishment(object):
 "}")
         icon17 = QtGui.QIcon()
         icon17.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon17)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon17)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.tblDetails = QtWidgets.QTableView(self.frame)
-        self.tblDetails.setGeometry(QtCore.QRect(306, 120, 1040, 500))
+        self.tblDetails.setGeometry(QtCore.QRect(326, 120, 1010, 500))
         font = QtGui.QFont()
         font.setPointSize(11)
         self.tblDetails.setFont(font)
@@ -22756,23 +24969,25 @@ class ViewPunishment(object):
         self.label_4.raise_()
         self.navViewMOB.raise_()
         self.navViewLocation.raise_()
-        self.navViewMangement.raise_()
+        self.navViewManagement.raise_()
         self.navViewPPE.raise_()
         self.navViewOOD.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.pushButton.raise_()
         self.pushButton_2.raise_()
         self.navViewPersonnel.raise_()
         self.btnAddPunishment.raise_()
-        self.navViewState.raise_()
+        self.navViewStatePersonnel.raise_()
         self.tblDetails.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -22801,14 +25016,16 @@ class ViewPunishment(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
         self.pushButton.setText(_translate("MainWindow", "Punishment Book"))
         self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
         self.btnAddPunishment.setText(_translate("MainWindow", "Add New Punishment Entry"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.label_6.setText(_translate("MainWindow", "View Punishment Details"))
 #----------------------------------------backend for View Punishment Interface--------------------------------------------
         self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
@@ -22821,9 +25038,13 @@ class ViewPunishment(object):
         self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
         self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
         self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
-        self.navViewState.clicked.connect(self.navViewStateMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
         self.btnAddPunishment.clicked.connect(self.navAddPunishMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
     def navViewPersonnelMethod(self):
              w.change_view(1)    
     def navViewImportantKeyMethod(self):
@@ -22848,10 +25069,18 @@ class ViewPunishment(object):
              w.change_view(11) 
     def navAddPunishMethod(self):
              w.change_view(19)   
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23)
     def navManageCallMethod(self):
-             w.change_view(25)  
+             w.change_view(25)   
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29) 
 class ViewPunishmentWidget(QtWidgets.QMainWindow,ViewPunishment ):
     def __init__(self, parent=None):
         super(ViewPunishmentWidget, self).__init__(parent)
@@ -22871,7 +25100,7 @@ class ViewOOD(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -22883,7 +25112,7 @@ class ViewOOD(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -22925,7 +25154,7 @@ class ViewOOD(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -22967,7 +25196,7 @@ class ViewOOD(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -23010,7 +25239,7 @@ class ViewOOD(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -23053,7 +25282,7 @@ class ViewOOD(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -23095,7 +25324,7 @@ class ViewOOD(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -23137,7 +25366,7 @@ class ViewOOD(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -23179,7 +25408,7 @@ class ViewOOD(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -23221,12 +25450,12 @@ class ViewOOD(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -23268,7 +25497,7 @@ class ViewOOD(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -23309,14 +25538,14 @@ class ViewOOD(object):
         self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -23347,12 +25576,12 @@ class ViewOOD(object):
 "}")
         icon10 = QtGui.QIcon()
         icon10.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon10)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
+        self.navViewManagement.setIcon(icon10)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -23394,7 +25623,7 @@ class ViewOOD(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -23440,7 +25669,7 @@ class ViewOOD(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -23496,7 +25725,7 @@ class ViewOOD(object):
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.frame)
         self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setGeometry(QtCore.QRect(306, 680, 100, 80))
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
         self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
 "    border-radius:4px;\n"
 "    outline:none;")
@@ -23507,7 +25736,7 @@ class ViewOOD(object):
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -23550,7 +25779,7 @@ class ViewOOD(object):
         self.navViewPersonnel.setFlat(False)
         self.navViewPersonnel.setObjectName("navViewPersonnel")
         self.btnAddOOD = QtWidgets.QPushButton(self.frame)
-        self.btnAddOOD.setGeometry(QtCore.QRect(1075, 630, 271, 44))
+        self.btnAddOOD.setGeometry(QtCore.QRect(1065, 630, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -23589,14 +25818,14 @@ class ViewOOD(object):
         self.btnAddOOD.setIcon(icon16)
         self.btnAddOOD.setIconSize(QtCore.QSize(25, 25))
         self.btnAddOOD.setObjectName("btnAddOOD")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -23627,12 +25856,92 @@ class ViewOOD(object):
 "}")
         icon17 = QtGui.QIcon()
         icon17.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon17)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon17)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.tblDetails = QtWidgets.QTableView(self.frame)
-        self.tblDetails.setGeometry(QtCore.QRect(306, 120, 1040, 500))
+        self.tblDetails.setGeometry(QtCore.QRect(326, 120, 1010, 500))
         font = QtGui.QFont()
         font.setPointSize(11)
         self.tblDetails.setFont(font)
@@ -23655,23 +25964,25 @@ class ViewOOD(object):
         self.label_4.raise_()
         self.navViewMOB.raise_()
         self.navViewLocation.raise_()
-        self.navViewMangement.raise_()
+        self.navViewManagement.raise_()
         self.navViewPPE.raise_()
         self.navViewOOD.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.pushButton.raise_()
         self.pushButton_2.raise_()
         self.navViewPersonnel.raise_()
         self.btnAddOOD.raise_()
-        self.navViewState.raise_()
+        self.navViewStatePersonnel.raise_()
         self.tblDetails.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -23700,14 +26011,16 @@ class ViewOOD(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
         self.pushButton.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
         self.btnAddOOD.setText(_translate("MainWindow", "Add New OOD Observation Entry"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.label_6.setText(_translate("MainWindow", "View OOD Observation Details"))
 #----------------------------------------backend for View OOD Observation Interface--------------------------------------------
         self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
@@ -23720,9 +26033,13 @@ class ViewOOD(object):
         self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
         self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
         self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
-        self.navViewState.clicked.connect(self.navViewStateMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
         self.btnAddOOD.clicked.connect(self.navAddOODMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
     def navViewPersonnelMethod(self):
              w.change_view(1)    
     def navViewImportantKeyMethod(self):
@@ -23747,10 +26064,18 @@ class ViewOOD(object):
              w.change_view(11) 
     def navAddOODMethod(self):
              w.change_view(20)
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23)    
     def navManageCallMethod(self):
-             w.change_view(25) 
+             w.change_view(25)  
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29) 
 class ViewOODWidget(QtWidgets.QMainWindow,ViewOOD ):
     def __init__(self, parent=None):
         super(ViewOODWidget, self).__init__(parent)
@@ -23770,7 +26095,7 @@ class ViewNightRound(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -23782,7 +26107,7 @@ class ViewNightRound(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -23824,7 +26149,7 @@ class ViewNightRound(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -23866,7 +26191,7 @@ class ViewNightRound(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -23909,7 +26234,7 @@ class ViewNightRound(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -23951,7 +26276,7 @@ class ViewNightRound(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -23993,7 +26318,7 @@ class ViewNightRound(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -24035,7 +26360,7 @@ class ViewNightRound(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -24077,7 +26402,7 @@ class ViewNightRound(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -24124,12 +26449,12 @@ class ViewNightRound(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -24171,7 +26496,7 @@ class ViewNightRound(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -24212,14 +26537,14 @@ class ViewNightRound(object):
         self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -24250,12 +26575,12 @@ class ViewNightRound(object):
 "}")
         icon10 = QtGui.QIcon()
         icon10.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon10)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
+        self.navViewManagement.setIcon(icon10)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -24297,7 +26622,7 @@ class ViewNightRound(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -24339,7 +26664,7 @@ class ViewNightRound(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -24395,7 +26720,7 @@ class ViewNightRound(object):
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.frame)
         self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setGeometry(QtCore.QRect(306, 680, 100, 80))
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
         self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
 "    border-radius:4px;\n"
 "    outline:none;")
@@ -24406,7 +26731,7 @@ class ViewNightRound(object):
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -24449,7 +26774,7 @@ class ViewNightRound(object):
         self.navViewPersonnel.setFlat(False)
         self.navViewPersonnel.setObjectName("navViewPersonnel")
         self.btnAddNight = QtWidgets.QPushButton(self.frame)
-        self.btnAddNight.setGeometry(QtCore.QRect(1075, 630, 271, 44))
+        self.btnAddNight.setGeometry(QtCore.QRect(1065, 630, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -24488,14 +26813,14 @@ class ViewNightRound(object):
         self.btnAddNight.setIcon(icon16)
         self.btnAddNight.setIconSize(QtCore.QSize(25, 25))
         self.btnAddNight.setObjectName("btnAddNight")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -24526,12 +26851,92 @@ class ViewNightRound(object):
 "}")
         icon17 = QtGui.QIcon()
         icon17.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon17)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon17)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.tblDetails = QtWidgets.QTableView(self.frame)
-        self.tblDetails.setGeometry(QtCore.QRect(306, 120, 1040, 500))
+        self.tblDetails.setGeometry(QtCore.QRect(326, 120, 1010, 500))
         font = QtGui.QFont()
         font.setPointSize(11)
         self.tblDetails.setFont(font)
@@ -24554,23 +26959,25 @@ class ViewNightRound(object):
         self.label_4.raise_()
         self.navViewMOB.raise_()
         self.navViewLocation.raise_()
-        self.navViewMangement.raise_()
+        self.navViewManagement.raise_()
         self.navViewPPE.raise_()
         self.navViewOOD.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.pushButton.raise_()
         self.pushButton_2.raise_()
         self.navViewPersonnel.raise_()
         self.btnAddNight.raise_()
-        self.navViewState.raise_()
+        self.navViewStatePersonnel.raise_()
         self.tblDetails.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -24599,14 +27006,16 @@ class ViewNightRound(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
         self.pushButton.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
         self.btnAddNight.setText(_translate("MainWindow", "Add New Night Round Entry"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.label_6.setText(_translate("MainWindow", "View Night Round Details"))
 #----------------------------------------backend for View NightRound Interface--------------------------------------------
         self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
@@ -24619,9 +27028,13 @@ class ViewNightRound(object):
         self.navViewPunishment.clicked.connect(self.navViewPunishMethod)   
         self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
         self.navViewGangway.clicked.connect(self.navViewGangwayMethod) 
-        self.navViewState.clicked.connect(self.navViewStateMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
         self.btnAddNight.clicked.connect(self.navAddNightRoundMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
     def navViewPersonnelMethod(self):
              w.change_view(1)    
     def navViewImportantKeyMethod(self):
@@ -24646,10 +27059,18 @@ class ViewNightRound(object):
              w.change_view(11)      
     def navAddNightRoundMethod(self):
              w.change_view(21) 
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23) 
     def navManageCallMethod(self):
-             w.change_view(25) 
+             w.change_view(25)  
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29) 
 class ViewNightRoundWidget(QtWidgets.QMainWindow,ViewNightRound ):
     def __init__(self, parent=None):
         super(ViewNightRoundWidget, self).__init__(parent)
@@ -24669,7 +27090,7 @@ class ViewArmPPE(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -24681,7 +27102,7 @@ class ViewArmPPE(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -24723,7 +27144,7 @@ class ViewArmPPE(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -24765,7 +27186,7 @@ class ViewArmPPE(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -24808,7 +27229,7 @@ class ViewArmPPE(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -24850,7 +27271,7 @@ class ViewArmPPE(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -24892,7 +27313,7 @@ class ViewArmPPE(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -24934,7 +27355,7 @@ class ViewArmPPE(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -24976,7 +27397,7 @@ class ViewArmPPE(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -25018,12 +27439,12 @@ class ViewArmPPE(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -25065,7 +27486,7 @@ class ViewArmPPE(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -25106,14 +27527,14 @@ class ViewArmPPE(object):
         self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -25144,12 +27565,12 @@ class ViewArmPPE(object):
 "}")
         icon10 = QtGui.QIcon()
         icon10.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon10)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
+        self.navViewManagement.setIcon(icon10)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -25195,7 +27616,7 @@ class ViewArmPPE(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -25237,7 +27658,7 @@ class ViewArmPPE(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -25293,7 +27714,7 @@ class ViewArmPPE(object):
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.frame)
         self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setGeometry(QtCore.QRect(306, 680, 100, 80))
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
         self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
 "    border-radius:4px;\n"
 "    outline:none;")
@@ -25304,7 +27725,7 @@ class ViewArmPPE(object):
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -25347,7 +27768,7 @@ class ViewArmPPE(object):
         self.navViewPersonnel.setFlat(False)
         self.navViewPersonnel.setObjectName("navViewPersonnel")
         self.btnAddArmPPE = QtWidgets.QPushButton(self.frame)
-        self.btnAddArmPPE.setGeometry(QtCore.QRect(1075, 630, 271, 44))
+        self.btnAddArmPPE.setGeometry(QtCore.QRect(1065, 630, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -25386,14 +27807,14 @@ class ViewArmPPE(object):
         self.btnAddArmPPE.setIcon(icon16)
         self.btnAddArmPPE.setIconSize(QtCore.QSize(25, 25))
         self.btnAddArmPPE.setObjectName("btnAddArmPPE")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -25424,12 +27845,92 @@ class ViewArmPPE(object):
 "}")
         icon17 = QtGui.QIcon()
         icon17.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon17)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon17)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.tblDetails = QtWidgets.QTableView(self.frame)
-        self.tblDetails.setGeometry(QtCore.QRect(306, 120, 1040, 500))
+        self.tblDetails.setGeometry(QtCore.QRect(326, 120, 1010, 500))
         font = QtGui.QFont()
         font.setPointSize(11)
         self.tblDetails.setFont(font)
@@ -25452,23 +27953,25 @@ class ViewArmPPE(object):
         self.label_4.raise_()
         self.navViewMOB.raise_()
         self.navViewLocation.raise_()
-        self.navViewMangement.raise_()
+        self.navViewManagement.raise_()
         self.navViewPPE.raise_()
         self.navViewOOD.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.pushButton.raise_()
         self.pushButton_2.raise_()
         self.navViewPersonnel.raise_()
         self.btnAddArmPPE.raise_()
-        self.navViewState.raise_()
+        self.navViewStatePersonnel.raise_()
         self.tblDetails.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -25497,14 +28000,16 @@ class ViewArmPPE(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
         self.pushButton.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
         self.btnAddArmPPE.setText(_translate("MainWindow", "Add New Small Arm and PPE Entry"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.label_6.setText(_translate("MainWindow", "View Small Arm and PPE Details"))
 
 #----------------------------------------backend for View ArmPPE Interface--------------------------------------------
@@ -25518,9 +28023,13 @@ class ViewArmPPE(object):
         self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
         self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
         self.navViewPunishment.clicked.connect(self.navViewPunishMethod)
-        self.navViewState.clicked.connect(self.navViewStateMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
         self.btnAddArmPPE.clicked.connect(self.navAddArmPPEMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
     def navViewPersonnelMethod(self):
              w.change_view(1)    
     def navViewImportantKeyMethod(self):
@@ -25545,15 +28054,23 @@ class ViewArmPPE(object):
              w.change_view(11) 
     def navAddArmPPEMethod(self):
              w.change_view(22) 
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23) 
     def navManageCallMethod(self):
-             w.change_view(25) 
+             w.change_view(25)  
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29) 
 class ViewArmPPEWidget(QtWidgets.QMainWindow,ViewArmPPE ):
     def __init__(self, parent=None):
         super(ViewArmPPEWidget, self).__init__(parent)
         self.setup_ViewArmPPE(self)
-############################################################# View Armory State Interface ######################################################################
+############################################################# View Personnel State Interface ######################################################################
 class ViewState(object):
     def setup_ViewState(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -25567,7 +28084,7 @@ class ViewState(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -25579,7 +28096,7 @@ class ViewState(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navManageState = QtWidgets.QPushButton(self.frame)
-        self.navManageState.setGeometry(QtCore.QRect(1075, 120, 271, 44))
+        self.navManageState.setGeometry(QtCore.QRect(1065, 120, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -25619,7 +28136,7 @@ class ViewState(object):
         self.navManageState.setIconSize(QtCore.QSize(25, 25))
         self.navManageState.setObjectName("navManageState")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -25661,7 +28178,7 @@ class ViewState(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -25703,7 +28220,7 @@ class ViewState(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -25747,7 +28264,7 @@ class ViewState(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -25789,7 +28306,7 @@ class ViewState(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -25831,7 +28348,7 @@ class ViewState(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -25873,7 +28390,7 @@ class ViewState(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -25915,7 +28432,7 @@ class ViewState(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -25957,12 +28474,12 @@ class ViewState(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -26004,7 +28521,7 @@ class ViewState(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -26045,14 +28562,14 @@ class ViewState(object):
         self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -26083,12 +28600,12 @@ class ViewState(object):
 "}")
         icon11 = QtGui.QIcon()
         icon11.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon11)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
+        self.navViewManagement.setIcon(icon11)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -26130,7 +28647,7 @@ class ViewState(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -26172,7 +28689,7 @@ class ViewState(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -26215,7 +28732,7 @@ class ViewState(object):
         self.navViewCMS.setObjectName("navViewCMS")
         self.pushButton = QtWidgets.QPushButton(self.frame)
         self.pushButton.setEnabled(True)
-        self.pushButton.setGeometry(QtCore.QRect(1069, 5, 271, 35))
+        self.pushButton.setGeometry(QtCore.QRect(1059, 5, 281, 35))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -26230,7 +28747,7 @@ class ViewState(object):
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.frame)
         self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setGeometry(QtCore.QRect(306, 680, 100, 80))
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
         self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
 "    border-radius:4px;\n"
 "    outline:none;")
@@ -26241,7 +28758,7 @@ class ViewState(object):
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -26283,14 +28800,14 @@ class ViewState(object):
         self.navViewPersonnel.setIconSize(QtCore.QSize(25, 25))
         self.navViewPersonnel.setFlat(False)
         self.navViewPersonnel.setObjectName("navViewPersonnel")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -26319,12 +28836,92 @@ class ViewState(object):
 "    border-radius: 6;\n"
 "\n"
 "}")
-        self.navViewState.setIcon(icon15)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon15)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.label_18 = QtWidgets.QLabel(self.frame)
-        self.label_18.setGeometry(QtCore.QRect(316, 110, 141, 44))
+        self.label_18.setGeometry(QtCore.QRect(326, 110, 141, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -26336,7 +28933,7 @@ class ViewState(object):
         self.label_18.setAlignment(QtCore.Qt.AlignCenter)
         self.label_18.setObjectName("label_18")
         self.label_16 = QtWidgets.QLabel(self.frame)
-        self.label_16.setGeometry(QtCore.QRect(306, 132, 681, 125))
+        self.label_16.setGeometry(QtCore.QRect(316, 132, 681, 125))
         self.label_16.setStyleSheet("    background-color:#FFFFFF;\n"
 "    border-width: 1px;\n"
 "    border-color: #A0A0A0;\n"
@@ -26417,7 +29014,7 @@ class ViewState(object):
         self.lblOfficersEnlisted.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.lblOfficersEnlisted.setObjectName("lblOfficersEnlisted")
         self.label_17 = QtWidgets.QLabel(self.frame)
-        self.label_17.setGeometry(QtCore.QRect(306, 287, 681, 125))
+        self.label_17.setGeometry(QtCore.QRect(316, 287, 681, 125))
         self.label_17.setStyleSheet("    background-color:#FFFFFF;\n"
 "    border-width: 1px;\n"
 "    border-color: #A0A0A0;\n"
@@ -26450,7 +29047,7 @@ class ViewState(object):
         self.label_15.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.label_15.setObjectName("label_15")
         self.label_19 = QtWidgets.QLabel(self.frame)
-        self.label_19.setGeometry(QtCore.QRect(316, 265, 141, 44))
+        self.label_19.setGeometry(QtCore.QRect(326, 265, 141, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -26510,7 +29107,7 @@ class ViewState(object):
         self.lblTotalPresent.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.lblTotalPresent.setObjectName("lblTotalPresent")
         self.label_21 = QtWidgets.QLabel(self.frame)
-        self.label_21.setGeometry(QtCore.QRect(306, 442, 681, 186))
+        self.label_21.setGeometry(QtCore.QRect(316, 442, 681, 186))
         self.label_21.setStyleSheet("    background-color:#FFFFFF;\n"
 "    border-width: 1px;\n"
 "    border-color: #A0A0A0;\n"
@@ -26567,7 +29164,7 @@ class ViewState(object):
         self.label_23.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.label_23.setObjectName("label_23")
         self.label_24 = QtWidgets.QLabel(self.frame)
-        self.label_24.setGeometry(QtCore.QRect(316, 420, 121, 44))
+        self.label_24.setGeometry(QtCore.QRect(326, 420, 121, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -26789,14 +29386,16 @@ class ViewState(object):
         self.label_4.raise_()
         self.navViewMOB.raise_()
         self.navViewLocation.raise_()
-        self.navViewMangement.raise_()
+        self.navViewManagement.raise_()
         self.navViewPPE.raise_()
         self.navViewOOD.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.pushButton.raise_()
         self.pushButton_2.raise_()
         self.navViewPersonnel.raise_()
-        self.navViewState.raise_()
+        self.navViewStatePersonnel.raise_()
         self.label_16.raise_()
         self.label_18.raise_()
         self.label_11.raise_()
@@ -26837,12 +29436,12 @@ class ViewState(object):
         self.label_32.raise_()
         self.label_33.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -26861,7 +29460,7 @@ class ViewState(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.navManageState.setText(_translate("MainWindow", "Manage Armory State"))
+        self.navManageState.setText(_translate("MainWindow", "Manage Personnel State"))
         self.navViewPunishment.setText(_translate("MainWindow", "Punishment Book"))
         self.navViewImpKey.setText(_translate("MainWindow", "Important Key Book"))
         self.navViewGenKey.setText(_translate("MainWindow", "General Key Book"))
@@ -26872,13 +29471,15 @@ class ViewState(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
-        self.pushButton.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
+        self.pushButton.setText(_translate("MainWindow", "Personnel State Management System"))
         self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.label_18.setText(_translate("MainWindow", "Personnel Enlisted"))
         self.label_11.setText(_translate("MainWindow", "CPO/ Sailors:"))
         self.lblTotalEnlisted.setText(_translate("MainWindow", "0"))
@@ -26914,7 +29515,7 @@ class ViewState(object):
         self.lblCasualSailors.setText(_translate("MainWindow", "0"))
         self.lblAwaySailors.setText(_translate("MainWindow", "0"))
         self.label_32.setText(_translate("MainWindow", "Shifa:"))
-        self.label_6.setText(_translate("MainWindow", "Armory State Details"))
+        self.label_6.setText(_translate("MainWindow", "Personnel State Details"))
 
 #----------------------------------------backend for View State Interface--------------------------------------------
         self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
@@ -26930,6 +29531,10 @@ class ViewState(object):
         self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
         self.navManageState.clicked.connect(self.navManageStateMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
     def navViewPersonnelMethod(self):
              w.change_view(1)    
     def navViewImportantKeyMethod(self):
@@ -26955,7 +29560,15 @@ class ViewState(object):
     def navManageStateMethod(self):
              w.change_view(24) 
     def navManageCallMethod(self):
-             w.change_view(25) 
+             w.change_view(25)  
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29) 
 class ViewStateWidget(QtWidgets.QMainWindow,ViewState ):
     def __init__(self, parent=None):
         super(ViewStateWidget, self).__init__(parent)
@@ -26974,7 +29587,7 @@ class ManageState(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet("background-image: url(null);\n"
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -26986,7 +29599,7 @@ class ManageState(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -27028,7 +29641,7 @@ class ManageState(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -27070,7 +29683,7 @@ class ManageState(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -27113,7 +29726,7 @@ class ManageState(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -27156,7 +29769,7 @@ class ManageState(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -27198,7 +29811,7 @@ class ManageState(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -27240,7 +29853,7 @@ class ManageState(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -27282,7 +29895,7 @@ class ManageState(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -27324,12 +29937,12 @@ class ManageState(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -27371,7 +29984,7 @@ class ManageState(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -27412,14 +30025,14 @@ class ManageState(object):
         self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -27450,12 +30063,12 @@ class ManageState(object):
 "}")
         icon10 = QtGui.QIcon()
         icon10.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon10)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
+        self.navViewManagement.setIcon(icon10)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -27497,7 +30110,7 @@ class ManageState(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -27539,7 +30152,7 @@ class ManageState(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -27597,7 +30210,7 @@ class ManageState(object):
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.frame)
         self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setGeometry(QtCore.QRect(306, 680, 100, 80))
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
         self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
 "    border-radius:4px;\n"
 "    outline:none;")
@@ -27608,7 +30221,7 @@ class ManageState(object):
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -27651,7 +30264,7 @@ class ManageState(object):
         self.navViewPersonnel.setFlat(False)
         self.navViewPersonnel.setObjectName("navViewPersonnel")
         self.btnSaveChanges = QtWidgets.QPushButton(self.frame)
-        self.btnSaveChanges.setGeometry(QtCore.QRect(1075, 650, 271, 44))
+        self.btnSaveChanges.setGeometry(QtCore.QRect(1065, 650, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -27690,14 +30303,14 @@ class ManageState(object):
         self.btnSaveChanges.setIcon(icon17)
         self.btnSaveChanges.setIconSize(QtCore.QSize(25, 25))
         self.btnSaveChanges.setObjectName("btnSaveChanges")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -27730,12 +30343,92 @@ class ManageState(object):
 "    border-radius: 6;\n"
 "\n"
 "}")
-        self.navViewState.setIcon(icon14)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon14)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.navViewArmoryDetails = QtWidgets.QPushButton(self.frame)
-        self.navViewArmoryDetails.setGeometry(QtCore.QRect(1075, 120, 271, 44))
+        self.navViewArmoryDetails.setGeometry(QtCore.QRect(1065, 120, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -27776,7 +30469,7 @@ class ManageState(object):
         self.navViewArmoryDetails.setObjectName("navViewArmoryDetails")
         self.lblDataEntrySuccessful = QtWidgets.QLabel(self.frame)
         self.lblDataEntrySuccessful.setEnabled(True)
-        self.lblDataEntrySuccessful.setGeometry(QtCore.QRect(306, 630, 361, 44))
+        self.lblDataEntrySuccessful.setGeometry(QtCore.QRect(316, 630, 361, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -27788,7 +30481,7 @@ class ManageState(object):
         self.lblDataEntrySuccessful.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.lblDataEntrySuccessful.setObjectName("lblDataEntrySuccessful")
         self.tblDetails = QtWidgets.QTableWidget(self.frame)
-        self.tblDetails.setGeometry(QtCore.QRect(306, 174, 1040, 446))
+        self.tblDetails.setGeometry(QtCore.QRect(326, 174, 1010, 446))
         self.tblDetails.setStyleSheet("")
         self.tblDetails.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.tblDetails.setAlternatingRowColors(True)
@@ -27810,25 +30503,27 @@ class ManageState(object):
         self.label_4.raise_()
         self.navViewMOB.raise_()
         self.navViewLocation.raise_()
-        self.navViewMangement.raise_()
+        self.navViewManagement.raise_()
         self.navViewPPE.raise_()
         self.navViewOOD.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.pushButton.raise_()
         self.pushButton_2.raise_()
         self.navViewPersonnel.raise_()
         self.btnSaveChanges.raise_()
-        self.navViewState.raise_()
+        self.navViewStatePersonnel.raise_()
         self.navViewArmoryDetails.raise_()
         self.lblDataEntrySuccessful.raise_()
         self.tblDetails.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -27857,17 +30552,19 @@ class ManageState(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
-        self.pushButton.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
+        self.pushButton.setText(_translate("MainWindow", "Personnel State Management System"))
         self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
         self.btnSaveChanges.setText(_translate("MainWindow", "Save Changes"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
-        self.navViewArmoryDetails.setText(_translate("MainWindow", "View Armory State Details"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
+        self.navViewArmoryDetails.setText(_translate("MainWindow", "View Personnel State Details"))
         self.lblDataEntrySuccessful.setText(_translate("MainWindow", "Changes Saved Successfully!"))
-        self.label_6.setText(_translate("MainWindow", "Manage Armory State"))
+        self.label_6.setText(_translate("MainWindow", "Manage Personnel State"))
 #----------------------------------------backend for Manage State Interface--------------------------------------------
         self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
         self.navViewImpKey.clicked.connect(self.navViewImportantKeyMethod)
@@ -27880,9 +30577,13 @@ class ManageState(object):
         self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
         self.navViewPunishment.clicked.connect(self.navViewPunishMethod)
         self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
-        self.navViewArmoryDetails.clicked.connect(self.navViewStateMethod)
+        self.navViewArmoryDetails.clicked.connect(self.navViewStatePersonnelMethod)
         self.navViewCMS.clicked.connect(self.navManageCallMethod)
         self.btnSaveChanges.clicked.connect(self.saveChanges)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
 
     def saveChanges(self):
             idNo=""
@@ -27927,10 +30628,18 @@ class ManageState(object):
              w.change_view(10) 
     def navViewArmPPEMethod(self):
              w.change_view(11) 
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23) 
     def navManageCallMethod(self):
              w.change_view(25) 
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29) 
 class ManageStateWidget(QtWidgets.QMainWindow,ManageState ):
     def __init__(self, parent=None):
         super(ManageStateWidget, self).__init__(parent)
@@ -27949,7 +30658,7 @@ class ManageCall(object):
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
         self.label.setStyleSheet("background-image: url(null);\n"
 "background-color:#2F3C71;")
         self.label.setText("")
@@ -27961,7 +30670,7 @@ class ManageCall(object):
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
         self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -28003,7 +30712,7 @@ class ManageCall(object):
         self.navViewPunishment.setFlat(False)
         self.navViewPunishment.setObjectName("navViewPunishment")
         self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -28045,7 +30754,7 @@ class ManageCall(object):
         self.navViewImpKey.setFlat(False)
         self.navViewImpKey.setObjectName("navViewImpKey")
         self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -28088,7 +30797,7 @@ class ManageCall(object):
         self.navViewGenKey.setFlat(False)
         self.navViewGenKey.setObjectName("navViewGenKey")
         self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -28131,7 +30840,7 @@ class ManageCall(object):
         self.navViewVisitor.setFlat(False)
         self.navViewVisitor.setObjectName("navViewVisitor")
         self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -28173,7 +30882,7 @@ class ManageCall(object):
         self.navViewTransport.setFlat(False)
         self.navViewTransport.setObjectName("navViewTransport")
         self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -28215,7 +30924,7 @@ class ManageCall(object):
         self.navViewGangway.setFlat(False)
         self.navViewGangway.setObjectName("navViewGangway")
         self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -28257,7 +30966,7 @@ class ManageCall(object):
         self.navViewDuty.setFlat(False)
         self.navViewDuty.setObjectName("navViewDuty")
         self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -28299,12 +31008,12 @@ class ManageCall(object):
         self.navViewNight.setFlat(False)
         self.navViewNight.setObjectName("navViewNight")
         self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
         self.label_4.setStyleSheet("background-color:#4154A0;")
         self.label_4.setText("")
         self.label_4.setObjectName("label_4")
         self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -28346,7 +31055,7 @@ class ManageCall(object):
         self.navViewMOB.setFlat(False)
         self.navViewMOB.setObjectName("navViewMOB")
         self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -28387,14 +31096,14 @@ class ManageCall(object):
         self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
         self.navViewLocation.setFlat(False)
         self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -28425,12 +31134,12 @@ class ManageCall(object):
 "}")
         icon10 = QtGui.QIcon()
         icon10.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon10)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
+        self.navViewManagement.setIcon(icon10)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
         self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -28472,7 +31181,7 @@ class ManageCall(object):
         self.navViewPPE.setFlat(False)
         self.navViewPPE.setObjectName("navViewPPE")
         self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -28514,7 +31223,7 @@ class ManageCall(object):
         self.navViewOOD.setFlat(False)
         self.navViewOOD.setObjectName("navViewOOD")
         self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -28575,7 +31284,7 @@ class ManageCall(object):
         self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.frame)
         self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setGeometry(QtCore.QRect(306, 680, 100, 80))
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
         self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
 "    border-radius:4px;\n"
 "    outline:none;")
@@ -28586,7 +31295,7 @@ class ManageCall(object):
         self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
         self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -28628,14 +31337,14 @@ class ManageCall(object):
         self.navViewPersonnel.setIconSize(QtCore.QSize(25, 25))
         self.navViewPersonnel.setFlat(False)
         self.navViewPersonnel.setObjectName("navViewPersonnel")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
@@ -28666,13 +31375,93 @@ class ManageCall(object):
 "}")
         icon16 = QtGui.QIcon()
         icon16.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon16)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
+        self.navViewStatePersonnel.setIcon(icon16)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
         self.lblDataEntrySuccessful = QtWidgets.QLabel(self.frame)
         self.lblDataEntrySuccessful.setEnabled(True)
-        self.lblDataEntrySuccessful.setGeometry(QtCore.QRect(306, 620, 361, 44))
+        self.lblDataEntrySuccessful.setGeometry(QtCore.QRect(316, 620, 361, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -28684,7 +31473,7 @@ class ManageCall(object):
         self.lblDataEntrySuccessful.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.lblDataEntrySuccessful.setObjectName("lblDataEntrySuccessful")
         self.tblDetails = QtWidgets.QTableWidget(self.frame)
-        self.tblDetails.setGeometry(QtCore.QRect(306, 120, 1040, 491))
+        self.tblDetails.setGeometry(QtCore.QRect(326, 120, 1010, 491))
         self.tblDetails.setStyleSheet("")
         self.tblDetails.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.tblDetails.setAlternatingRowColors(True)
@@ -28706,23 +31495,25 @@ class ManageCall(object):
         self.label_4.raise_()
         self.navViewMOB.raise_()
         self.navViewLocation.raise_()
-        self.navViewMangement.raise_()
+        self.navViewManagement.raise_()
         self.navViewPPE.raise_()
         self.navViewOOD.raise_()
         self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
         self.pushButton.raise_()
         self.pushButton_2.raise_()
         self.navViewPersonnel.raise_()
-        self.navViewState.raise_()
+        self.navViewStatePersonnel.raise_()
         self.lblDataEntrySuccessful.raise_()
         self.tblDetails.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
         self.label_13.setText("")
         self.label_13.setObjectName("label_13")
         self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -28751,13 +31542,15 @@ class ManageCall(object):
         self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
         self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
         self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
         self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
         self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
         self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
         self.pushButton.setText(_translate("MainWindow", "SRE Call Management System"))
         self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.lblDataEntrySuccessful.setText(_translate("MainWindow", "Changes Saved Successfully!"))
         self.label_6.setText(_translate("MainWindow", "Call Personnel"))
 #----------------------------------------backend for Manage Call Interface--------------------------------------------
@@ -28773,7 +31566,11 @@ class ManageCall(object):
         self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
         self.navViewPunishment.clicked.connect(self.navViewPunishMethod)
         self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
-        self.navViewState.clicked.connect(self.navViewStateMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
     def resetManageStateSuccess(self):
             self.lblDataEntrySuccessful.hide()
             self.lblDataEntrySuccessful.setStyleSheet("color: green;\n""background-color:#ffffff;\n""font-size: 11pt")
@@ -28799,13 +31596,4883 @@ class ManageCall(object):
              w.change_view(10) 
     def navViewArmPPEMethod(self):
              w.change_view(11) 
-    def navViewStateMethod(self):
+    def navViewStatePersonnelMethod(self):
              w.change_view(23) 
-
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29) 
 class ManageCallWidget(QtWidgets.QMainWindow,ManageCall ):
     def __init__(self, parent=None):
         super(ManageCallWidget, self).__init__(parent)
         self.setup_ManageCall(self)
+
+############################################################# Personnel Locaton Interface ######################################################################
+class PersonnelLocation(object):
+    def setup_PersonnelLocation(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(1366, 765)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.frame = QtWidgets.QFrame(self.centralwidget)
+        self.frame.setGeometry(QtCore.QRect(0, 0, 1366, 768))
+        self.frame.setStyleSheet("background-color: #ffffff")
+        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame.setObjectName("frame")
+        self.label = QtWidgets.QLabel(self.frame)
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
+        self.label.setStyleSheet("background-image: url(null);\n"
+"background-color:#2F3C71;")
+        self.label.setText("")
+        self.label.setObjectName("label")
+        self.label_2 = QtWidgets.QLabel(self.frame)
+        self.label_2.setGeometry(QtCore.QRect(0, 0, 1366, 44))
+        self.label_2.setStyleSheet("background-image: url(null);\n"
+"background-color:#222222;")
+        self.label_2.setText("")
+        self.label_2.setObjectName("label_2")
+        self.navViewPunishment = QtWidgets.QPushButton(self.frame)
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPunishment.setFont(font)
+        self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPunishment.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/images/punishment.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPunishment.setIcon(icon)
+        self.navViewPunishment.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPunishment.setFlat(False)
+        self.navViewPunishment.setObjectName("navViewPunishment")
+        self.navViewImpKey = QtWidgets.QPushButton(self.frame)
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewImpKey.setFont(font)
+        self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewImpKey.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/images/impKey.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewImpKey.setIcon(icon1)
+        self.navViewImpKey.setIconSize(QtCore.QSize(25, 25))
+        self.navViewImpKey.setFlat(False)
+        self.navViewImpKey.setObjectName("navViewImpKey")
+        self.navViewGenKey = QtWidgets.QPushButton(self.frame)
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewGenKey.setFont(font)
+        self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewGenKey.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(":/images/genKey.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewGenKey.setIcon(icon2)
+        self.navViewGenKey.setIconSize(QtCore.QSize(25, 25))
+        self.navViewGenKey.setFlat(False)
+        self.navViewGenKey.setObjectName("navViewGenKey")
+        self.navViewVisitor = QtWidgets.QPushButton(self.frame)
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewVisitor.setFont(font)
+        self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewVisitor.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"}")
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(":/images/visitor.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewVisitor.setIcon(icon3)
+        self.navViewVisitor.setIconSize(QtCore.QSize(25, 25))
+        self.navViewVisitor.setFlat(False)
+        self.navViewVisitor.setObjectName("navViewVisitor")
+        self.navViewTransport = QtWidgets.QPushButton(self.frame)
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewTransport.setFont(font)
+        self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewTransport.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon4 = QtGui.QIcon()
+        icon4.addPixmap(QtGui.QPixmap(":/images/transport.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewTransport.setIcon(icon4)
+        self.navViewTransport.setIconSize(QtCore.QSize(25, 25))
+        self.navViewTransport.setFlat(False)
+        self.navViewTransport.setObjectName("navViewTransport")
+        self.navViewGangway = QtWidgets.QPushButton(self.frame)
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewGangway.setFont(font)
+        self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewGangway.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon5 = QtGui.QIcon()
+        icon5.addPixmap(QtGui.QPixmap(":/images/gangway.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewGangway.setIcon(icon5)
+        self.navViewGangway.setIconSize(QtCore.QSize(25, 25))
+        self.navViewGangway.setFlat(False)
+        self.navViewGangway.setObjectName("navViewGangway")
+        self.navViewDuty = QtWidgets.QPushButton(self.frame)
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewDuty.setFont(font)
+        self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewDuty.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon6 = QtGui.QIcon()
+        icon6.addPixmap(QtGui.QPixmap(":/images/duty.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewDuty.setIcon(icon6)
+        self.navViewDuty.setIconSize(QtCore.QSize(25, 25))
+        self.navViewDuty.setFlat(False)
+        self.navViewDuty.setObjectName("navViewDuty")
+        self.navViewNight = QtWidgets.QPushButton(self.frame)
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewNight.setFont(font)
+        self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewNight.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon7 = QtGui.QIcon()
+        icon7.addPixmap(QtGui.QPixmap(":/images/night.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewNight.setIcon(icon7)
+        self.navViewNight.setIconSize(QtCore.QSize(25, 25))
+        self.navViewNight.setFlat(False)
+        self.navViewNight.setObjectName("navViewNight")
+        self.label_4 = QtWidgets.QLabel(self.frame)
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
+        self.label_4.setStyleSheet("background-color:#4154A0;")
+        self.label_4.setText("")
+        self.label_4.setObjectName("label_4")
+        self.navViewMOB = QtWidgets.QPushButton(self.frame)
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewMOB.setFont(font)
+        self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewMOB.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon8 = QtGui.QIcon()
+        icon8.addPixmap(QtGui.QPixmap(":/images/mob.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewMOB.setIcon(icon8)
+        self.navViewMOB.setIconSize(QtCore.QSize(32, 32))
+        self.navViewMOB.setFlat(False)
+        self.navViewMOB.setObjectName("navViewMOB")
+        self.navViewLocation = QtWidgets.QPushButton(self.frame)
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewLocation.setFont(font)
+        self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewLocation.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:active\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon9 = QtGui.QIcon()
+        icon9.addPixmap(QtGui.QPixmap(":/images/locate.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewLocation.setIcon(icon9)
+        self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
+        self.navViewLocation.setFlat(False)
+        self.navViewLocation.setObjectName("navViewLocation")
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon10 = QtGui.QIcon()
+        icon10.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewManagement.setIcon(icon10)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
+        self.navViewPPE = QtWidgets.QPushButton(self.frame)
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPPE.setFont(font)
+        self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPPE.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon11 = QtGui.QIcon()
+        icon11.addPixmap(QtGui.QPixmap(":/images/armPPE.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPPE.setIcon(icon11)
+        self.navViewPPE.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPPE.setFlat(False)
+        self.navViewPPE.setObjectName("navViewPPE")
+        self.navViewOOD = QtWidgets.QPushButton(self.frame)
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewOOD.setFont(font)
+        self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewOOD.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon12 = QtGui.QIcon()
+        icon12.addPixmap(QtGui.QPixmap(":/images/oodObserve.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewOOD.setIcon(icon12)
+        self.navViewOOD.setIconSize(QtCore.QSize(25, 25))
+        self.navViewOOD.setFlat(False)
+        self.navViewOOD.setObjectName("navViewOOD")
+        self.navViewCMS = QtWidgets.QPushButton(self.frame)
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewCMS.setFont(font)
+        self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewCMS.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon13 = QtGui.QIcon()
+        icon13.addPixmap(QtGui.QPixmap(":/images/sreCall.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewCMS.setIcon(icon13)
+        self.navViewCMS.setIconSize(QtCore.QSize(25, 25))
+        self.navViewCMS.setFlat(False)
+        self.navViewCMS.setObjectName("navViewCMS")
+        self.pushButton = QtWidgets.QPushButton(self.frame)
+        self.pushButton.setEnabled(True)
+        self.pushButton.setGeometry(QtCore.QRect(1080, 5, 260, 35))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.pushButton.setFont(font)
+        self.pushButton.setStyleSheet(" text-align: right;\n"
+"    color: #ffffff;\n"
+"    background-color:#222222;")
+        self.pushButton.setIcon(icon9)
+        self.pushButton.setIconSize(QtCore.QSize(32, 32))
+        self.pushButton.setObjectName("pushButton")
+        self.pushButton_2 = QtWidgets.QPushButton(self.frame)
+        self.pushButton_2.setEnabled(True)
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
+        self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
+"    border-radius:4px;\n"
+"    outline:none;")
+        self.pushButton_2.setText("")
+        icon14 = QtGui.QIcon()
+        icon14.addPixmap(QtGui.QPixmap(":/images/logoMTIP.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_2.setIcon(icon14)
+        self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
+        self.pushButton_2.setObjectName("pushButton_2")
+        self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPersonnel.setFont(font)
+        self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPersonnel.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon15 = QtGui.QIcon()
+        icon15.addPixmap(QtGui.QPixmap(":/images/personnelData.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPersonnel.setIcon(icon15)
+        self.navViewPersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPersonnel.setFlat(False)
+        self.navViewPersonnel.setObjectName("navViewPersonnel")
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon16 = QtGui.QIcon()
+        icon16.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStatePersonnel.setIcon(icon16)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
+        self.scrollArea = QtWidgets.QScrollArea(self.frame)
+        self.scrollArea.setGeometry(QtCore.QRect(325, 60, 1025, 551))
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setObjectName("scrollArea")
+        self.scrollAreaWidgetContents_4 = QtWidgets.QWidget()
+        self.scrollAreaWidgetContents_4.setGeometry(QtCore.QRect(0, 0, 1023, 549))
+        self.scrollAreaWidgetContents_4.setObjectName("scrollAreaWidgetContents_4")
+        self.btnshipImage = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnshipImage.setGeometry(QtCore.QRect(-10, -10, 1040, 569))
+        self.btnshipImage.setLayoutDirection(QtCore.Qt.RightToLeft)
+        self.btnshipImage.setStyleSheet("border:1px solid #fff;\n"
+"outline:none;\n"
+"background-color:#AADAFF;\n"
+"color:#AADAFF;")
+        self.btnshipImage.setText("")
+        icon17 = QtGui.QIcon()
+        icon17.addPixmap(QtGui.QPixmap(":/images/shipDefault.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnshipImage.setIcon(icon17)
+        self.btnshipImage.setIconSize(QtCore.QSize(1040, 520))
+        self.btnshipImage.setObjectName("btnshipImage")
+        self.btnZoomIn = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnZoomIn.setGeometry(QtCore.QRect(974, 6, 44, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnZoomIn.setFont(font)
+        self.btnZoomIn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnZoomIn.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #000000;\n"
+"    background-color:#ffffff;\n"
+"    border-width: 1px;\n"
+"    border-color: #A5A5A5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#E5E5E5\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #D1D1D1;\n"
+"     border-width: 3px;\n"
+"    border-color: #E5E5E5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.btnZoomIn.setText("")
+        icon18 = QtGui.QIcon()
+        icon18.addPixmap(QtGui.QPixmap(":/images/zoomIn.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnZoomIn.setIcon(icon18)
+        self.btnZoomIn.setIconSize(QtCore.QSize(25, 25))
+        self.btnZoomIn.setObjectName("btnZoomIn")
+        self.btnZoomOut = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnZoomOut.setGeometry(QtCore.QRect(974, 56, 44, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnZoomOut.setFont(font)
+        self.btnZoomOut.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnZoomOut.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #000000;\n"
+"    background-color:#ffffff;\n"
+"    border-width: 1px;\n"
+"    border-color: #A5A5A5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#E5E5E5\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #D1D1D1;\n"
+"     border-width: 3px;\n"
+"    border-color: #E5E5E5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.btnZoomOut.setText("")
+        icon19 = QtGui.QIcon()
+        icon19.addPixmap(QtGui.QPixmap(":/images/zoomOut.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnZoomOut.setIcon(icon19)
+        self.btnZoomOut.setIconSize(QtCore.QSize(25, 25))
+        self.btnZoomOut.setObjectName("btnZoomOut")
+        self.btnMoveRight = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMoveRight.setGeometry(QtCore.QRect(974, 500, 44, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMoveRight.setFont(font)
+        self.btnMoveRight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMoveRight.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #000000;\n"
+"    background-color:#ffffff;\n"
+"    border-width: 1px;\n"
+"    border-color: #A5A5A5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#E5E5E5\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #D1D1D1;\n"
+"     border-width: 3px;\n"
+"    border-color: #E5E5E5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.btnMoveRight.setText("")
+        icon20 = QtGui.QIcon()
+        icon20.addPixmap(QtGui.QPixmap(":/images/moveRight.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMoveRight.setIcon(icon20)
+        self.btnMoveRight.setIconSize(QtCore.QSize(25, 25))
+        self.btnMoveRight.setObjectName("btnMoveRight")
+        self.btnMoveLeft = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMoveLeft.setGeometry(QtCore.QRect(924, 500, 44, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMoveLeft.setFont(font)
+        self.btnMoveLeft.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMoveLeft.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #000000;\n"
+"    background-color:#ffffff;\n"
+"    border-width: 1px;\n"
+"    border-color: #A5A5A5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#E5E5E5\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #D1D1D1;\n"
+"     border-width: 3px;\n"
+"    border-color: #E5E5E5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.btnMoveLeft.setText("")
+        icon21 = QtGui.QIcon()
+        icon21.addPixmap(QtGui.QPixmap(":/images/moveLeft.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMoveLeft.setIcon(icon21)
+        self.btnMoveLeft.setIconSize(QtCore.QSize(25, 25))
+        self.btnMoveLeft.setObjectName("btnMoveLeft")
+        self.btnMarker2Room2 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker2Room2.setGeometry(QtCore.QRect(570, 163, 51, 101))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker2Room2.setFont(font)
+        self.btnMarker2Room2.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker2Room2.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker2Room2.setText("")
+        icon22 = QtGui.QIcon()
+        icon22.addPixmap(QtGui.QPixmap(":/images/markerRoom3.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMarker2Room2.setIcon(icon22)
+        self.btnMarker2Room2.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker2Room2.setObjectName("btnMarker2Room2")
+        self.btnMarker1Room2 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker1Room2.setGeometry(QtCore.QRect(531, 163, 51, 101))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker1Room2.setFont(font)
+        self.btnMarker1Room2.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker1Room2.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker1Room2.setText("")
+        self.btnMarker1Room2.setIcon(icon22)
+        self.btnMarker1Room2.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker1Room2.setObjectName("btnMarker1Room2")
+        self.btnMarker3Room1 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker3Room1.setGeometry(QtCore.QRect(476, 163, 51, 101))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker3Room1.setFont(font)
+        self.btnMarker3Room1.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker3Room1.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker3Room1.setText("")
+        icon23 = QtGui.QIcon()
+        icon23.addPixmap(QtGui.QPixmap(":/images/markerRoom2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMarker3Room1.setIcon(icon23)
+        self.btnMarker3Room1.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker3Room1.setObjectName("btnMarker3Room1")
+        self.btnMarker2Room1 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker2Room1.setGeometry(QtCore.QRect(413, 240, 101, 51))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker2Room1.setFont(font)
+        self.btnMarker2Room1.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker2Room1.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker2Room1.setText("")
+        icon24 = QtGui.QIcon()
+        icon24.addPixmap(QtGui.QPixmap(":/images/markerRoomLeft2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMarker2Room1.setIcon(icon24)
+        self.btnMarker2Room1.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker2Room1.setObjectName("btnMarker2Room1")
+        self.btnMarker1Room3 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker1Room3.setGeometry(QtCore.QRect(520, 298, 51, 101))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker1Room3.setFont(font)
+        self.btnMarker1Room3.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker1Room3.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker1Room3.setText("")
+        icon25 = QtGui.QIcon()
+        icon25.addPixmap(QtGui.QPixmap(":/images/markerRoom1.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMarker1Room3.setIcon(icon25)
+        self.btnMarker1Room3.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker1Room3.setObjectName("btnMarker1Room3")
+        self.btnMarker2Room3 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker2Room3.setGeometry(QtCore.QRect(560, 298, 51, 101))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker2Room3.setFont(font)
+        self.btnMarker2Room3.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker2Room3.setLayoutDirection(QtCore.Qt.RightToLeft)
+        self.btnMarker2Room3.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker2Room3.setText("")
+        self.btnMarker2Room3.setIcon(icon25)
+        self.btnMarker2Room3.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker2Room3.setObjectName("btnMarker2Room3")
+        self.btnMarker1Room1 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker1Room1.setGeometry(QtCore.QRect(476, 258, 51, 101))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker1Room1.setFont(font)
+        self.btnMarker1Room1.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker1Room1.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker1Room1.setText("")
+        icon26 = QtGui.QIcon()
+        icon26.addPixmap(QtGui.QPixmap(":/images/markerRoomDown2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMarker1Room1.setIcon(icon26)
+        self.btnMarker1Room1.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker1Room1.setObjectName("btnMarker1Room1")
+        self.btnMarker3Room3 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker3Room3.setGeometry(QtCore.QRect(583, 286, 101, 51))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker3Room3.setFont(font)
+        self.btnMarker3Room3.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker3Room3.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker3Room3.setText("")
+        icon27 = QtGui.QIcon()
+        icon27.addPixmap(QtGui.QPixmap(":/images/markerRoomRight1.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMarker3Room3.setIcon(icon27)
+        self.btnMarker3Room3.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker3Room3.setObjectName("btnMarker3Room3")
+        self.btnMarker3Room2 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker3Room2.setGeometry(QtCore.QRect(583, 240, 101, 51))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker3Room2.setFont(font)
+        self.btnMarker3Room2.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker3Room2.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker3Room2.setText("")
+        icon28 = QtGui.QIcon()
+        icon28.addPixmap(QtGui.QPixmap(":/images/markerRoomRight3.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMarker3Room2.setIcon(icon28)
+        self.btnMarker3Room2.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker3Room2.setObjectName("btnMarker3Room2")
+        self.btnMobError = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMobError.setEnabled(True)
+        self.btnMobError.setGeometry(QtCore.QRect(6, 482, 211, 61))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMobError.setFont(font)
+        self.btnMobError.setStyleSheet("border:1px solid  #FF5555;\n"
+"background-color: #FF5555;\n"
+"outline:none;\n"
+"color: #FFFFFF;")
+        icon29 = QtGui.QIcon()
+        icon29.addPixmap(QtGui.QPixmap(":/images/notification.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMobError.setIcon(icon29)
+        self.btnMobError.setIconSize(QtCore.QSize(32, 32))
+        self.btnMobError.setObjectName("btnMobError")
+        self.btnshipImage.raise_()
+        self.btnMarker2Room2.raise_()
+        self.btnMarker1Room2.raise_()
+        self.btnMarker3Room1.raise_()
+        self.btnMarker2Room1.raise_()
+        self.btnMarker1Room3.raise_()
+        self.btnMarker2Room3.raise_()
+        self.btnMarker1Room1.raise_()
+        self.btnMarker3Room3.raise_()
+        self.btnMarker3Room2.raise_()
+        self.btnMoveLeft.raise_()
+        self.btnMoveRight.raise_()
+        self.btnZoomIn.raise_()
+        self.btnZoomOut.raise_()
+        self.btnMobError.raise_()
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents_4)
+        self.label_2.raise_()
+        self.label.raise_()
+        self.navViewPunishment.raise_()
+        self.navViewImpKey.raise_()
+        self.navViewGenKey.raise_()
+        self.navViewVisitor.raise_()
+        self.navViewTransport.raise_()
+        self.navViewGangway.raise_()
+        self.navViewDuty.raise_()
+        self.navViewNight.raise_()
+        self.label_4.raise_()
+        self.navViewMOB.raise_()
+        self.navViewLocation.raise_()
+        self.navViewManagement.raise_()
+        self.navViewPPE.raise_()
+        self.navViewOOD.raise_()
+        self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
+        self.pushButton.raise_()
+        self.pushButton_2.raise_()
+        self.navViewPersonnel.raise_()
+        self.navViewStatePersonnel.raise_()
+        self.scrollArea.raise_()
+        MainWindow.setCentralWidget(self.centralwidget)
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.navViewPunishment.setText(_translate("MainWindow", "Punishment Book"))
+        self.navViewImpKey.setText(_translate("MainWindow", "Important Key Book"))
+        self.navViewGenKey.setText(_translate("MainWindow", "General Key Book"))
+        self.navViewVisitor.setText(_translate("MainWindow", "Visitor Book"))
+        self.navViewTransport.setText(_translate("MainWindow", "Transport Book"))
+        self.navViewGangway.setText(_translate("MainWindow", "Gangway Book"))
+        self.navViewDuty.setText(_translate("MainWindow", "Duty Book"))
+        self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
+        self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
+        self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
+        self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
+        self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
+        self.pushButton.setText(_translate("MainWindow", "Personnel Location"))
+        self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
+        self.btnMobError.setText(_translate("MainWindow", "Alert! Man Overboard!"))
+
+
+#----------------------------------------backend for Personnel Location Interface----------------------------------------------
+      
+        disableHideMarkers(self)
+        self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
+        self.navViewImpKey.clicked.connect(self.navViewImportantKeyMethod)
+        self.navViewGenKey.clicked.connect(self.navViewGeneralKeyMethod)
+        self.navViewOOD.clicked.connect(self.navViewOODMethod)
+        self.navViewTransport.clicked.connect(self.navViewTransportMethod)
+        self.navViewVisitor.clicked.connect(self.navViewVisitorMethod)
+        self.navViewDuty.clicked.connect(self.navViewDutyMethod)
+        self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
+        self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
+        self.navViewPunishment.clicked.connect(self.navViewPunishMethod)
+        self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
+        self.navViewCMS.clicked.connect(self.navManageCallMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
+        self.zoomLimit=0
+        self.moveLimit=0
+        self.moveText="*********************"
+        self.btnZoomOut.setEnabled(False)
+        self.btnMoveLeft.setEnabled(False)
+        self.btnMoveRight.setEnabled(False)
+        self.btnZoomIn.clicked.connect(self.zoomInMethod)
+        self.btnZoomOut.clicked.connect(self.zoomOutMethod)
+        self.btnMoveRight.clicked.connect(self.moveRightMethod)
+        self.btnMoveLeft.clicked.connect(self.moveLeftMethod)
+
+    def zoomInMethod(self):
+            zoomIn(self)
+    def zoomOutMethod(self):
+            zoomOut(self)
+    def moveRightMethod(self):
+            moveRight(self)
+    def moveLeftMethod(self):
+            moveLeft(self)
+            
+    def navViewPersonnelMethod(self):
+             w.change_view(1)    
+    def navViewImportantKeyMethod(self):
+             w.change_view(2)
+    def navViewGeneralKeyMethod(self):
+             w.change_view(3)  
+    def navViewVisitorMethod(self):
+             w.change_view(4)
+    def navViewTransportMethod(self):
+             w.change_view(5) 
+    def navViewGangwayMethod(self):
+             w.change_view(6)
+    def navViewDutyMethod(self):
+             w.change_view(7)
+    def navViewPunishMethod(self):
+             w.change_view(8)    
+    def navViewOODMethod(self):
+             w.change_view(9)      
+    def navViewNightRoundMethod(self):
+             w.change_view(10) 
+    def navViewArmPPEMethod(self):
+             w.change_view(11) 
+    def navViewStatePersonnelMethod(self):
+             w.change_view(23) 
+    def navManageCallMethod(self):
+             w.change_view(25) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27) 
+    def navMOBMethod(self):
+             w.change_view(28)
+    def navLogoutMethod(self):
+             w.change_view(29) 
+class PersonnelLocationWidget(QtWidgets.QMainWindow,PersonnelLocation ):
+    def __init__(self, parent=None):
+        super(PersonnelLocationWidget, self).__init__(parent)
+        self.setup_PersonnelLocation(self)
+############################################################# Personnel Management System Interface ######################################################################
+class PersonnelManagement(object):
+    def setup_PersonnelManagement(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(1366, 765)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.frame = QtWidgets.QFrame(self.centralwidget)
+        self.frame.setGeometry(QtCore.QRect(0, 0, 1366, 768))
+        self.frame.setStyleSheet("background-color: #ffffff")
+        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame.setObjectName("frame")
+        self.label = QtWidgets.QLabel(self.frame)
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
+        self.label.setStyleSheet("background-image: url(null);\n"
+"background-color:#2F3C71;")
+        self.label.setText("")
+        self.label.setObjectName("label")
+        self.label_2 = QtWidgets.QLabel(self.frame)
+        self.label_2.setGeometry(QtCore.QRect(0, 0, 1366, 44))
+        self.label_2.setStyleSheet("background-image: url(null);\n"
+"background-color:#222222;")
+        self.label_2.setText("")
+        self.label_2.setObjectName("label_2")
+        self.navViewPunishment = QtWidgets.QPushButton(self.frame)
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPunishment.setFont(font)
+        self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPunishment.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/images/punishment.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPunishment.setIcon(icon)
+        self.navViewPunishment.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPunishment.setFlat(False)
+        self.navViewPunishment.setObjectName("navViewPunishment")
+        self.navViewImpKey = QtWidgets.QPushButton(self.frame)
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewImpKey.setFont(font)
+        self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewImpKey.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/images/impKey.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewImpKey.setIcon(icon1)
+        self.navViewImpKey.setIconSize(QtCore.QSize(25, 25))
+        self.navViewImpKey.setFlat(False)
+        self.navViewImpKey.setObjectName("navViewImpKey")
+        self.navViewGenKey = QtWidgets.QPushButton(self.frame)
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewGenKey.setFont(font)
+        self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewGenKey.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(":/images/genKey.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewGenKey.setIcon(icon2)
+        self.navViewGenKey.setIconSize(QtCore.QSize(25, 25))
+        self.navViewGenKey.setFlat(False)
+        self.navViewGenKey.setObjectName("navViewGenKey")
+        self.navViewVisitor = QtWidgets.QPushButton(self.frame)
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewVisitor.setFont(font)
+        self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewVisitor.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"}")
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(":/images/visitor.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewVisitor.setIcon(icon3)
+        self.navViewVisitor.setIconSize(QtCore.QSize(25, 25))
+        self.navViewVisitor.setFlat(False)
+        self.navViewVisitor.setObjectName("navViewVisitor")
+        self.navViewTransport = QtWidgets.QPushButton(self.frame)
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewTransport.setFont(font)
+        self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewTransport.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon4 = QtGui.QIcon()
+        icon4.addPixmap(QtGui.QPixmap(":/images/transport.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewTransport.setIcon(icon4)
+        self.navViewTransport.setIconSize(QtCore.QSize(25, 25))
+        self.navViewTransport.setFlat(False)
+        self.navViewTransport.setObjectName("navViewTransport")
+        self.navViewGangway = QtWidgets.QPushButton(self.frame)
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewGangway.setFont(font)
+        self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewGangway.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon5 = QtGui.QIcon()
+        icon5.addPixmap(QtGui.QPixmap(":/images/gangway.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewGangway.setIcon(icon5)
+        self.navViewGangway.setIconSize(QtCore.QSize(25, 25))
+        self.navViewGangway.setFlat(False)
+        self.navViewGangway.setObjectName("navViewGangway")
+        self.navViewDuty = QtWidgets.QPushButton(self.frame)
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewDuty.setFont(font)
+        self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewDuty.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon6 = QtGui.QIcon()
+        icon6.addPixmap(QtGui.QPixmap(":/images/duty.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewDuty.setIcon(icon6)
+        self.navViewDuty.setIconSize(QtCore.QSize(25, 25))
+        self.navViewDuty.setFlat(False)
+        self.navViewDuty.setObjectName("navViewDuty")
+        self.navViewNight = QtWidgets.QPushButton(self.frame)
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewNight.setFont(font)
+        self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewNight.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon7 = QtGui.QIcon()
+        icon7.addPixmap(QtGui.QPixmap(":/images/night.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewNight.setIcon(icon7)
+        self.navViewNight.setIconSize(QtCore.QSize(25, 25))
+        self.navViewNight.setFlat(False)
+        self.navViewNight.setObjectName("navViewNight")
+        self.label_4 = QtWidgets.QLabel(self.frame)
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
+        self.label_4.setStyleSheet("background-color:#4154A0;")
+        self.label_4.setText("")
+        self.label_4.setObjectName("label_4")
+        self.navViewMOB = QtWidgets.QPushButton(self.frame)
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewMOB.setFont(font)
+        self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewMOB.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon8 = QtGui.QIcon()
+        icon8.addPixmap(QtGui.QPixmap(":/images/mob.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewMOB.setIcon(icon8)
+        self.navViewMOB.setIconSize(QtCore.QSize(32, 32))
+        self.navViewMOB.setFlat(False)
+        self.navViewMOB.setObjectName("navViewMOB")
+        self.navViewLocation = QtWidgets.QPushButton(self.frame)
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewLocation.setFont(font)
+        self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewLocation.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon9 = QtGui.QIcon()
+        icon9.addPixmap(QtGui.QPixmap(":/images/locate.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewLocation.setIcon(icon9)
+        self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
+        self.navViewLocation.setFlat(False)
+        self.navViewLocation.setObjectName("navViewLocation")
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:active\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon10 = QtGui.QIcon()
+        icon10.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewManagement.setIcon(icon10)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
+        self.navViewPPE = QtWidgets.QPushButton(self.frame)
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPPE.setFont(font)
+        self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPPE.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon11 = QtGui.QIcon()
+        icon11.addPixmap(QtGui.QPixmap(":/images/armPPE.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPPE.setIcon(icon11)
+        self.navViewPPE.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPPE.setFlat(False)
+        self.navViewPPE.setObjectName("navViewPPE")
+        self.navViewOOD = QtWidgets.QPushButton(self.frame)
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewOOD.setFont(font)
+        self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewOOD.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon12 = QtGui.QIcon()
+        icon12.addPixmap(QtGui.QPixmap(":/images/oodObserve.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewOOD.setIcon(icon12)
+        self.navViewOOD.setIconSize(QtCore.QSize(25, 25))
+        self.navViewOOD.setFlat(False)
+        self.navViewOOD.setObjectName("navViewOOD")
+        self.navViewCMS = QtWidgets.QPushButton(self.frame)
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewCMS.setFont(font)
+        self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewCMS.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon13 = QtGui.QIcon()
+        icon13.addPixmap(QtGui.QPixmap(":/images/sreCall.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewCMS.setIcon(icon13)
+        self.navViewCMS.setIconSize(QtCore.QSize(25, 25))
+        self.navViewCMS.setFlat(False)
+        self.navViewCMS.setObjectName("navViewCMS")
+        self.pushButton = QtWidgets.QPushButton(self.frame)
+        self.pushButton.setEnabled(True)
+        self.pushButton.setGeometry(QtCore.QRect(1080, 5, 260, 35))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.pushButton.setFont(font)
+        self.pushButton.setStyleSheet(" text-align: right;\n"
+"    color: #ffffff;\n"
+"    background-color:#222222;")
+        self.pushButton.setIcon(icon10)
+        self.pushButton.setIconSize(QtCore.QSize(32, 32))
+        self.pushButton.setObjectName("pushButton")
+        self.pushButton_2 = QtWidgets.QPushButton(self.frame)
+        self.pushButton_2.setEnabled(True)
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
+        self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
+"    border-radius:4px;\n"
+"    outline:none;")
+        self.pushButton_2.setText("")
+        icon14 = QtGui.QIcon()
+        icon14.addPixmap(QtGui.QPixmap(":/images/logoMTIP.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_2.setIcon(icon14)
+        self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
+        self.pushButton_2.setObjectName("pushButton_2")
+        self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPersonnel.setFont(font)
+        self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPersonnel.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon15 = QtGui.QIcon()
+        icon15.addPixmap(QtGui.QPixmap(":/images/personnelData.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPersonnel.setIcon(icon15)
+        self.navViewPersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPersonnel.setFlat(False)
+        self.navViewPersonnel.setObjectName("navViewPersonnel")
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon16 = QtGui.QIcon()
+        icon16.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStatePersonnel.setIcon(icon16)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
+        self.scrollArea = QtWidgets.QScrollArea(self.frame)
+        self.scrollArea.setGeometry(QtCore.QRect(325, 60, 1025, 551))
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setObjectName("scrollArea")
+        self.scrollAreaWidgetContents_4 = QtWidgets.QWidget()
+        self.scrollAreaWidgetContents_4.setGeometry(QtCore.QRect(0, 0, 1023, 549))
+        self.scrollAreaWidgetContents_4.setObjectName("scrollAreaWidgetContents_4")
+        self.btnshipImage = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnshipImage.setGeometry(QtCore.QRect(-10, -10, 1040, 569))
+        self.btnshipImage.setLayoutDirection(QtCore.Qt.RightToLeft)
+        self.btnshipImage.setStyleSheet("border:1px solid #fff;\n"
+"outline:none;\n"
+"background-color:#AADAFF;\n"
+"color:#AADAFF;")
+        self.btnshipImage.setText("")
+        icon17 = QtGui.QIcon()
+        icon17.addPixmap(QtGui.QPixmap(":/images/shipDefault.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnshipImage.setIcon(icon17)
+        self.btnshipImage.setIconSize(QtCore.QSize(1040, 520))
+        self.btnshipImage.setObjectName("btnshipImage")
+        self.btnZoomIn = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnZoomIn.setGeometry(QtCore.QRect(974, 6, 44, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnZoomIn.setFont(font)
+        self.btnZoomIn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnZoomIn.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #000000;\n"
+"    background-color:#ffffff;\n"
+"    border-width: 1px;\n"
+"    border-color: #A5A5A5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#E5E5E5\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #D1D1D1;\n"
+"     border-width: 3px;\n"
+"    border-color: #E5E5E5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.btnZoomIn.setText("")
+        icon18 = QtGui.QIcon()
+        icon18.addPixmap(QtGui.QPixmap(":/images/zoomIn.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnZoomIn.setIcon(icon18)
+        self.btnZoomIn.setIconSize(QtCore.QSize(25, 25))
+        self.btnZoomIn.setObjectName("btnZoomIn")
+        self.btnZoomOut = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnZoomOut.setGeometry(QtCore.QRect(974, 56, 44, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnZoomOut.setFont(font)
+        self.btnZoomOut.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnZoomOut.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #000000;\n"
+"    background-color:#ffffff;\n"
+"    border-width: 1px;\n"
+"    border-color: #A5A5A5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#E5E5E5\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #D1D1D1;\n"
+"     border-width: 3px;\n"
+"    border-color: #E5E5E5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.btnZoomOut.setText("")
+        icon19 = QtGui.QIcon()
+        icon19.addPixmap(QtGui.QPixmap(":/images/zoomOut.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnZoomOut.setIcon(icon19)
+        self.btnZoomOut.setIconSize(QtCore.QSize(25, 25))
+        self.btnZoomOut.setObjectName("btnZoomOut")
+        self.btnMoveRight = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMoveRight.setGeometry(QtCore.QRect(974, 500, 44, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMoveRight.setFont(font)
+        self.btnMoveRight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMoveRight.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #000000;\n"
+"    background-color:#ffffff;\n"
+"    border-width: 1px;\n"
+"    border-color: #A5A5A5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#E5E5E5\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #D1D1D1;\n"
+"     border-width: 3px;\n"
+"    border-color: #E5E5E5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.btnMoveRight.setText("")
+        icon20 = QtGui.QIcon()
+        icon20.addPixmap(QtGui.QPixmap(":/images/moveRight.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMoveRight.setIcon(icon20)
+        self.btnMoveRight.setIconSize(QtCore.QSize(25, 25))
+        self.btnMoveRight.setObjectName("btnMoveRight")
+        self.btnMoveLeft = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMoveLeft.setGeometry(QtCore.QRect(924, 500, 44, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMoveLeft.setFont(font)
+        self.btnMoveLeft.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMoveLeft.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #000000;\n"
+"    background-color:#ffffff;\n"
+"    border-width: 1px;\n"
+"    border-color: #A5A5A5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#E5E5E5\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #D1D1D1;\n"
+"     border-width: 3px;\n"
+"    border-color: #E5E5E5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.btnMoveLeft.setText("")
+        icon21 = QtGui.QIcon()
+        icon21.addPixmap(QtGui.QPixmap(":/images/moveLeft.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMoveLeft.setIcon(icon21)
+        self.btnMoveLeft.setIconSize(QtCore.QSize(25, 25))
+        self.btnMoveLeft.setObjectName("btnMoveLeft")
+        self.btnMarker2Room2 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker2Room2.setGeometry(QtCore.QRect(570, 163, 51, 101))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker2Room2.setFont(font)
+        self.btnMarker2Room2.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker2Room2.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker2Room2.setText("")
+        icon22 = QtGui.QIcon()
+        icon22.addPixmap(QtGui.QPixmap(":/images/markerRoom3.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMarker2Room2.setIcon(icon22)
+        self.btnMarker2Room2.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker2Room2.setObjectName("btnMarker2Room2")
+        self.btnMarker1Room2 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker1Room2.setGeometry(QtCore.QRect(531, 163, 51, 101))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker1Room2.setFont(font)
+        self.btnMarker1Room2.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker1Room2.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker1Room2.setText("")
+        self.btnMarker1Room2.setIcon(icon22)
+        self.btnMarker1Room2.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker1Room2.setObjectName("btnMarker1Room2")
+        self.btnMarker3Room1 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker3Room1.setGeometry(QtCore.QRect(476, 163, 51, 101))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker3Room1.setFont(font)
+        self.btnMarker3Room1.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker3Room1.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker3Room1.setText("")
+        icon23 = QtGui.QIcon()
+        icon23.addPixmap(QtGui.QPixmap(":/images/markerRoom2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMarker3Room1.setIcon(icon23)
+        self.btnMarker3Room1.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker3Room1.setObjectName("btnMarker3Room1")
+        self.btnMarker2Room1 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker2Room1.setGeometry(QtCore.QRect(413, 240, 101, 51))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker2Room1.setFont(font)
+        self.btnMarker2Room1.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker2Room1.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker2Room1.setText("")
+        icon24 = QtGui.QIcon()
+        icon24.addPixmap(QtGui.QPixmap(":/images/markerRoomLeft2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMarker2Room1.setIcon(icon24)
+        self.btnMarker2Room1.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker2Room1.setObjectName("btnMarker2Room1")
+        self.btnMarker1Room3 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker1Room3.setGeometry(QtCore.QRect(520, 298, 51, 101))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker1Room3.setFont(font)
+        self.btnMarker1Room3.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker1Room3.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker1Room3.setText("")
+        icon25 = QtGui.QIcon()
+        icon25.addPixmap(QtGui.QPixmap(":/images/markerRoom1.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMarker1Room3.setIcon(icon25)
+        self.btnMarker1Room3.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker1Room3.setObjectName("btnMarker1Room3")
+        self.btnMarker2Room3 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker2Room3.setGeometry(QtCore.QRect(560, 298, 51, 101))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker2Room3.setFont(font)
+        self.btnMarker2Room3.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker2Room3.setLayoutDirection(QtCore.Qt.RightToLeft)
+        self.btnMarker2Room3.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker2Room3.setText("")
+        self.btnMarker2Room3.setIcon(icon25)
+        self.btnMarker2Room3.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker2Room3.setObjectName("btnMarker2Room3")
+        self.btnMarker1Room1 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker1Room1.setGeometry(QtCore.QRect(476, 258, 51, 101))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker1Room1.setFont(font)
+        self.btnMarker1Room1.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker1Room1.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker1Room1.setText("")
+        icon26 = QtGui.QIcon()
+        icon26.addPixmap(QtGui.QPixmap(":/images/markerRoomDown2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMarker1Room1.setIcon(icon26)
+        self.btnMarker1Room1.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker1Room1.setObjectName("btnMarker1Room1")
+        self.btnMarker3Room3 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker3Room3.setGeometry(QtCore.QRect(583, 286, 101, 51))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker3Room3.setFont(font)
+        self.btnMarker3Room3.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker3Room3.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker3Room3.setText("")
+        icon27 = QtGui.QIcon()
+        icon27.addPixmap(QtGui.QPixmap(":/images/markerRoomRight1.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMarker3Room3.setIcon(icon27)
+        self.btnMarker3Room3.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker3Room3.setObjectName("btnMarker3Room3")
+        self.btnMarker3Room2 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker3Room2.setGeometry(QtCore.QRect(583, 240, 101, 51))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker3Room2.setFont(font)
+        self.btnMarker3Room2.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker3Room2.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker3Room2.setText("")
+        icon28 = QtGui.QIcon()
+        icon28.addPixmap(QtGui.QPixmap(":/images/markerRoomRight3.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMarker3Room2.setIcon(icon28)
+        self.btnMarker3Room2.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker3Room2.setObjectName("btnMarker3Room2")
+        self.btnMobError = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMobError.setEnabled(True)
+        self.btnMobError.setGeometry(QtCore.QRect(6, 482, 211, 61))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMobError.setFont(font)
+        self.btnMobError.setStyleSheet("border:1px solid  #FF5555;\n"
+"background-color: #FF5555;\n"
+"outline:none;\n"
+"color: #FFFFFF;")
+        icon29 = QtGui.QIcon()
+        icon29.addPixmap(QtGui.QPixmap(":/images/notification.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMobError.setIcon(icon29)
+        self.btnMobError.setIconSize(QtCore.QSize(32, 32))
+        self.btnMobError.setObjectName("btnMobError")
+        self.btnshipImage.raise_()
+        self.btnMarker2Room2.raise_()
+        self.btnMarker1Room2.raise_()
+        self.btnMarker3Room1.raise_()
+        self.btnMarker2Room1.raise_()
+        self.btnMarker1Room3.raise_()
+        self.btnMarker2Room3.raise_()
+        self.btnMarker1Room1.raise_()
+        self.btnMarker3Room3.raise_()
+        self.btnMarker3Room2.raise_()
+        self.btnMoveLeft.raise_()
+        self.btnMoveRight.raise_()
+        self.btnZoomIn.raise_()
+        self.btnZoomOut.raise_()
+        self.btnMobError.raise_()
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents_4)
+        self.btnCallAll = QtWidgets.QPushButton(self.frame)
+        self.btnCallAll.setGeometry(QtCore.QRect(1080, 620, 271, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnCallAll.setFont(font)
+        self.btnCallAll.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnCallAll.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon30 = QtGui.QIcon()
+        icon30.addPixmap(QtGui.QPixmap(":/images/callAll.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnCallAll.setIcon(icon30)
+        self.btnCallAll.setIconSize(QtCore.QSize(25, 25))
+        self.btnCallAll.setObjectName("btnCallAll")
+        self.cBoxAction = QtWidgets.QComboBox(self.frame)
+        self.cBoxAction.setGeometry(QtCore.QRect(850, 620, 221, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        font.setKerning(True)
+        self.cBoxAction.setFont(font)
+        self.cBoxAction.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.cBoxAction.setStyleSheet("QComboBox{ border-width: 1px;\n"
+" border-color: #aaa;\n"
+" border-style: solid;\n"
+"border-radius:6; \n"
+"}\n"
+"\n"
+"QComboBox::drop-down:button{\n"
+"background-color:transparent;\n"
+"}\n"
+"QComboBox::down-arrow {\n"
+" \n"
+"    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);\n"
+"    width: 25px;\n"
+"    height: 9px;\n"
+"}\n"
+"QComboBox:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QComboBox:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"  }\n"
+"")
+        self.cBoxAction.setEditable(False)
+        self.cBoxAction.setFrame(True)
+        self.cBoxAction.setObjectName("cBoxAction")
+        self.cBoxAction.addItem("")
+        self.cBoxAction.addItem("")
+        self.cBoxRoom = QtWidgets.QComboBox(self.frame)
+        self.cBoxRoom.setGeometry(QtCore.QRect(620, 620, 221, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        font.setKerning(True)
+        self.cBoxRoom.setFont(font)
+        self.cBoxRoom.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.cBoxRoom.setStyleSheet("QComboBox{ border-width: 1px;\n"
+" border-color: #aaa;\n"
+" border-style: solid;\n"
+"border-radius:6; \n"
+"}\n"
+"\n"
+"QComboBox::drop-down:button{\n"
+"background-color:transparent;\n"
+"}\n"
+"QComboBox::down-arrow {\n"
+" \n"
+"    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);\n"
+"    width: 25px;\n"
+"    height: 9px;\n"
+"}\n"
+"QComboBox:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QComboBox:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"  }\n"
+"")
+        self.cBoxRoom.setEditable(False)
+        self.cBoxRoom.setFrame(True)
+        self.cBoxRoom.setObjectName("cBoxRoom")
+        self.cBoxRoom.addItem("")
+        self.cBoxRoom.addItem("")
+        self.cBoxRoom.addItem("")
+        self.label_2.raise_()
+        self.label.raise_()
+        self.navViewPunishment.raise_()
+        self.navViewImpKey.raise_()
+        self.navViewGenKey.raise_()
+        self.navViewVisitor.raise_()
+        self.navViewTransport.raise_()
+        self.navViewGangway.raise_()
+        self.navViewDuty.raise_()
+        self.navViewNight.raise_()
+        self.label_4.raise_()
+        self.navViewMOB.raise_()
+        self.navViewLocation.raise_()
+        self.navViewManagement.raise_()
+        self.navViewPPE.raise_()
+        self.navViewOOD.raise_()
+        self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
+        self.pushButton.raise_()
+        self.pushButton_2.raise_()
+        self.navViewPersonnel.raise_()
+        self.navViewStatePersonnel.raise_()
+        self.scrollArea.raise_()
+        self.btnCallAll.raise_()
+        self.cBoxAction.raise_()
+        self.cBoxRoom.raise_()
+        MainWindow.setCentralWidget(self.centralwidget)
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.navViewPunishment.setText(_translate("MainWindow", "Punishment Book"))
+        self.navViewImpKey.setText(_translate("MainWindow", "Important Key Book"))
+        self.navViewGenKey.setText(_translate("MainWindow", "General Key Book"))
+        self.navViewVisitor.setText(_translate("MainWindow", "Visitor Book"))
+        self.navViewTransport.setText(_translate("MainWindow", "Transport Book"))
+        self.navViewGangway.setText(_translate("MainWindow", "Gangway Book"))
+        self.navViewDuty.setText(_translate("MainWindow", "Duty Book"))
+        self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
+        self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
+        self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
+        self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
+        self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
+        self.pushButton.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
+        self.btnMobError.setText(_translate("MainWindow", "Alert! Man Overboard!"))
+        self.btnCallAll.setText(_translate("MainWindow", "Call All Personnel"))
+        self.cBoxAction.setItemText(0, _translate("MainWindow", "Fire"))
+        self.cBoxAction.setItemText(1, _translate("MainWindow", "Flood"))
+        self.cBoxRoom.setItemText(0, _translate("MainWindow", "Gyro Room"))
+        self.cBoxRoom.setItemText(1, _translate("MainWindow", "Tool Room"))
+        self.cBoxRoom.setItemText(2, _translate("MainWindow", "Battery Changing Room"))
+#----------------------------------------backend for Personnel Management System Interface----------------------------------------------
+      
+
+        self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
+        self.navViewImpKey.clicked.connect(self.navViewImportantKeyMethod)
+        self.navViewGenKey.clicked.connect(self.navViewGeneralKeyMethod)
+        self.navViewOOD.clicked.connect(self.navViewOODMethod)
+        self.navViewTransport.clicked.connect(self.navViewTransportMethod)
+        self.navViewVisitor.clicked.connect(self.navViewVisitorMethod)
+        self.navViewDuty.clicked.connect(self.navViewDutyMethod)
+        self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
+        self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
+        self.navViewPunishment.clicked.connect(self.navViewPunishMethod)
+        self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
+        self.navViewCMS.clicked.connect(self.navManageCallMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
+        self.zoomLimit=0
+        self.moveLimit=0
+        self.moveText="*********************"
+        self.btnZoomOut.setEnabled(False)
+        self.btnMoveLeft.setEnabled(False)
+        self.btnMoveRight.setEnabled(False)
+        self.btnZoomIn.clicked.connect(self.zoomInMethod)
+        self.btnZoomOut.clicked.connect(self.zoomOutMethod)
+        self.btnMoveRight.clicked.connect(self.moveRightMethod)
+        self.btnMoveLeft.clicked.connect(self.moveLeftMethod)
+
+    def zoomInMethod(self):
+            zoomIn(self)
+    def zoomOutMethod(self):
+            zoomOut(self)
+    def moveRightMethod(self):
+            moveRight(self)
+    def moveLeftMethod(self):
+            moveLeft(self)
+
+    def navViewPersonnelMethod(self):
+             w.change_view(1)    
+    def navViewImportantKeyMethod(self):
+             w.change_view(2)
+    def navViewGeneralKeyMethod(self):
+             w.change_view(3)  
+    def navViewVisitorMethod(self):
+             w.change_view(4)
+    def navViewTransportMethod(self):
+             w.change_view(5) 
+    def navViewGangwayMethod(self):
+             w.change_view(6)
+    def navViewDutyMethod(self):
+             w.change_view(7)
+    def navViewPunishMethod(self):
+             w.change_view(8)    
+    def navViewOODMethod(self):
+             w.change_view(9)      
+    def navViewNightRoundMethod(self):
+             w.change_view(10) 
+    def navViewArmPPEMethod(self):
+             w.change_view(11) 
+    def navViewStatePersonnelMethod(self):
+             w.change_view(23) 
+    def navManageCallMethod(self):
+             w.change_view(25) 
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29)
+class PersonnelManagementWidget(QtWidgets.QMainWindow,PersonnelManagement ):
+    def __init__(self, parent=None):
+        super(PersonnelManagementWidget, self).__init__(parent)
+        self.setup_PersonnelManagement(self)
+############################################################# MOB Interface ######################################################################
+class MOb(object):
+    def setup_MOb(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(1366, 765)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.frame = QtWidgets.QFrame(self.centralwidget)
+        self.frame.setGeometry(QtCore.QRect(0, 0, 1366, 768))
+        self.frame.setStyleSheet("background-color: #ffffff")
+        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame.setObjectName("frame")
+        self.label = QtWidgets.QLabel(self.frame)
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
+        self.label.setStyleSheet("background-image: url(null);\n"
+"background-color:#2F3C71;")
+        self.label.setText("")
+        self.label.setObjectName("label")
+        self.label_2 = QtWidgets.QLabel(self.frame)
+        self.label_2.setGeometry(QtCore.QRect(0, 0, 1366, 44))
+        self.label_2.setStyleSheet("background-image: url(null);\n"
+"background-color:#222222;")
+        self.label_2.setText("")
+        self.label_2.setObjectName("label_2")
+        self.navViewPunishment = QtWidgets.QPushButton(self.frame)
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPunishment.setFont(font)
+        self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPunishment.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/images/punishment.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPunishment.setIcon(icon)
+        self.navViewPunishment.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPunishment.setFlat(False)
+        self.navViewPunishment.setObjectName("navViewPunishment")
+        self.navViewImpKey = QtWidgets.QPushButton(self.frame)
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewImpKey.setFont(font)
+        self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewImpKey.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/images/impKey.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewImpKey.setIcon(icon1)
+        self.navViewImpKey.setIconSize(QtCore.QSize(25, 25))
+        self.navViewImpKey.setFlat(False)
+        self.navViewImpKey.setObjectName("navViewImpKey")
+        self.navViewGenKey = QtWidgets.QPushButton(self.frame)
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewGenKey.setFont(font)
+        self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewGenKey.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(":/images/genKey.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewGenKey.setIcon(icon2)
+        self.navViewGenKey.setIconSize(QtCore.QSize(25, 25))
+        self.navViewGenKey.setFlat(False)
+        self.navViewGenKey.setObjectName("navViewGenKey")
+        self.navViewVisitor = QtWidgets.QPushButton(self.frame)
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewVisitor.setFont(font)
+        self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewVisitor.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"}")
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(":/images/visitor.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewVisitor.setIcon(icon3)
+        self.navViewVisitor.setIconSize(QtCore.QSize(25, 25))
+        self.navViewVisitor.setFlat(False)
+        self.navViewVisitor.setObjectName("navViewVisitor")
+        self.navViewTransport = QtWidgets.QPushButton(self.frame)
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewTransport.setFont(font)
+        self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewTransport.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon4 = QtGui.QIcon()
+        icon4.addPixmap(QtGui.QPixmap(":/images/transport.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewTransport.setIcon(icon4)
+        self.navViewTransport.setIconSize(QtCore.QSize(25, 25))
+        self.navViewTransport.setFlat(False)
+        self.navViewTransport.setObjectName("navViewTransport")
+        self.navViewGangway = QtWidgets.QPushButton(self.frame)
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewGangway.setFont(font)
+        self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewGangway.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon5 = QtGui.QIcon()
+        icon5.addPixmap(QtGui.QPixmap(":/images/gangway.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewGangway.setIcon(icon5)
+        self.navViewGangway.setIconSize(QtCore.QSize(25, 25))
+        self.navViewGangway.setFlat(False)
+        self.navViewGangway.setObjectName("navViewGangway")
+        self.navViewDuty = QtWidgets.QPushButton(self.frame)
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewDuty.setFont(font)
+        self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewDuty.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon6 = QtGui.QIcon()
+        icon6.addPixmap(QtGui.QPixmap(":/images/duty.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewDuty.setIcon(icon6)
+        self.navViewDuty.setIconSize(QtCore.QSize(25, 25))
+        self.navViewDuty.setFlat(False)
+        self.navViewDuty.setObjectName("navViewDuty")
+        self.navViewNight = QtWidgets.QPushButton(self.frame)
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewNight.setFont(font)
+        self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewNight.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon7 = QtGui.QIcon()
+        icon7.addPixmap(QtGui.QPixmap(":/images/night.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewNight.setIcon(icon7)
+        self.navViewNight.setIconSize(QtCore.QSize(25, 25))
+        self.navViewNight.setFlat(False)
+        self.navViewNight.setObjectName("navViewNight")
+        self.label_4 = QtWidgets.QLabel(self.frame)
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
+        self.label_4.setStyleSheet("background-color:#4154A0;")
+        self.label_4.setText("")
+        self.label_4.setObjectName("label_4")
+        self.navViewMOB = QtWidgets.QPushButton(self.frame)
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewMOB.setFont(font)
+        self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewMOB.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:active\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon8 = QtGui.QIcon()
+        icon8.addPixmap(QtGui.QPixmap(":/images/mob.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewMOB.setIcon(icon8)
+        self.navViewMOB.setIconSize(QtCore.QSize(32, 32))
+        self.navViewMOB.setFlat(False)
+        self.navViewMOB.setObjectName("navViewMOB")
+        self.navViewLocation = QtWidgets.QPushButton(self.frame)
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewLocation.setFont(font)
+        self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewLocation.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon9 = QtGui.QIcon()
+        icon9.addPixmap(QtGui.QPixmap(":/images/locate.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewLocation.setIcon(icon9)
+        self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
+        self.navViewLocation.setFlat(False)
+        self.navViewLocation.setObjectName("navViewLocation")
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon10 = QtGui.QIcon()
+        icon10.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewManagement.setIcon(icon10)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
+        self.navViewPPE = QtWidgets.QPushButton(self.frame)
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPPE.setFont(font)
+        self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPPE.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon11 = QtGui.QIcon()
+        icon11.addPixmap(QtGui.QPixmap(":/images/armPPE.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPPE.setIcon(icon11)
+        self.navViewPPE.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPPE.setFlat(False)
+        self.navViewPPE.setObjectName("navViewPPE")
+        self.navViewOOD = QtWidgets.QPushButton(self.frame)
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewOOD.setFont(font)
+        self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewOOD.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon12 = QtGui.QIcon()
+        icon12.addPixmap(QtGui.QPixmap(":/images/oodObserve.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewOOD.setIcon(icon12)
+        self.navViewOOD.setIconSize(QtCore.QSize(25, 25))
+        self.navViewOOD.setFlat(False)
+        self.navViewOOD.setObjectName("navViewOOD")
+        self.navViewCMS = QtWidgets.QPushButton(self.frame)
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewCMS.setFont(font)
+        self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewCMS.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon13 = QtGui.QIcon()
+        icon13.addPixmap(QtGui.QPixmap(":/images/sreCall.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewCMS.setIcon(icon13)
+        self.navViewCMS.setIconSize(QtCore.QSize(25, 25))
+        self.navViewCMS.setFlat(False)
+        self.navViewCMS.setObjectName("navViewCMS")
+        self.pushButton = QtWidgets.QPushButton(self.frame)
+        self.pushButton.setEnabled(True)
+        self.pushButton.setGeometry(QtCore.QRect(1080, 5, 260, 35))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.pushButton.setFont(font)
+        self.pushButton.setStyleSheet(" text-align: right;\n"
+"    color: #ffffff;\n"
+"    background-color:#222222;")
+        self.pushButton.setIcon(icon8)
+        self.pushButton.setIconSize(QtCore.QSize(32, 32))
+        self.pushButton.setObjectName("pushButton")
+        self.pushButton_2 = QtWidgets.QPushButton(self.frame)
+        self.pushButton_2.setEnabled(True)
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
+        self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
+"    border-radius:4px;\n"
+"    outline:none;")
+        self.pushButton_2.setText("")
+        icon14 = QtGui.QIcon()
+        icon14.addPixmap(QtGui.QPixmap(":/images/logoMTIP.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_2.setIcon(icon14)
+        self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
+        self.pushButton_2.setObjectName("pushButton_2")
+        self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPersonnel.setFont(font)
+        self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPersonnel.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon15 = QtGui.QIcon()
+        icon15.addPixmap(QtGui.QPixmap(":/images/personnelData.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPersonnel.setIcon(icon15)
+        self.navViewPersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPersonnel.setFlat(False)
+        self.navViewPersonnel.setObjectName("navViewPersonnel")
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon16 = QtGui.QIcon()
+        icon16.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStatePersonnel.setIcon(icon16)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon31 = QtGui.QIcon()
+        icon31.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon31)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
+        self.scrollArea = QtWidgets.QScrollArea(self.frame)
+        self.scrollArea.setGeometry(QtCore.QRect(325, 60, 1025, 551))
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setObjectName("scrollArea")
+        self.scrollAreaWidgetContents_4 = QtWidgets.QWidget()
+        self.scrollAreaWidgetContents_4.setGeometry(QtCore.QRect(0, 0, 1023, 549))
+        self.scrollAreaWidgetContents_4.setObjectName("scrollAreaWidgetContents_4")
+        self.btnshipImage = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnshipImage.setGeometry(QtCore.QRect(-10, -10, 1040, 569))
+        self.btnshipImage.setLayoutDirection(QtCore.Qt.RightToLeft)
+        self.btnshipImage.setStyleSheet("border:1px solid #fff;\n"
+"outline:none;\n"
+"background-color:#AADAFF;\n"
+"color:#AADAFF;")
+        self.btnshipImage.setText("")
+        icon17 = QtGui.QIcon()
+        icon17.addPixmap(QtGui.QPixmap(":/images/shipDefault.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnshipImage.setIcon(icon17)
+        self.btnshipImage.setIconSize(QtCore.QSize(1040, 520))
+        self.btnshipImage.setObjectName("btnshipImage")
+        self.btnZoomIn = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnZoomIn.setGeometry(QtCore.QRect(974, 6, 44, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnZoomIn.setFont(font)
+        self.btnZoomIn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnZoomIn.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #000000;\n"
+"    background-color:#ffffff;\n"
+"    border-width: 1px;\n"
+"    border-color: #A5A5A5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#E5E5E5\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #D1D1D1;\n"
+"     border-width: 3px;\n"
+"    border-color: #E5E5E5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.btnZoomIn.setText("")
+        icon18 = QtGui.QIcon()
+        icon18.addPixmap(QtGui.QPixmap(":/images/zoomIn.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnZoomIn.setIcon(icon18)
+        self.btnZoomIn.setIconSize(QtCore.QSize(25, 25))
+        self.btnZoomIn.setObjectName("btnZoomIn")
+        self.btnZoomOut = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnZoomOut.setGeometry(QtCore.QRect(974, 56, 44, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnZoomOut.setFont(font)
+        self.btnZoomOut.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnZoomOut.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #000000;\n"
+"    background-color:#ffffff;\n"
+"    border-width: 1px;\n"
+"    border-color: #A5A5A5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#E5E5E5\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #D1D1D1;\n"
+"     border-width: 3px;\n"
+"    border-color: #E5E5E5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.btnZoomOut.setText("")
+        icon19 = QtGui.QIcon()
+        icon19.addPixmap(QtGui.QPixmap(":/images/zoomOut.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnZoomOut.setIcon(icon19)
+        self.btnZoomOut.setIconSize(QtCore.QSize(25, 25))
+        self.btnZoomOut.setObjectName("btnZoomOut")
+        self.btnMoveRight = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMoveRight.setGeometry(QtCore.QRect(974, 500, 44, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMoveRight.setFont(font)
+        self.btnMoveRight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMoveRight.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #000000;\n"
+"    background-color:#ffffff;\n"
+"    border-width: 1px;\n"
+"    border-color: #A5A5A5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#E5E5E5\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #D1D1D1;\n"
+"     border-width: 3px;\n"
+"    border-color: #E5E5E5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.btnMoveRight.setText("")
+        icon20 = QtGui.QIcon()
+        icon20.addPixmap(QtGui.QPixmap(":/images/moveRight.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMoveRight.setIcon(icon20)
+        self.btnMoveRight.setIconSize(QtCore.QSize(25, 25))
+        self.btnMoveRight.setObjectName("btnMoveRight")
+        self.btnMoveLeft = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMoveLeft.setGeometry(QtCore.QRect(924, 500, 44, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMoveLeft.setFont(font)
+        self.btnMoveLeft.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMoveLeft.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #000000;\n"
+"    background-color:#ffffff;\n"
+"    border-width: 1px;\n"
+"    border-color: #A5A5A5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#E5E5E5\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #D1D1D1;\n"
+"     border-width: 3px;\n"
+"    border-color: #E5E5E5;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.btnMoveLeft.setText("")
+        icon21 = QtGui.QIcon()
+        icon21.addPixmap(QtGui.QPixmap(":/images/moveLeft.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMoveLeft.setIcon(icon21)
+        self.btnMoveLeft.setIconSize(QtCore.QSize(25, 25))
+        self.btnMoveLeft.setObjectName("btnMoveLeft")
+        self.btnMarker2Room2 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker2Room2.setGeometry(QtCore.QRect(570, 163, 51, 101))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker2Room2.setFont(font)
+        self.btnMarker2Room2.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker2Room2.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker2Room2.setText("")
+        icon22 = QtGui.QIcon()
+        icon22.addPixmap(QtGui.QPixmap(":/images/markerRoom3.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMarker2Room2.setIcon(icon22)
+        self.btnMarker2Room2.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker2Room2.setObjectName("btnMarker2Room2")
+        self.btnMarker1Room2 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker1Room2.setGeometry(QtCore.QRect(531, 163, 51, 101))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker1Room2.setFont(font)
+        self.btnMarker1Room2.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker1Room2.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker1Room2.setText("")
+        self.btnMarker1Room2.setIcon(icon22)
+        self.btnMarker1Room2.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker1Room2.setObjectName("btnMarker1Room2")
+        self.btnMarker3Room1 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker3Room1.setGeometry(QtCore.QRect(476, 163, 51, 101))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker3Room1.setFont(font)
+        self.btnMarker3Room1.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker3Room1.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker3Room1.setText("")
+        icon23 = QtGui.QIcon()
+        icon23.addPixmap(QtGui.QPixmap(":/images/markerRoom2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMarker3Room1.setIcon(icon23)
+        self.btnMarker3Room1.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker3Room1.setObjectName("btnMarker3Room1")
+        self.btnMarker2Room1 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker2Room1.setGeometry(QtCore.QRect(413, 240, 101, 51))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker2Room1.setFont(font)
+        self.btnMarker2Room1.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker2Room1.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker2Room1.setText("")
+        icon24 = QtGui.QIcon()
+        icon24.addPixmap(QtGui.QPixmap(":/images/markerRoomLeft2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMarker2Room1.setIcon(icon24)
+        self.btnMarker2Room1.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker2Room1.setObjectName("btnMarker2Room1")
+        self.btnMarker1Room3 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker1Room3.setGeometry(QtCore.QRect(520, 298, 51, 101))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker1Room3.setFont(font)
+        self.btnMarker1Room3.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker1Room3.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker1Room3.setText("")
+        icon25 = QtGui.QIcon()
+        icon25.addPixmap(QtGui.QPixmap(":/images/markerRoom1.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMarker1Room3.setIcon(icon25)
+        self.btnMarker1Room3.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker1Room3.setObjectName("btnMarker1Room3")
+        self.btnMarker2Room3 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker2Room3.setGeometry(QtCore.QRect(560, 298, 51, 101))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker2Room3.setFont(font)
+        self.btnMarker2Room3.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker2Room3.setLayoutDirection(QtCore.Qt.RightToLeft)
+        self.btnMarker2Room3.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker2Room3.setText("")
+        self.btnMarker2Room3.setIcon(icon25)
+        self.btnMarker2Room3.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker2Room3.setObjectName("btnMarker2Room3")
+        self.btnMarker1Room1 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker1Room1.setGeometry(QtCore.QRect(476, 258, 51, 101))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker1Room1.setFont(font)
+        self.btnMarker1Room1.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker1Room1.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker1Room1.setText("")
+        icon26 = QtGui.QIcon()
+        icon26.addPixmap(QtGui.QPixmap(":/images/markerRoomDown2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMarker1Room1.setIcon(icon26)
+        self.btnMarker1Room1.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker1Room1.setObjectName("btnMarker1Room1")
+        self.btnMarker3Room3 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker3Room3.setGeometry(QtCore.QRect(583, 286, 101, 51))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker3Room3.setFont(font)
+        self.btnMarker3Room3.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker3Room3.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker3Room3.setText("")
+        icon27 = QtGui.QIcon()
+        icon27.addPixmap(QtGui.QPixmap(":/images/markerRoomRight1.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMarker3Room3.setIcon(icon27)
+        self.btnMarker3Room3.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker3Room3.setObjectName("btnMarker3Room3")
+        self.btnMarker3Room2 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMarker3Room2.setGeometry(QtCore.QRect(583, 240, 101, 51))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMarker3Room2.setFont(font)
+        self.btnMarker3Room2.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnMarker3Room2.setStyleSheet("QPushButton\n"
+"{\n"
+"   \n"
+"    background-color:transparent;\n"
+"\n"
+"}")
+        self.btnMarker3Room2.setText("")
+        icon28 = QtGui.QIcon()
+        icon28.addPixmap(QtGui.QPixmap(":/images/markerRoomRight3.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMarker3Room2.setIcon(icon28)
+        self.btnMarker3Room2.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker3Room2.setObjectName("btnMarker3Room2")
+        self.btnshipImage.raise_()
+        self.btnMarker2Room2.raise_()
+        self.btnMarker1Room2.raise_()
+        self.btnMarker3Room1.raise_()
+        self.btnMarker2Room1.raise_()
+        self.btnMarker1Room3.raise_()
+        self.btnMarker2Room3.raise_()
+        self.btnMarker1Room1.raise_()
+        self.btnMarker3Room3.raise_()
+        self.btnMarker3Room2.raise_()
+        self.btnMoveLeft.raise_()
+        self.btnMoveRight.raise_()
+        self.btnZoomIn.raise_()
+        self.btnZoomOut.raise_()
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents_4)
+        self.btnSearchMOB = QtWidgets.QPushButton(self.frame)
+        self.btnSearchMOB.setGeometry(QtCore.QRect(1080, 620, 271, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnSearchMOB.setFont(font)
+        self.btnSearchMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnSearchMOB.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon29 = QtGui.QIcon()
+        icon29.addPixmap(QtGui.QPixmap(":/images/viewDetails.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnSearchMOB.setIcon(icon29)
+        self.btnSearchMOB.setIconSize(QtCore.QSize(25, 25))
+        self.btnSearchMOB.setObjectName("btnSearchMOB")
+        self.label_2.raise_()
+        self.label.raise_()
+        self.navViewPunishment.raise_()
+        self.navViewImpKey.raise_()
+        self.navViewGenKey.raise_()
+        self.navViewVisitor.raise_()
+        self.navViewTransport.raise_()
+        self.navViewGangway.raise_()
+        self.navViewDuty.raise_()
+        self.navViewNight.raise_()
+        self.label_4.raise_()
+        self.navViewMOB.raise_()
+        self.navViewLocation.raise_()
+        self.navViewManagement.raise_()
+        self.navViewPPE.raise_()
+        self.navViewOOD.raise_()
+        self.navViewCMS.raise_()
+        self.navViewStateArmory.raise_()
+        self.btnLogout.raise_()
+        self.pushButton.raise_()
+        self.pushButton_2.raise_()
+        self.navViewPersonnel.raise_()
+        self.navViewStatePersonnel.raise_()
+        self.scrollArea.raise_()
+        self.btnSearchMOB.raise_()
+        MainWindow.setCentralWidget(self.centralwidget)
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.navViewPunishment.setText(_translate("MainWindow", "Punishment Book"))
+        self.navViewImpKey.setText(_translate("MainWindow", "Important Key Book"))
+        self.navViewGenKey.setText(_translate("MainWindow", "General Key Book"))
+        self.navViewVisitor.setText(_translate("MainWindow", "Visitor Book"))
+        self.navViewTransport.setText(_translate("MainWindow", "Transport Book"))
+        self.navViewGangway.setText(_translate("MainWindow", "Gangway Book"))
+        self.navViewDuty.setText(_translate("MainWindow", "Duty Book"))
+        self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
+        self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
+        self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
+        self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
+        self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
+        self.pushButton.setText(_translate("MainWindow", "Man Over Board"))
+        self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
+        self.btnSearchMOB.setText(_translate("MainWindow", "Search for MOB"))
+
+#----------------------------------------backend for MOB Interface----------------------------------------------
+      
+
+        self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
+        self.navViewImpKey.clicked.connect(self.navViewImportantKeyMethod)
+        self.navViewGenKey.clicked.connect(self.navViewGeneralKeyMethod)
+        self.navViewOOD.clicked.connect(self.navViewOODMethod)
+        self.navViewTransport.clicked.connect(self.navViewTransportMethod)
+        self.navViewVisitor.clicked.connect(self.navViewVisitorMethod)
+        self.navViewDuty.clicked.connect(self.navViewDutyMethod)
+        self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
+        self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
+        self.navViewPunishment.clicked.connect(self.navViewPunishMethod)
+        self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
+        self.navViewCMS.clicked.connect(self.navManageCallMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
+        self.zoomLimit=0
+        self.moveLimit=0
+        self.moveText="*********************"
+        self.btnZoomOut.setEnabled(False)
+        self.btnMoveLeft.setEnabled(False)
+        self.btnMoveRight.setEnabled(False)
+        self.btnZoomIn.clicked.connect(self.zoomInMethod)
+        self.btnZoomOut.clicked.connect(self.zoomOutMethod)
+        self.btnMoveRight.clicked.connect(self.moveRightMethod)
+        self.btnMoveLeft.clicked.connect(self.moveLeftMethod)
+
+    def zoomInMethod(self):
+            zoomIn(self)
+    def zoomOutMethod(self):
+            zoomOut(self)
+    def moveRightMethod(self):
+            moveRight(self)
+    def moveLeftMethod(self):
+            moveLeft(self)
+    def navViewPersonnelMethod(self):
+             w.change_view(1)    
+    def navViewImportantKeyMethod(self):
+             w.change_view(2)
+    def navViewGeneralKeyMethod(self):
+             w.change_view(3)  
+    def navViewVisitorMethod(self):
+             w.change_view(4)
+    def navViewTransportMethod(self):
+             w.change_view(5) 
+    def navViewGangwayMethod(self):
+             w.change_view(6)
+    def navViewDutyMethod(self):
+             w.change_view(7)
+    def navViewPunishMethod(self):
+             w.change_view(8)    
+    def navViewOODMethod(self):
+             w.change_view(9)      
+    def navViewNightRoundMethod(self):
+             w.change_view(10) 
+    def navViewArmPPEMethod(self):
+             w.change_view(11) 
+    def navViewStatePersonnelMethod(self):
+             w.change_view(23) 
+    def navManageCallMethod(self):
+             w.change_view(25) 
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navLogoutMethod(self):
+             w.change_view(29)
+class MObWidget(QtWidgets.QMainWindow,MOb ):
+    def __init__(self, parent=None):
+        super(MObWidget, self).__init__(parent)
+        self.setup_MOb(self)
+
+############################################################# Login Interface ######################################################################
+class Login(object):
+    def setup_Login(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(1366, 765)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.frame = QtWidgets.QFrame(self.centralwidget)
+        self.frame.setGeometry(QtCore.QRect(0, 0, 1366, 768))
+        self.frame.setStyleSheet("background-color: #ffffff")
+        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame.setObjectName("frame")
+        self.label_7 = QtWidgets.QLabel(self.frame)
+        self.label_7.setGeometry(QtCore.QRect(498, 349, 121, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_7.setFont(font)
+        self.label_7.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_7.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_7.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_7.setObjectName("label_7")
+        self.edtUsername = QtWidgets.QLineEdit(self.frame)
+        self.edtUsername.setGeometry(QtCore.QRect(619, 351, 251, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.edtUsername.setFont(font)
+        self.edtUsername.setStyleSheet("QLineEdit{\n"
+"    border:1px solid #aaa;\n"
+"    border-radius:4px;\n"
+"    outline:none;\n"
+"    padding:6px;\n"
+"    box-sizing:border-box;\n"
+"    transition:.3s;\n"
+"  }\n"
+"  QLineEdit:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QLineEdit:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"  }")
+        self.edtUsername.setObjectName("edtUsername")
+        self.label_8 = QtWidgets.QLabel(self.frame)
+        self.label_8.setGeometry(QtCore.QRect(498, 393, 121, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_8.setFont(font)
+        self.label_8.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_8.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_8.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_8.setObjectName("label_8")
+        self.edtPassword = QtWidgets.QLineEdit(self.frame)
+        self.edtPassword.setGeometry(QtCore.QRect(619, 395, 251, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.edtPassword.setFont(font)
+        self.edtPassword.setStyleSheet("QLineEdit{\n"
+"    border:1px solid #aaa;\n"
+"    border-radius:4px;\n"
+"    outline:none;\n"
+"    padding:6px;\n"
+"    box-sizing:border-box;\n"
+"    transition:.3s;\n"
+"  }\n"
+"  QLineEdit:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QLineEdit:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"  }")
+        self.edtPassword.setEchoMode(QtWidgets.QLineEdit.Password)
+        self.edtPassword.setObjectName("edtPassword")
+        self.label_9 = QtWidgets.QLabel(self.frame)
+        self.label_9.setGeometry(QtCore.QRect(498, 437, 121, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_9.setFont(font)
+        self.label_9.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_9.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_9.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_9.setObjectName("label_9")
+        self.lblDataEntrySuccessful = QtWidgets.QLabel(self.frame)
+        self.lblDataEntrySuccessful.setEnabled(True)
+        self.lblDataEntrySuccessful.setGeometry(QtCore.QRect(498, 493, 291, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblDataEntrySuccessful.setFont(font)
+        self.lblDataEntrySuccessful.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblDataEntrySuccessful.setStyleSheet("color: red;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblDataEntrySuccessful.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblDataEntrySuccessful.setObjectName("lblDataEntrySuccessful")
+        self.pushButton_2 = QtWidgets.QPushButton(self.frame)
+        self.pushButton_2.setEnabled(True)
+        self.pushButton_2.setGeometry(QtCore.QRect(608, 194, 150, 120))
+        self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
+"    border-radius:4px;\n"
+"    outline:none;")
+        self.pushButton_2.setText("")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/images/logoMTIPLarge2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_2.setIcon(icon)
+        self.pushButton_2.setIconSize(QtCore.QSize(200, 100))
+        self.pushButton_2.setObjectName("pushButton_2")
+        self.cBoxLoginAs = QtWidgets.QComboBox(self.frame)
+        self.cBoxLoginAs.setGeometry(QtCore.QRect(619, 439, 251, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        font.setKerning(True)
+        self.cBoxLoginAs.setFont(font)
+        self.cBoxLoginAs.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.cBoxLoginAs.setStyleSheet("QComboBox{ border-width: 1px;\n"
+" border-color: #aaa;\n"
+" border-style: solid;\n"
+"border-radius:6; \n"
+"}\n"
+"\n"
+"QComboBox::drop-down:button{\n"
+"background-color:transparent;\n"
+"}\n"
+"QComboBox::down-arrow {\n"
+" \n"
+"    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);\n"
+"    width: 25px;\n"
+"    height: 9px;\n"
+"}\n"
+"QComboBox:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QComboBox:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"  }\n"
+"")
+        self.cBoxLoginAs.setEditable(False)
+        self.cBoxLoginAs.setFrame(True)
+        self.cBoxLoginAs.setObjectName("cBoxLoginAs")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.btnLogin = QtWidgets.QPushButton(self.frame)
+        self.btnLogin.setGeometry(QtCore.QRect(740, 514, 131, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogin.setFont(font)
+        self.btnLogin.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogin.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#00B355;\n"
+"    border-width: 1px;\n"
+"    border-color: #007939;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#00D564\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #00B355;\n"
+"     border-width: 3px;\n"
+"    border-color: #00D564;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/images/login.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogin.setIcon(icon1)
+        self.btnLogin.setIconSize(QtCore.QSize(25, 25))
+        self.btnLogin.setObjectName("btnLogin")
+        self.label = QtWidgets.QLabel(self.frame)
+        self.label.setGeometry(QtCore.QRect(448, 174, 471, 421))
+        self.label.setStyleSheet("   border:1px solid #aaa;\n"
+"    border-radius:4px;\n"
+"    outline:none;\n"
+"    padding:6px;")
+        self.label.setText("")
+        self.label.setObjectName("label")
+        self.pushButton_3 = QtWidgets.QPushButton(self.frame)
+        self.pushButton_3.setEnabled(True)
+        self.pushButton_3.setGeometry(QtCore.QRect(0, 0, 1366, 768))
+        self.pushButton_3.setStyleSheet("background-color: rgba(47, 60, 113, 0.6);")
+        self.pushButton_3.setText("")
+        self.pushButton_3.setIconSize(QtCore.QSize(1366, 768))
+        self.pushButton_3.setObjectName("pushButton_3")
+        self.pushButton_4 = QtWidgets.QPushButton(self.frame)
+        self.pushButton_4.setEnabled(True)
+        self.pushButton_4.setGeometry(QtCore.QRect(0, 0, 1366, 768))
+        self.pushButton_4.setStyleSheet(" border:1px solid #fff;\n"
+"    border-radius:4px;\n"
+"    outline:none;")
+        self.pushButton_4.setText("")
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(":/images/shipBackground.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_4.setIcon(icon2)
+        self.pushButton_4.setIconSize(QtCore.QSize(1366, 768))
+        self.pushButton_4.setObjectName("pushButton_4")
+        self.btnShutdown = QtWidgets.QPushButton(self.frame)
+        self.btnShutdown.setEnabled(True)
+        self.btnShutdown.setGeometry(QtCore.QRect(1310, 707, 50, 51))
+        self.btnShutdown.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnShutdown.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#E3322C;\n"
+"    border-width: 1px;\n"
+"    border-color: #E6150B;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#F87169\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #E3322C;\n"
+"     border-width: 3px;\n"
+"    border-color: #F87169;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.btnShutdown.setText("")
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(":/images/shutDown.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnShutdown.setIcon(icon3)
+        self.btnShutdown.setIconSize(QtCore.QSize(32, 32))
+        self.btnShutdown.setObjectName("btnShutdown")
+        self.pushButton_4.raise_()
+        self.pushButton_3.raise_()
+        self.label.raise_()
+        self.edtUsername.raise_()
+        self.label_7.raise_()
+        self.edtPassword.raise_()
+        self.label_8.raise_()
+        self.cBoxLoginAs.raise_()
+        self.label_9.raise_()
+        self.lblDataEntrySuccessful.raise_()
+        self.btnLogin.raise_()
+        self.pushButton_2.raise_()
+        self.btnShutdown.raise_()
+        MainWindow.setCentralWidget(self.centralwidget)
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.label_7.setText(_translate("MainWindow", "Usename"))
+        self.label_8.setText(_translate("MainWindow", "Password"))
+        self.label_9.setText(_translate("MainWindow", "Login as"))
+        self.lblDataEntrySuccessful.setText(_translate("MainWindow", "Incorrect Username or Password!"))
+        self.cBoxLoginAs.setItemText(0, _translate("MainWindow", "Commanding Officer Secretary"))
+        self.cBoxLoginAs.setItemText(1, _translate("MainWindow", "Commanding Officer"))
+        self.cBoxLoginAs.setItemText(2, _translate("MainWindow", "Executive Officer"))
+        self.cBoxLoginAs.setItemText(3, _translate("MainWindow", "Weapon Engineering Officer"))
+        self.cBoxLoginAs.setItemText(4, _translate("MainWindow", "Marine Engineering Officer"))
+        self.cBoxLoginAs.setItemText(5, _translate("MainWindow", "Supply Officer"))
+        self.cBoxLoginAs.setItemText(6, _translate("MainWindow", "Principal Warfare Officer"))
+        self.cBoxLoginAs.setItemText(7, _translate("MainWindow", "Officer of the Day"))
+        self.cBoxLoginAs.setItemText(8, _translate("MainWindow", "Officer on Watch"))
+        self.cBoxLoginAs.setItemText(8, _translate("MainWindow", "Administrator"))
+        self.btnLogin.setText(_translate("MainWindow", "Login"))
+
+#----------------------------------------backend for Login Interface----------------------------------------------
+
+        resetLoginGUI(self)
+        self.btnLogin.clicked.connect(self.login)
+        self.btnShutdown.clicked.connect(self.shutdown)
+        self.edtPassword.textEdited.connect(self.resetSuccess)
+        self.edtUsername.textEdited.connect(self.resetSuccess)
+        self.cBoxLoginAs.activated.connect(self.resetSuccess)
+    def login(self):
+        loginCount=0
+        userName=self.edtUsername.text()
+        password=self.edtPassword.text()
+        loginAs=self.cBoxLoginAs.currentText()
+        if(userName!="" and password!=""):
+                if(loginAs =="Administrator"):
+                        if(userName=="admin" and password=="admin123"):
+                                w.change_view(30)
+                        else:
+                                self.lblDataEntrySuccessful.setText("Incorrect Username or Password!")
+                                self.lblDataEntrySuccessful.show()
+                else:
+                        loginCountQuery="SELECT Count (userName) FROM Login WHERE  userName='"+userName+"'"+"AND password='"+password+"'"+"AND loginAs='"+loginAs+"'"
+                        conn=createTable()
+                        c=conn.cursor()
+                        c.execute(loginCountQuery)
+                        loginCount=c.fetchone()
+                        c.close()
+                        conn.close()
+                        if (loginCount[0]>0):
+                                if(loginAs =="Officer of the Day" or loginAs =="Officer on Watch"):
+                                        w.enableAdvancedFunctionality()
+                                        w.change_view(26) 
+                                else:
+                                        w.disableAdvancedFunctionality()
+                                        w.change_view(26)  
+                        else:
+                                self.lblDataEntrySuccessful.setText("Incorrect Username or Password!")
+                                self.lblDataEntrySuccessful.show()
+        else:
+                self.lblDataEntrySuccessful.setText("One or more fields are empty!")
+                self.lblDataEntrySuccessful.show()
+    def resetSuccess(self):
+                self.lblDataEntrySuccessful.hide()
+    def shutdown(self):
+            sys.exit()
+class LoginWidget(QtWidgets.QMainWindow,Login ):
+    def __init__(self, parent=None):
+        super(LoginWidget, self).__init__(parent)
+        self.setup_Login(self)
+############################################################# Admin Settings Interface ######################################################################
+class AdminSettings(object):
+    def setup_AdminSettings(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(1366, 765)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.frame = QtWidgets.QFrame(self.centralwidget)
+        self.frame.setGeometry(QtCore.QRect(0, 0, 1366, 768))
+        self.frame.setStyleSheet("background-color: #ffffff")
+        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame.setObjectName("frame")
+        self.label_7 = QtWidgets.QLabel(self.frame)
+        self.label_7.setGeometry(QtCore.QRect(498, 349, 121, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_7.setFont(font)
+        self.label_7.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_7.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_7.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_7.setObjectName("label_7")
+        self.edtUsername = QtWidgets.QLineEdit(self.frame)
+        self.edtUsername.setGeometry(QtCore.QRect(619, 351, 251, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.edtUsername.setFont(font)
+        self.edtUsername.setStyleSheet("QLineEdit{\n"
+"    border:1px solid #aaa;\n"
+"    border-radius:4px;\n"
+"    outline:none;\n"
+"    padding:6px;\n"
+"    box-sizing:border-box;\n"
+"    transition:.3s;\n"
+"  }\n"
+"  QLineEdit:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QLineEdit:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"  }")
+        self.edtUsername.setObjectName("edtUsername")
+        self.label_8 = QtWidgets.QLabel(self.frame)
+        self.label_8.setGeometry(QtCore.QRect(498, 393, 121, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_8.setFont(font)
+        self.label_8.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_8.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_8.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_8.setObjectName("label_8")
+        self.edtPassword = QtWidgets.QLineEdit(self.frame)
+        self.edtPassword.setGeometry(QtCore.QRect(619, 395, 251, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.edtPassword.setFont(font)
+        self.edtPassword.setStyleSheet("QLineEdit{\n"
+"    border:1px solid #aaa;\n"
+"    border-radius:4px;\n"
+"    outline:none;\n"
+"    padding:6px;\n"
+"    box-sizing:border-box;\n"
+"    transition:.3s;\n"
+"  }\n"
+"  QLineEdit:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QLineEdit:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"  }")
+        self.edtPassword.setEchoMode(QtWidgets.QLineEdit.Password)
+        self.edtPassword.setObjectName("edtPassword")
+        self.label_9 = QtWidgets.QLabel(self.frame)
+        self.label_9.setGeometry(QtCore.QRect(498, 437, 121, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_9.setFont(font)
+        self.label_9.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_9.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_9.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_9.setObjectName("label_9")
+        self.lblDataEntrySuccessful = QtWidgets.QLabel(self.frame)
+        self.lblDataEntrySuccessful.setEnabled(True)
+        self.lblDataEntrySuccessful.setGeometry(QtCore.QRect(498, 493, 291, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblDataEntrySuccessful.setFont(font)
+        self.lblDataEntrySuccessful.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblDataEntrySuccessful.setStyleSheet("color: green;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblDataEntrySuccessful.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblDataEntrySuccessful.setObjectName("lblDataEntrySuccessful")
+        self.pushButton_2 = QtWidgets.QPushButton(self.frame)
+        self.pushButton_2.setEnabled(True)
+        self.pushButton_2.setGeometry(QtCore.QRect(608, 194, 150, 120))
+        self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
+"    border-radius:4px;\n"
+"    outline:none;")
+        self.pushButton_2.setText("")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/images/logoMTIPLarge2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_2.setIcon(icon)
+        self.pushButton_2.setIconSize(QtCore.QSize(200, 100))
+        self.pushButton_2.setObjectName("pushButton_2")
+        self.cBoxLoginAs = QtWidgets.QComboBox(self.frame)
+        self.cBoxLoginAs.setGeometry(QtCore.QRect(619, 439, 251, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        font.setKerning(True)
+        self.cBoxLoginAs.setFont(font)
+        self.cBoxLoginAs.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.cBoxLoginAs.setStyleSheet("QComboBox{ border-width: 1px;\n"
+" border-color: #aaa;\n"
+" border-style: solid;\n"
+"border-radius:6; \n"
+"}\n"
+"\n"
+"QComboBox::drop-down:button{\n"
+"background-color:transparent;\n"
+"}\n"
+"QComboBox::down-arrow {\n"
+" \n"
+"    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);\n"
+"    width: 25px;\n"
+"    height: 9px;\n"
+"}\n"
+"QComboBox:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QComboBox:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"  }\n"
+"")
+        self.cBoxLoginAs.setEditable(False)
+        self.cBoxLoginAs.setFrame(True)
+        self.cBoxLoginAs.setObjectName("cBoxLoginAs")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.btnAddLogin = QtWidgets.QPushButton(self.frame)
+        self.btnAddLogin.setGeometry(QtCore.QRect(679, 514, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnAddLogin.setFont(font)
+        self.btnAddLogin.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnAddLogin.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/images/add.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnAddLogin.setIcon(icon1)
+        self.btnAddLogin.setIconSize(QtCore.QSize(25, 25))
+        self.btnAddLogin.setObjectName("btnAddLogin")
+        self.pushButton = QtWidgets.QPushButton(self.frame)
+        self.pushButton.setEnabled(True)
+        self.pushButton.setGeometry(QtCore.QRect(1080, 5, 260, 35))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.pushButton.setFont(font)
+        self.pushButton.setStyleSheet(" text-align: right;\n"
+"    color: #ffffff;\n"
+"    background-color:#222222;")
+        icon5 = QtGui.QIcon()
+        icon5.addPixmap(QtGui.QPixmap(":/images/settings.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton.setIcon(icon5)
+        self.pushButton.setIconSize(QtCore.QSize(32, 32))
+        self.pushButton.setObjectName("pushButton")
+        self.label = QtWidgets.QLabel(self.frame)
+        self.label.setGeometry(QtCore.QRect(448, 174, 471, 421))
+        self.label.setStyleSheet("   border:1px solid #aaa;\n"
+"    border-radius:4px;\n"
+"    outline:none;\n"
+"    padding:6px;")
+        self.label.setText("")
+        self.label.setObjectName("label")
+        self.pushButton_3 = QtWidgets.QPushButton(self.frame)
+        self.pushButton_3.setEnabled(True)
+        self.pushButton_3.setGeometry(QtCore.QRect(0, 0, 1366, 768))
+        self.pushButton_3.setStyleSheet("background-color: rgba(47, 60, 113, 0.6);")
+        self.pushButton_3.setText("")
+        self.pushButton_3.setIconSize(QtCore.QSize(1366, 768))
+        self.pushButton_3.setObjectName("pushButton_3")
+        self.pushButton_4 = QtWidgets.QPushButton(self.frame)
+        self.pushButton_4.setEnabled(True)
+        self.pushButton_4.setGeometry(QtCore.QRect(0, 0, 1366, 768))
+        self.pushButton_4.setStyleSheet(" border:1px solid #fff;\n"
+"    border-radius:4px;\n"
+"    outline:none;")
+        self.pushButton_4.setText("")
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(":/images/shipBackground.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_4.setIcon(icon2)
+        self.pushButton_4.setIconSize(QtCore.QSize(1366, 768))
+        self.pushButton_4.setObjectName("pushButton_4")
+        self.label_2 = QtWidgets.QLabel(self.frame)
+        self.label_2.setGeometry(QtCore.QRect(0, 0, 1366, 44))
+        self.label_2.setStyleSheet(
+"background-color:#222222;")
+        self.label_2.setText("")
+        self.label_2.setObjectName("label_2")
+        self.navViewImpKeyDetails = QtWidgets.QPushButton(self.frame)
+        self.navViewImpKeyDetails.setGeometry(QtCore.QRect(1065, 120, 271, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewImpKeyDetails.setFont(font)
+        self.navViewImpKeyDetails.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewImpKeyDetails.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(30, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
+        self.pushButton_4.raise_()
+        self.pushButton_3.raise_()
+        self.label.raise_()
+        self.edtUsername.raise_()
+        self.label_7.raise_()
+        self.label_2.raise_()
+        self.edtPassword.raise_()
+        self.label_8.raise_()
+        self.cBoxLoginAs.raise_()
+        self.btnLogout.raise_()
+        self.label_9.raise_()
+        self.lblDataEntrySuccessful.raise_()
+        self.btnAddLogin.raise_()
+        self.pushButton_2.raise_()
+        self.pushButton.raise_()
+        MainWindow.setCentralWidget(self.centralwidget)
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.label_7.setText(_translate("MainWindow", "Usename"))
+        self.label_8.setText(_translate("MainWindow", "Password"))
+        self.label_9.setText(_translate("MainWindow", "Login as"))
+        self.lblDataEntrySuccessful.setText(_translate("MainWindow", "Details Saved Successfully!"))
+        self.cBoxLoginAs.setItemText(0, _translate("MainWindow", "Commanding Officer Secretary"))
+        self.cBoxLoginAs.setItemText(1, _translate("MainWindow", "Commanding Officer"))
+        self.cBoxLoginAs.setItemText(2, _translate("MainWindow", "Executive Officer"))
+        self.cBoxLoginAs.setItemText(3, _translate("MainWindow", "Weapon Engineering Officer"))
+        self.cBoxLoginAs.setItemText(4, _translate("MainWindow", "Marine Engineering Officer"))
+        self.cBoxLoginAs.setItemText(5, _translate("MainWindow", "Supply Officer"))
+        self.cBoxLoginAs.setItemText(6, _translate("MainWindow", "Principal Warfare Officer"))
+        self.cBoxLoginAs.setItemText(7, _translate("MainWindow", "Officer of the Day"))
+        self.cBoxLoginAs.setItemText(8, _translate("MainWindow", "Officer on Watch"))
+        self.btnAddLogin.setText(_translate("MainWindow", "Add New User Login"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
+        self.pushButton.setText(_translate("MainWindow", "Admin Settings"))
+
+#----------------------------------------backend for AdminSettings Interface----------------------------------------------
+        resetLoginGUI(self)
+        self.btnAddLogin.clicked.connect(self.addLogin)
+        self.edtPassword.textEdited.connect(self.resetSuccess)
+        self.edtUsername.textEdited.connect(self.resetSuccess)
+        self.cBoxLoginAs.activated.connect(self.resetSuccess)
+    def addLogin(self):
+        userName=self.edtUsername.text()
+        password=self.edtPassword.text()
+        loginAs=self.cBoxLoginAs.currentText()
+        if(userName!="" and password!=""):
+                queryString="INSERT INTO Login VALUES('"+userName+"',"+"'"+password+"',"+"'"+loginAs+"')"
+                insertData(self,queryString)
+                if(self.lblDataEntrySuccessful.text()!="Details could not be saved!"):
+                        resetKeysGUI(self)    
+
+        else:
+                self.lblDataEntrySuccessful.setText("One or more fields are empty!")
+                self.lblDataEntrySuccessful.show()
+    def resetSuccess(self):
+                self.lblDataEntrySuccessful.hide()
+                self.lblDataEntrySuccessful.setStyleSheet("color: green;\n""background-color:#ffffff;\n""font-size: 11pt")
+        
+    def navLogoutMethod(self):
+             w.change_view(29)  
+class AdminSettingsWidget(QtWidgets.QMainWindow,AdminSettings ):
+    def __init__(self, parent=None):
+        super(AdminSettingsWidget, self).__init__(parent)
+        self.setup_AdminSettings(self)
 ############################################################# Main ######################################################################
 import IconResource_rc
 
@@ -28817,5 +36484,5 @@ if __name__ == "__main__":
     w.resize(1366,768)
     w.setWindowState(QtCore.Qt.WindowMaximized)
     w.show()
-    w.change_view(1)
+    w.change_view(29)
     sys.exit(app.exec_())

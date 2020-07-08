@@ -1,943 +1,2027 @@
-# -*- coding: utf-8 -*-
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1366</width>
+    <height>765</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QFrame" name="frame">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>1366</width>
+      <height>768</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: #ffffff</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+    <widget class="QLabel" name="label">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>310</width>
+       <height>768</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-image: url(null);
+background-color:#2F3C71;</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_2">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>1366</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-image: url(null);
+background-color:#222222;</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewPunishment">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>587</y>
+       <width>290</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
 
-# Form implementation generated from reading ui file 'C:\Users\home\Desktop\IndoorPosition\Interfaces\PersonnelLocation.ui'
-#
-# Created by: PyQt5 UI code generator 5.13.0
-#
-# WARNING! All changes made in this file will be lost!
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
 
+}</string>
+     </property>
+     <property name="text">
+      <string>Punishment Book</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/punishment.png</normaloff>:/images/punishment.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewImpKey">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>323</y>
+       <width>290</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
 
+}</string>
+     </property>
+     <property name="text">
+      <string>Important Key Book</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/impKey.png</normaloff>:/images/impKey.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewGenKey">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>367</y>
+       <width>290</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
 
-class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1366, 765)
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
-        self.frame = QtWidgets.QFrame(self.centralwidget)
-        self.frame.setGeometry(QtCore.QRect(0, 0, 1366, 768))
-        self.frame.setStyleSheet("background-color: #ffffff")
-        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
-        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame.setObjectName("frame")
-        self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(0, 0, 290, 768))
-        self.label.setStyleSheet("background-image: url(null);\n"
-"background-color:#2F3C71;")
-        self.label.setText("")
-        self.label.setObjectName("label")
-        self.label_2 = QtWidgets.QLabel(self.frame)
-        self.label_2.setGeometry(QtCore.QRect(0, 0, 1366, 44))
-        self.label_2.setStyleSheet("background-image: url(null);\n"
-"background-color:#222222;")
-        self.label_2.setText("")
-        self.label_2.setObjectName("label_2")
-        self.navViewPunishment = QtWidgets.QPushButton(self.frame)
-        self.navViewPunishment.setGeometry(QtCore.QRect(10, 558, 270, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.navViewPunishment.setFont(font)
-        self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewPunishment.setStyleSheet("QPushButton \n"
-"{\n"
-"    text-align: left;\n"
-"    color: #ffffff;\n"
-"    background-color:#2F3C71;\n"
-"    border-width: 1px;\n"
-"    border-color: #2F3C71;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"    padding: 3px;\n"
-"    font-size: 11pt;\n"
-"    padding-left: 5px;\n"
-"    padding-right: 5px;\n"
-"    min-width: 40px;\n"
-"}\n"
-"\n"
-"QPushButton:hover\n"
-"{\n"
-"    background-color:#4154A0;\n"
-"}\n"
-"QPushButton:pressed\n"
-"{\n"
-"    background-color: #384889;\n"
-"     border-width: 3px;\n"
-"    border-color: #5C70BC;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"\n"
-"}")
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(":/images/punishment.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewPunishment.setIcon(icon)
-        self.navViewPunishment.setIconSize(QtCore.QSize(25, 25))
-        self.navViewPunishment.setFlat(False)
-        self.navViewPunishment.setObjectName("navViewPunishment")
-        self.navViewImpKey = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKey.setGeometry(QtCore.QRect(10, 294, 270, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.navViewImpKey.setFont(font)
-        self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewImpKey.setStyleSheet("QPushButton \n"
-"{\n"
-"    text-align: left;\n"
-"    color: #ffffff;\n"
-"    background-color:#2F3C71;\n"
-"    border-width: 1px;\n"
-"    border-color: #2F3C71;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"    padding: 3px;\n"
-"    font-size: 11pt;\n"
-"    padding-left: 5px;\n"
-"    padding-right: 5px;\n"
-"    min-width: 40px;\n"
-"}\n"
-"\n"
-"QPushButton:hover\n"
-"{\n"
-"    background-color:#4154A0;\n"
-"}\n"
-"QPushButton:pressed\n"
-"{\n"
-"    background-color: #384889;\n"
-"     border-width: 3px;\n"
-"    border-color: #5C70BC;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"\n"
-"}")
-        icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap(":/images/impKey.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewImpKey.setIcon(icon1)
-        self.navViewImpKey.setIconSize(QtCore.QSize(25, 25))
-        self.navViewImpKey.setFlat(False)
-        self.navViewImpKey.setObjectName("navViewImpKey")
-        self.navViewGenKey = QtWidgets.QPushButton(self.frame)
-        self.navViewGenKey.setGeometry(QtCore.QRect(10, 338, 270, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.navViewGenKey.setFont(font)
-        self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewGenKey.setStyleSheet("QPushButton \n"
-"{\n"
-"    text-align: left;\n"
-"    color: #ffffff;\n"
-"    background-color:#2F3C71;\n"
-"    border-width: 1px;\n"
-"    border-color: #2F3C71;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"    padding: 3px;\n"
-"    font-size: 11pt;\n"
-"    padding-left: 5px;\n"
-"    padding-right: 5px;\n"
-"    min-width: 40px;\n"
-"}\n"
-"\n"
-"QPushButton:hover\n"
-"{\n"
-"    background-color:#4154A0;\n"
-"}\n"
-"\n"
-"QPushButton:active\n"
-"{\n"
-"    background-color:#4154A0;\n"
-"}\n"
-"QPushButton:pressed\n"
-"{\n"
-"    background-color: #384889;\n"
-"     border-width: 3px;\n"
-"    border-color: #5C70BC;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"\n"
-"}")
-        icon2 = QtGui.QIcon()
-        icon2.addPixmap(QtGui.QPixmap(":/images/genKey.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewGenKey.setIcon(icon2)
-        self.navViewGenKey.setIconSize(QtCore.QSize(25, 25))
-        self.navViewGenKey.setFlat(False)
-        self.navViewGenKey.setObjectName("navViewGenKey")
-        self.navViewVisitor = QtWidgets.QPushButton(self.frame)
-        self.navViewVisitor.setGeometry(QtCore.QRect(10, 382, 270, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.navViewVisitor.setFont(font)
-        self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewVisitor.setStyleSheet("QPushButton \n"
-"{\n"
-"    text-align: left;\n"
-"    color: #ffffff;\n"
-"    background-color:#2F3C71;\n"
-"    border-width: 1px;\n"
-"    border-color: #2F3C71;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"    padding: 3px;\n"
-"    font-size: 11pt;\n"
-"    padding-left: 5px;\n"
-"    padding-right: 5px;\n"
-"    min-width: 40px;\n"
-"}\n"
-"\n"
-"QPushButton:hover\n"
-"{\n"
-"    background-color:#4154A0;\n"
-"}\n"
-"\n"
-"QPushButton:pressed\n"
-"{\n"
-"    background-color: #384889;\n"
-"     border-width: 3px;\n"
-"    border-color: #5C70BC;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"}")
-        icon3 = QtGui.QIcon()
-        icon3.addPixmap(QtGui.QPixmap(":/images/visitor.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewVisitor.setIcon(icon3)
-        self.navViewVisitor.setIconSize(QtCore.QSize(25, 25))
-        self.navViewVisitor.setFlat(False)
-        self.navViewVisitor.setObjectName("navViewVisitor")
-        self.navViewTransport = QtWidgets.QPushButton(self.frame)
-        self.navViewTransport.setGeometry(QtCore.QRect(10, 426, 270, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.navViewTransport.setFont(font)
-        self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewTransport.setStyleSheet("QPushButton \n"
-"{\n"
-"    text-align: left;\n"
-"    color: #ffffff;\n"
-"    background-color:#2F3C71;\n"
-"    border-width: 1px;\n"
-"    border-color: #2F3C71;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"    padding: 3px;\n"
-"    font-size: 11pt;\n"
-"    padding-left: 5px;\n"
-"    padding-right: 5px;\n"
-"    min-width: 40px;\n"
-"}\n"
-"\n"
-"QPushButton:hover\n"
-"{\n"
-"    background-color:#4154A0;\n"
-"}\n"
-"QPushButton:pressed\n"
-"{\n"
-"    background-color: #384889;\n"
-"     border-width: 3px;\n"
-"    border-color: #5C70BC;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"\n"
-"}")
-        icon4 = QtGui.QIcon()
-        icon4.addPixmap(QtGui.QPixmap(":/images/transport.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewTransport.setIcon(icon4)
-        self.navViewTransport.setIconSize(QtCore.QSize(25, 25))
-        self.navViewTransport.setFlat(False)
-        self.navViewTransport.setObjectName("navViewTransport")
-        self.navViewGangway = QtWidgets.QPushButton(self.frame)
-        self.navViewGangway.setGeometry(QtCore.QRect(10, 470, 270, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.navViewGangway.setFont(font)
-        self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewGangway.setStyleSheet("QPushButton \n"
-"{\n"
-"    text-align: left;\n"
-"    color: #ffffff;\n"
-"    background-color:#2F3C71;\n"
-"    border-width: 1px;\n"
-"    border-color: #2F3C71;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"    padding: 3px;\n"
-"    font-size: 11pt;\n"
-"    padding-left: 5px;\n"
-"    padding-right: 5px;\n"
-"    min-width: 40px;\n"
-"}\n"
-"\n"
-"QPushButton:hover\n"
-"{\n"
-"    background-color:#4154A0;\n"
-"}\n"
-"QPushButton:pressed\n"
-"{\n"
-"    background-color: #384889;\n"
-"     border-width: 3px;\n"
-"    border-color: #5C70BC;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"\n"
-"}")
-        icon5 = QtGui.QIcon()
-        icon5.addPixmap(QtGui.QPixmap(":/images/gangway.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewGangway.setIcon(icon5)
-        self.navViewGangway.setIconSize(QtCore.QSize(25, 25))
-        self.navViewGangway.setFlat(False)
-        self.navViewGangway.setObjectName("navViewGangway")
-        self.navViewDuty = QtWidgets.QPushButton(self.frame)
-        self.navViewDuty.setGeometry(QtCore.QRect(10, 514, 270, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.navViewDuty.setFont(font)
-        self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewDuty.setStyleSheet("QPushButton \n"
-"{\n"
-"    text-align: left;\n"
-"    color: #ffffff;\n"
-"    background-color:#2F3C71;\n"
-"    border-width: 1px;\n"
-"    border-color: #2F3C71;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"    padding: 3px;\n"
-"    font-size: 11pt;\n"
-"    padding-left: 5px;\n"
-"    padding-right: 5px;\n"
-"    min-width: 40px;\n"
-"}\n"
-"\n"
-"QPushButton:hover\n"
-"{\n"
-"    background-color:#4154A0;\n"
-"}\n"
-"QPushButton:pressed\n"
-"{\n"
-"    background-color: #384889;\n"
-"     border-width: 3px;\n"
-"    border-color: #5C70BC;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"\n"
-"}")
-        icon6 = QtGui.QIcon()
-        icon6.addPixmap(QtGui.QPixmap(":/images/duty.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewDuty.setIcon(icon6)
-        self.navViewDuty.setIconSize(QtCore.QSize(25, 25))
-        self.navViewDuty.setFlat(False)
-        self.navViewDuty.setObjectName("navViewDuty")
-        self.navViewNight = QtWidgets.QPushButton(self.frame)
-        self.navViewNight.setGeometry(QtCore.QRect(10, 646, 270, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.navViewNight.setFont(font)
-        self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewNight.setStyleSheet("QPushButton \n"
-"{\n"
-"    text-align: left;\n"
-"    color: #ffffff;\n"
-"    background-color:#2F3C71;\n"
-"    border-width: 1px;\n"
-"    border-color: #2F3C71;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"    padding: 3px;\n"
-"    font-size: 11pt;\n"
-"    padding-left: 5px;\n"
-"    padding-right: 5px;\n"
-"    min-width: 40px;\n"
-"}\n"
-"\n"
-"QPushButton:hover\n"
-"{\n"
-"    background-color:#4154A0;\n"
-"}\n"
-"QPushButton:pressed\n"
-"{\n"
-"    background-color: #384889;\n"
-"     border-width: 3px;\n"
-"    border-color: #5C70BC;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"\n"
-"}")
-        icon7 = QtGui.QIcon()
-        icon7.addPixmap(QtGui.QPixmap(":/images/night.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewNight.setIcon(icon7)
-        self.navViewNight.setIconSize(QtCore.QSize(25, 25))
-        self.navViewNight.setFlat(False)
-        self.navViewNight.setObjectName("navViewNight")
-        self.label_4 = QtWidgets.QLabel(self.frame)
-        self.label_4.setGeometry(QtCore.QRect(10, 245, 270, 2))
-        self.label_4.setStyleSheet("background-color:#4154A0;")
-        self.label_4.setText("")
-        self.label_4.setObjectName("label_4")
-        self.navViewMOB = QtWidgets.QPushButton(self.frame)
-        self.navViewMOB.setGeometry(QtCore.QRect(10, 110, 270, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.navViewMOB.setFont(font)
-        self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMOB.setStyleSheet("QPushButton \n"
-"{\n"
-"    text-align: left;\n"
-"    color: #ffffff;\n"
-"    background-color:#2F3C71;\n"
-"    border-width: 1px;\n"
-"    border-color: #2F3C71;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"    padding: 3px;\n"
-"    font-size: 11pt;\n"
-"    padding-left: 5px;\n"
-"    padding-right: 5px;\n"
-"    min-width: 40px;\n"
-"}\n"
-"\n"
-"QPushButton:hover\n"
-"{\n"
-"    background-color:#4154A0;\n"
-"}\n"
-"QPushButton:pressed\n"
-"{\n"
-"    background-color: #384889;\n"
-"     border-width: 3px;\n"
-"    border-color: #5C70BC;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"\n"
-"}")
-        icon8 = QtGui.QIcon()
-        icon8.addPixmap(QtGui.QPixmap(":/images/mob.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMOB.setIcon(icon8)
-        self.navViewMOB.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMOB.setFlat(False)
-        self.navViewMOB.setObjectName("navViewMOB")
-        self.navViewLocation = QtWidgets.QPushButton(self.frame)
-        self.navViewLocation.setGeometry(QtCore.QRect(10, 22, 270, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.navViewLocation.setFont(font)
-        self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewLocation.setStyleSheet("QPushButton \n"
-"{\n"
-"    text-align: left;\n"
-"    color: #ffffff;\n"
-"    background-color:#2F3C71;\n"
-"    border-width: 1px;\n"
-"    border-color: #2F3C71;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"    padding: 3px;\n"
-"    font-size: 11pt;\n"
-"    padding-left: 5px;\n"
-"    padding-right: 5px;\n"
-"    min-width: 40px;\n"
-"}\n"
-"\n"
-"QPushButton:hover\n"
-"{\n"
-"    background-color:#4154A0;\n"
-"}\n"
-"QPushButton:pressed\n"
-"{\n"
-"    background-color: #384889;\n"
-"     border-width: 3px;\n"
-"    border-color: #5C70BC;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"\n"
-"}")
-        icon9 = QtGui.QIcon()
-        icon9.addPixmap(QtGui.QPixmap(":/images/locate.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewLocation.setIcon(icon9)
-        self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
-        self.navViewLocation.setFlat(False)
-        self.navViewLocation.setObjectName("navViewLocation")
-        self.navViewMangement = QtWidgets.QPushButton(self.frame)
-        self.navViewMangement.setGeometry(QtCore.QRect(10, 66, 270, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.navViewMangement.setFont(font)
-        self.navViewMangement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewMangement.setStyleSheet("QPushButton \n"
-"{\n"
-"    text-align: left;\n"
-"    color: #ffffff;\n"
-"    background-color:#2F3C71;\n"
-"    border-width: 1px;\n"
-"    border-color: #2F3C71;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"    padding: 3px;\n"
-"    font-size: 11pt;\n"
-"    padding-left: 5px;\n"
-"    padding-right: 5px;\n"
-"    min-width: 40px;\n"
-"}\n"
-"\n"
-"QPushButton:hover\n"
-"{\n"
-"    background-color:#4154A0;\n"
-"}\n"
-"QPushButton:pressed\n"
-"{\n"
-"    background-color: #384889;\n"
-"     border-width: 3px;\n"
-"    border-color: #5C70BC;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"\n"
-"}")
-        icon10 = QtGui.QIcon()
-        icon10.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewMangement.setIcon(icon10)
-        self.navViewMangement.setIconSize(QtCore.QSize(32, 32))
-        self.navViewMangement.setFlat(False)
-        self.navViewMangement.setObjectName("navViewMangement")
-        self.navViewPPE = QtWidgets.QPushButton(self.frame)
-        self.navViewPPE.setGeometry(QtCore.QRect(10, 690, 270, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.navViewPPE.setFont(font)
-        self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewPPE.setStyleSheet("QPushButton \n"
-"{\n"
-"    text-align: left;\n"
-"    color: #ffffff;\n"
-"    background-color:#2F3C71;\n"
-"    border-width: 1px;\n"
-"    border-color: #2F3C71;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"    padding: 3px;\n"
-"    font-size: 11pt;\n"
-"    padding-left: 5px;\n"
-"    padding-right: 5px;\n"
-"    min-width: 40px;\n"
-"}\n"
-"\n"
-"QPushButton:hover\n"
-"{\n"
-"    background-color:#4154A0;\n"
-"}\n"
-"QPushButton:pressed\n"
-"{\n"
-"    background-color: #384889;\n"
-"     border-width: 3px;\n"
-"    border-color: #5C70BC;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"\n"
-"}")
-        icon11 = QtGui.QIcon()
-        icon11.addPixmap(QtGui.QPixmap(":/images/armPPE.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewPPE.setIcon(icon11)
-        self.navViewPPE.setIconSize(QtCore.QSize(25, 25))
-        self.navViewPPE.setFlat(False)
-        self.navViewPPE.setObjectName("navViewPPE")
-        self.navViewOOD = QtWidgets.QPushButton(self.frame)
-        self.navViewOOD.setGeometry(QtCore.QRect(10, 602, 270, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.navViewOOD.setFont(font)
-        self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewOOD.setStyleSheet("QPushButton \n"
-"{\n"
-"    text-align: left;\n"
-"    color: #ffffff;\n"
-"    background-color:#2F3C71;\n"
-"    border-width: 1px;\n"
-"    border-color: #2F3C71;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"    padding: 3px;\n"
-"    font-size: 11pt;\n"
-"    padding-left: 5px;\n"
-"    padding-right: 5px;\n"
-"    min-width: 40px;\n"
-"}\n"
-"\n"
-"QPushButton:hover\n"
-"{\n"
-"    background-color:#4154A0;\n"
-"}\n"
-"QPushButton:pressed\n"
-"{\n"
-"    background-color: #384889;\n"
-"     border-width: 3px;\n"
-"    border-color: #5C70BC;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"\n"
-"}")
-        icon12 = QtGui.QIcon()
-        icon12.addPixmap(QtGui.QPixmap(":/images/oodObserve.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewOOD.setIcon(icon12)
-        self.navViewOOD.setIconSize(QtCore.QSize(25, 25))
-        self.navViewOOD.setFlat(False)
-        self.navViewOOD.setObjectName("navViewOOD")
-        self.navViewCMS = QtWidgets.QPushButton(self.frame)
-        self.navViewCMS.setGeometry(QtCore.QRect(10, 154, 270, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.navViewCMS.setFont(font)
-        self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewCMS.setStyleSheet("QPushButton \n"
-"{\n"
-"    text-align: left;\n"
-"    color: #ffffff;\n"
-"    background-color:#2F3C71;\n"
-"    border-width: 1px;\n"
-"    border-color: #2F3C71;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"    padding: 3px;\n"
-"    font-size: 11pt;\n"
-"    padding-left: 5px;\n"
-"    padding-right: 5px;\n"
-"    min-width: 40px;\n"
-"}\n"
-"\n"
-"QPushButton:hover\n"
-"{\n"
-"    background-color:#4154A0;\n"
-"}\n"
-"QPushButton:pressed\n"
-"{\n"
-"    background-color: #384889;\n"
-"     border-width: 3px;\n"
-"    border-color: #5C70BC;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"\n"
-"}")
-        icon13 = QtGui.QIcon()
-        icon13.addPixmap(QtGui.QPixmap(":/images/sreCall.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewCMS.setIcon(icon13)
-        self.navViewCMS.setIconSize(QtCore.QSize(25, 25))
-        self.navViewCMS.setFlat(False)
-        self.navViewCMS.setObjectName("navViewCMS")
-        self.pushButton = QtWidgets.QPushButton(self.frame)
-        self.pushButton.setEnabled(True)
-        self.pushButton.setGeometry(QtCore.QRect(1080, 5, 260, 35))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.pushButton.setFont(font)
-        self.pushButton.setStyleSheet(" text-align: right;\n"
-"    color: #ffffff;\n"
-"    background-color:#222222;")
-        self.pushButton.setIcon(icon2)
-        self.pushButton.setIconSize(QtCore.QSize(32, 32))
-        self.pushButton.setObjectName("pushButton")
-        self.pushButton_2 = QtWidgets.QPushButton(self.frame)
-        self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setGeometry(QtCore.QRect(306, 680, 100, 80))
-        self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
-"    border-radius:4px;\n"
-"    outline:none;")
-        self.pushButton_2.setText("")
-        icon14 = QtGui.QIcon()
-        icon14.addPixmap(QtGui.QPixmap(":/images/logoMTIP.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.pushButton_2.setIcon(icon14)
-        self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
-        self.pushButton_2.setObjectName("pushButton_2")
-        self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
-        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 250, 270, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.navViewPersonnel.setFont(font)
-        self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewPersonnel.setStyleSheet("QPushButton \n"
-"{\n"
-"    text-align: left;\n"
-"    color: #ffffff;\n"
-"    background-color:#2F3C71;\n"
-"    border-width: 1px;\n"
-"    border-color: #2F3C71;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"    padding: 3px;\n"
-"    font-size: 11pt;\n"
-"    padding-left: 5px;\n"
-"    padding-right: 5px;\n"
-"    min-width: 40px;\n"
-"}\n"
-"\n"
-"QPushButton:hover\n"
-"{\n"
-"    background-color:#4154A0;\n"
-"}\n"
-"\n"
-"QPushButton:pressed\n"
-"{\n"
-"    background-color: #384889;\n"
-"     border-width: 3px;\n"
-"    border-color: #5C70BC;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"\n"
-"}")
-        icon15 = QtGui.QIcon()
-        icon15.addPixmap(QtGui.QPixmap(":/images/personnelData.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewPersonnel.setIcon(icon15)
-        self.navViewPersonnel.setIconSize(QtCore.QSize(25, 25))
-        self.navViewPersonnel.setFlat(False)
-        self.navViewPersonnel.setObjectName("navViewPersonnel")
-        self.navViewState = QtWidgets.QPushButton(self.frame)
-        self.navViewState.setGeometry(QtCore.QRect(10, 198, 270, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.navViewState.setFont(font)
-        self.navViewState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewState.setStyleSheet("QPushButton \n"
-"{\n"
-"    text-align: left;\n"
-"    color: #ffffff;\n"
-"    background-color:#2F3C71;\n"
-"    border-width: 1px;\n"
-"    border-color: #2F3C71;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"    padding: 3px;\n"
-"    font-size: 11pt;\n"
-"    padding-left: 5px;\n"
-"    padding-right: 5px;\n"
-"    min-width: 40px;\n"
-"}\n"
-"\n"
-"QPushButton:hover\n"
-"{\n"
-"    background-color:#4154A0;\n"
-"}\n"
-"QPushButton:pressed\n"
-"{\n"
-"    background-color: #384889;\n"
-"     border-width: 3px;\n"
-"    border-color: #5C70BC;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"\n"
-"}")
-        icon16 = QtGui.QIcon()
-        icon16.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.navViewState.setIcon(icon16)
-        self.navViewState.setIconSize(QtCore.QSize(25, 25))
-        self.navViewState.setFlat(False)
-        self.navViewState.setObjectName("navViewState")
-        self.scrollArea = QtWidgets.QScrollArea(self.frame)
-        self.scrollArea.setGeometry(QtCore.QRect(306, 120, 1040, 540))
-        self.scrollArea.setWidgetResizable(True)
-        self.scrollArea.setObjectName("scrollArea")
-        self.scrollAreaWidgetContents_4 = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents_4.setGeometry(QtCore.QRect(0, 0, 1038, 538))
-        self.scrollAreaWidgetContents_4.setObjectName("scrollAreaWidgetContents_4")
-        self.btnshipImage = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnshipImage.setGeometry(QtCore.QRect(0, 0, 1040, 540))
-        self.btnshipImage.setStyleSheet("border:1px solid #fff;\n"
-"outline:none;")
-        self.btnshipImage.setText("")
-        icon17 = QtGui.QIcon()
-        icon17.addPixmap(QtGui.QPixmap(":/images/shipDefault.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.btnshipImage.setIcon(icon17)
-        self.btnshipImage.setIconSize(QtCore.QSize(1040, 520))
-        self.btnshipImage.setObjectName("btnshipImage")
-        self.btnzoomIn = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnzoomIn.setGeometry(QtCore.QRect(980, 10, 52, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.btnzoomIn.setFont(font)
-        self.btnzoomIn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnzoomIn.setStyleSheet("QPushButton\n"
-"{\n"
-"    color: #ffffff;\n"
-"    background-color:#D1D1D1;\n"
-"    border-width: 1px;\n"
-"    border-color: #DADCDE;\n"
-"    border-style: solid;\n"
-"    padding: 3px;\n"
-"    font-size: 11pt;\n"
-"    padding-left: 5px;\n"
-"    padding-right: 5px;\n"
-"    min-width: 40px;\n"
-"}\n"
-"\n"
-"QPushButton:hover\n"
-"{\n"
-"    background-color:#C8C8C9\n"
-"}\n"
-"QPushButton:pressed\n"
-"{\n"
-"    background-color: #D1D1D1;\n"
-"     border-width: 3px;\n"
-"    border-color: #D1D1D1;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"\n"
-"}")
-        self.btnzoomIn.setIconSize(QtCore.QSize(25, 25))
-        self.btnzoomIn.setObjectName("btnzoomIn")
-        self.btnzoomOut = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnzoomOut.setGeometry(QtCore.QRect(980, 60, 52, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.btnzoomOut.setFont(font)
-        self.btnzoomOut.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnzoomOut.setStyleSheet("QPushButton\n"
-"{\n"
-"    color: #ffffff;\n"
-"    background-color:#D1D1D1;\n"
-"    border-width: 1px;\n"
-"    border-color: #DADCDE;\n"
-"    border-style: solid;\n"
-"    padding: 3px;\n"
-"    font-size: 11pt;\n"
-"    padding-left: 5px;\n"
-"    padding-right: 5px;\n"
-"    min-width: 40px;\n"
-"}\n"
-"\n"
-"QPushButton:hover\n"
-"{\n"
-"    background-color:#C8C8C9\n"
-"}\n"
-"QPushButton:pressed\n"
-"{\n"
-"    background-color: #D1D1D1;\n"
-"     border-width: 3px;\n"
-"    border-color: #D1D1D1;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"\n"
-"}")
-        self.btnzoomOut.setIconSize(QtCore.QSize(25, 25))
-        self.btnzoomOut.setObjectName("btnzoomOut")
-        self.scrollArea.setWidget(self.scrollAreaWidgetContents_4)
-        self.label_2.raise_()
-        self.label.raise_()
-        self.navViewPunishment.raise_()
-        self.navViewImpKey.raise_()
-        self.navViewGenKey.raise_()
-        self.navViewVisitor.raise_()
-        self.navViewTransport.raise_()
-        self.navViewGangway.raise_()
-        self.navViewDuty.raise_()
-        self.navViewNight.raise_()
-        self.label_4.raise_()
-        self.navViewMOB.raise_()
-        self.navViewLocation.raise_()
-        self.navViewMangement.raise_()
-        self.navViewPPE.raise_()
-        self.navViewOOD.raise_()
-        self.navViewCMS.raise_()
-        self.pushButton.raise_()
-        self.pushButton_2.raise_()
-        self.navViewPersonnel.raise_()
-        self.navViewState.raise_()
-        self.scrollArea.raise_()
-        self.label_13 = QtWidgets.QLabel(self.centralwidget)
-        self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
-        self.label_13.setStyleSheet("background-color:#A0A0A0;")
-        self.label_13.setText("")
-        self.label_13.setObjectName("label_13")
-        self.label_6 = QtWidgets.QLabel(self.centralwidget)
-        self.label_6.setGeometry(QtCore.QRect(306, 60, 221, 31))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.label_6.setFont(font)
-        self.label_6.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.label_6.setStyleSheet("color: #000000;\n"
-"background-color:#ffffff;\n"
-"font-size: 11pt")
-        self.label_6.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.label_6.setObjectName("label_6")
-        MainWindow.setCentralWidget(self.centralwidget)
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
 
-        self.retranslateUi(MainWindow)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
 
-    def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.navViewPunishment.setText(_translate("MainWindow", "Punishment Book"))
-        self.navViewImpKey.setText(_translate("MainWindow", "Important Key Book"))
-        self.navViewGenKey.setText(_translate("MainWindow", "General Key Book"))
-        self.navViewVisitor.setText(_translate("MainWindow", "Visitor Book"))
-        self.navViewTransport.setText(_translate("MainWindow", "Transport Book"))
-        self.navViewGangway.setText(_translate("MainWindow", "Gangway Book"))
-        self.navViewDuty.setText(_translate("MainWindow", "Duty Book"))
-        self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
-        self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
-        self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
-        self.navViewMangement.setText(_translate("MainWindow", "Personnel Management System"))
-        self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
-        self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
-        self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
-        self.pushButton.setText(_translate("MainWindow", "General Key Book"))
-        self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
-        self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
-        self.btnzoomIn.setText(_translate("MainWindow", "Z+"))
-        self.btnzoomOut.setText(_translate("MainWindow", "Z-"))
-        self.label_6.setText(_translate("MainWindow", "Enter General Key Details"))
+}</string>
+     </property>
+     <property name="text">
+      <string>General Key Book</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/genKey.png</normaloff>:/images/genKey.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewVisitor">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>411</y>
+       <width>290</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
 
-#--------------------------------------------------------------------------------------------------
-        self.zoomLimit=0
-        print(self.zoomLimit)
-        self.btnzoomOut.setEnabled(False)
-        self.btnzoomIn.clicked.connect(self.zoomInMethod)
-        self.btnzoomOut.clicked.connect(self.zoomOutMethod)
-    def zoomInMethod(self):
-            if(self.zoomLimit==0):
-                    self.btnshipImage.setIconSize(QtCore.QSize(1280, 650))
-                    self.zoomLimit+=1
-            elif(self.zoomLimit==1):
-                    self.btnshipImage.setIconSize(QtCore.QSize(1540, 780))
-                    self.zoomLimit+=1
-            elif(self.zoomLimit==2):
-                    self.btnshipImage.setIconSize(QtCore.QSize(1800, 910))
-                    self.btnzoomOut.setEnabled(True)
-                    self.btnzoomIn.setEnabled(False)
-            
-    def zoomOutMethod(self):
-            if(self.zoomLimit==0):
-                    self.btnshipImage.setIconSize(QtCore.QSize(1040, 520))
-                    self.btnzoomOut.setEnabled(False)
-                    self.btnzoomIn.setEnabled(True)
-            elif(self.zoomLimit==1):
-                    self.btnshipImage.setIconSize(QtCore.QSize(1280, 650))
-                    self.zoomLimit-=1
-            elif(self.zoomLimit==2):
-                    self.btnshipImage.setIconSize(QtCore.QSize(1540, 780))
-                    self.zoomLimit-=1
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
 
-import IconResource_rc
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+}</string>
+     </property>
+     <property name="text">
+      <string>Visitor Book</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/visitor.png</normaloff>:/images/visitor.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewTransport">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>455</y>
+       <width>290</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
 
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
 
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec_())
+}</string>
+     </property>
+     <property name="text">
+      <string>Transport Book</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/transport.png</normaloff>:/images/transport.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewGangway">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>499</y>
+       <width>290</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>Gangway Book</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/gangway.png</normaloff>:/images/gangway.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewDuty">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>543</y>
+       <width>290</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>Duty Book</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/duty.png</normaloff>:/images/duty.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewNight">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>675</y>
+       <width>290</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>Night Round Book</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/night.png</normaloff>:/images/night.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_4">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>272</y>
+       <width>290</width>
+       <height>2</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color:#4154A0;</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewMOB">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>91</y>
+       <width>290</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>Man Over Board</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/mob.png</normaloff>:/images/mob.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>32</width>
+       <height>32</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewLocation">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>3</y>
+       <width>290</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+
+QPushButton:active
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>Personnel Location</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/locate.png</normaloff>:/images/locate.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewMangement">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>47</y>
+       <width>290</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>Personnel Management System</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/personnel.png</normaloff>:/images/personnel.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>32</width>
+       <height>32</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewPPE">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>719</y>
+       <width>290</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>Small Arm and PPE Book</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/armPPE.png</normaloff>:/images/armPPE.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewOOD">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>631</y>
+       <width>290</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>OOD Observation Book</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/oodObserve.png</normaloff>:/images/oodObserve.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewCMS">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>135</y>
+       <width>290</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>SRE Call Management System</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/sreCall.png</normaloff>:/images/sreCall.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>1080</x>
+       <y>5</y>
+       <width>260</width>
+       <height>35</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true"> text-align: right;
+    color: #ffffff;
+    background-color:#222222;</string>
+     </property>
+     <property name="text">
+      <string>Personnel Location</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/personnel.png</normaloff>:/images/personnel.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>32</width>
+       <height>32</height>
+      </size>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_2">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>316</x>
+       <y>680</y>
+       <width>100</width>
+       <height>80</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true"> border:1px solid #fff;
+    border-radius:4px;
+    outline:none;</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/logoMTIP.png</normaloff>:/images/logoMTIP.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>200</width>
+       <height>200</height>
+      </size>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewPersonnel">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>279</y>
+       <width>290</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>Personnel Data Book</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/personnelData.png</normaloff>:/images/personnelData.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="navViewState">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>179</y>
+       <width>290</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>Personnel State Management System</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/armoryState.png</normaloff>:/images/armoryState.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <widget class="QScrollArea" name="scrollArea">
+     <property name="geometry">
+      <rect>
+       <x>325</x>
+       <y>60</y>
+       <width>1025</width>
+       <height>551</height>
+      </rect>
+     </property>
+     <property name="widgetResizable">
+      <bool>true</bool>
+     </property>
+     <widget class="QWidget" name="scrollAreaWidgetContents_4">
+      <property name="geometry">
+       <rect>
+        <x>0</x>
+        <y>0</y>
+        <width>1023</width>
+        <height>549</height>
+       </rect>
+      </property>
+      <widget class="QPushButton" name="btnshipImage">
+       <property name="geometry">
+        <rect>
+         <x>-10</x>
+         <y>-10</y>
+         <width>1040</width>
+         <height>569</height>
+        </rect>
+       </property>
+       <property name="layoutDirection">
+        <enum>Qt::RightToLeft</enum>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">border:1px solid #fff;
+outline:none;
+background-color:#AADAFF;
+color:#AADAFF;</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/shipDefault.png</normaloff>:/images/shipDefault.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>1800</width>
+         <height>520</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnZoomIn">
+       <property name="geometry">
+        <rect>
+         <x>974</x>
+         <y>6</y>
+         <width>44</width>
+         <height>44</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+    color: #000000;
+    background-color:#ffffff;
+    border-width: 1px;
+    border-color: #A5A5A5;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+QPushButton:hover
+{
+    background-color:#E5E5E5
+}
+QPushButton:pressed
+{
+    background-color: #D1D1D1;
+ 	border-width: 3px;
+    border-color: #E5E5E5;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/zoomIn.png</normaloff>:/images/zoomIn.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>25</width>
+         <height>25</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnZoomOut">
+       <property name="geometry">
+        <rect>
+         <x>974</x>
+         <y>56</y>
+         <width>44</width>
+         <height>44</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+    color: #000000;
+    background-color:#ffffff;
+    border-width: 1px;
+    border-color: #A5A5A5;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+QPushButton:hover
+{
+    background-color:#E5E5E5
+}
+QPushButton:pressed
+{
+    background-color: #D1D1D1;
+ 	border-width: 3px;
+    border-color: #E5E5E5;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/zoomOut.png</normaloff>:/images/zoomOut.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>25</width>
+         <height>25</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnMoveRight">
+       <property name="geometry">
+        <rect>
+         <x>974</x>
+         <y>500</y>
+         <width>44</width>
+         <height>44</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+    color: #000000;
+    background-color:#ffffff;
+    border-width: 1px;
+    border-color: #A5A5A5;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+QPushButton:hover
+{
+    background-color:#E5E5E5
+}
+QPushButton:pressed
+{
+    background-color: #D1D1D1;
+ 	border-width: 3px;
+    border-color: #E5E5E5;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/moveRight.png</normaloff>:/images/moveRight.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>25</width>
+         <height>25</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnMoveLeft">
+       <property name="geometry">
+        <rect>
+         <x>924</x>
+         <y>500</y>
+         <width>44</width>
+         <height>44</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+    color: #000000;
+    background-color:#ffffff;
+    border-width: 1px;
+    border-color: #A5A5A5;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+QPushButton:hover
+{
+    background-color:#E5E5E5
+}
+QPushButton:pressed
+{
+    background-color: #D1D1D1;
+ 	border-width: 3px;
+    border-color: #E5E5E5;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/moveLeft.png</normaloff>:/images/moveLeft.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>25</width>
+         <height>25</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnMarker2Room2">
+       <property name="geometry">
+        <rect>
+         <x>637</x>
+         <y>162</y>
+         <width>51</width>
+         <height>101</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+   
+    background-color:transparent;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/markerRoom3.png</normaloff>:/images/markerRoom3.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>75</width>
+         <height>75</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnMarker1Room2">
+       <property name="geometry">
+        <rect>
+         <x>562</x>
+         <y>162</y>
+         <width>51</width>
+         <height>101</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+   
+    background-color:transparent;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/markerRoom3.png</normaloff>:/images/markerRoom3.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>75</width>
+         <height>75</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnMarker3Room1">
+       <property name="geometry">
+        <rect>
+         <x>466</x>
+         <y>163</y>
+         <width>51</width>
+         <height>101</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+   
+    background-color:transparent;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/markerRoom2.png</normaloff>:/images/markerRoom2.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>75</width>
+         <height>75</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnMarker2Room1">
+       <property name="geometry">
+        <rect>
+         <x>403</x>
+         <y>240</y>
+         <width>101</width>
+         <height>51</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+   
+    background-color:transparent;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/markerRoomLeft2.png</normaloff>:/images/markerRoomLeft2.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>75</width>
+         <height>75</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnMarker1Room3">
+       <property name="geometry">
+        <rect>
+         <x>542</x>
+         <y>298</y>
+         <width>51</width>
+         <height>101</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+   
+    background-color:transparent;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/markerRoom1.png</normaloff>:/images/markerRoom1.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>75</width>
+         <height>75</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnMarker2Room3">
+       <property name="geometry">
+        <rect>
+         <x>612</x>
+         <y>298</y>
+         <width>51</width>
+         <height>101</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="layoutDirection">
+        <enum>Qt::RightToLeft</enum>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+   
+    background-color:transparent;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/markerRoom1.png</normaloff>:/images/markerRoom1.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>75</width>
+         <height>75</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnMarker1Room1">
+       <property name="geometry">
+        <rect>
+         <x>466</x>
+         <y>258</y>
+         <width>51</width>
+         <height>101</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+   
+    background-color:transparent;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/markerRoomDown2.png</normaloff>:/images/markerRoomDown2.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>75</width>
+         <height>75</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnMarker3Room3">
+       <property name="geometry">
+        <rect>
+         <x>649</x>
+         <y>286</y>
+         <width>101</width>
+         <height>51</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+   
+    background-color:transparent;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/markerRoomRight1.png</normaloff>:/images/markerRoomRight1.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>75</width>
+         <height>75</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnMarker3Room2">
+       <property name="geometry">
+        <rect>
+         <x>649</x>
+         <y>240</y>
+         <width>101</width>
+         <height>51</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="cursor">
+        <cursorShape>PointingHandCursor</cursorShape>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton
+{
+   
+    background-color:transparent;
+
+}</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/markerRoomRight3.png</normaloff>:/images/markerRoomRight3.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>75</width>
+         <height>75</height>
+        </size>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="btnMobError">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>6</x>
+         <y>482</y>
+         <width>211</width>
+         <height>61</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <family>Segoe UI</family>
+         <pointsize>11</pointsize>
+        </font>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">border:1px solid  #FF5555;
+background-color: #FF5555;
+outline:none;
+color: #FFFFFF;</string>
+       </property>
+       <property name="text">
+        <string>Alert! Man Overboard!</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../IconResource.qrc">
+         <normaloff>:/images/notification.png</normaloff>:/images/notification.png</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>32</width>
+         <height>32</height>
+        </size>
+       </property>
+      </widget>
+      <zorder>btnshipImage</zorder>
+      <zorder>btnMarker2Room2</zorder>
+      <zorder>btnMarker1Room2</zorder>
+      <zorder>btnMarker3Room1</zorder>
+      <zorder>btnMarker2Room1</zorder>
+      <zorder>btnMarker1Room3</zorder>
+      <zorder>btnMarker2Room3</zorder>
+      <zorder>btnMarker1Room1</zorder>
+      <zorder>btnMarker3Room3</zorder>
+      <zorder>btnMarker3Room2</zorder>
+      <zorder>btnMoveLeft</zorder>
+      <zorder>btnMoveRight</zorder>
+      <zorder>btnZoomIn</zorder>
+      <zorder>btnZoomOut</zorder>
+      <zorder>btnMobError</zorder>
+     </widget>
+    </widget>
+    <widget class="QPushButton" name="navViewState_2">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>223</y>
+       <width>290</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton 
+{
+    text-align: left;
+    color: #ffffff;
+    background-color:#2F3C71;
+    border-width: 1px;
+    border-color: #2F3C71;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+    min-width: 40px;
+}
+
+QPushButton:hover
+{
+    background-color:#4154A0;
+}
+QPushButton:pressed
+{
+    background-color: #384889;
+ 	border-width: 3px;
+    border-color: #5C70BC;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>Armory State Management System</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/armoryState.png</normaloff>:/images/armoryState.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
+     </property>
+    </widget>
+    <zorder>label_2</zorder>
+    <zorder>label</zorder>
+    <zorder>navViewPunishment</zorder>
+    <zorder>navViewImpKey</zorder>
+    <zorder>navViewGenKey</zorder>
+    <zorder>navViewVisitor</zorder>
+    <zorder>navViewTransport</zorder>
+    <zorder>navViewGangway</zorder>
+    <zorder>navViewDuty</zorder>
+    <zorder>navViewNight</zorder>
+    <zorder>label_4</zorder>
+    <zorder>navViewMOB</zorder>
+    <zorder>navViewLocation</zorder>
+    <zorder>navViewMangement</zorder>
+    <zorder>navViewPPE</zorder>
+    <zorder>navViewOOD</zorder>
+    <zorder>navViewCMS</zorder>
+    <zorder>pushButton</zorder>
+    <zorder>pushButton_2</zorder>
+    <zorder>navViewPersonnel</zorder>
+    <zorder>navViewState</zorder>
+    <zorder>scrollArea</zorder>
+    <zorder>navViewState_2</zorder>
+   </widget>
+  </widget>
+ </widget>
+ <resources>
+  <include location="../IconResource.qrc"/>
+ </resources>
+ <connections/>
+</ui>

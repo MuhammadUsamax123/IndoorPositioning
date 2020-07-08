@@ -22,10 +22,32 @@
     <file>images/visitor.png</file>
     <file>images/personnelData.png</file>
     <file>images/logoMTIP.png</file>
+    <file>images/shipBackground.png</file>
+    <file>images/logoMTIPLarge2.png</file>
     <file>images/armoryState.png</file>
     <file>images/manageArmory.png</file>
     <file>images/shipDefault.png</file>
     <file>images/saveChanges.png</file>
     <file>images/call.png</file>
+    <file>images/callAll.png</file>
+    <file>images/moveUp.png</file>
+    <file>images/moveDown.png</file>
+    <file>images/moveLeft.png</file>
+    <file>images/moveRight.png</file>
+    <file>images/zoomIn.png</file>
+    <file>images/zoomOut.png</file>
+    <file>images/markerRoom1.png</file>
+    <file>images/markerRoomRight1.png</file>
+    <file>images/markerRoom2.png</file>
+    <file>images/markerRoomDown2.png</file>
+    <file>images/markerRoomLeft2.png</file>
+    <file>images/markerRoom3.png</file>
+    <file>images/markerRoomRight3.png</file>
+    <file>images/notification.png</file>
+    <file>images/armory.png</file>
+    <file>images/logout.png</file>
+    <file>images/login.png</file>
+    <file>images/shutDown.png</file>
+    <file>images/settings.png</file>
 </qresource>
 </RCC>

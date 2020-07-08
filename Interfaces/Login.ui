@@ -1,0 +1,571 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1366</width>
+    <height>765</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QFrame" name="frame">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>1366</width>
+      <height>768</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-color: #ffffff</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+    <widget class="QLabel" name="label_7">
+     <property name="geometry">
+      <rect>
+       <x>498</x>
+       <y>349</y>
+       <width>121</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>Usename</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="edtUsername">
+     <property name="geometry">
+      <rect>
+       <x>619</x>
+       <y>351</y>
+       <width>251</width>
+       <height>38</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QLineEdit{
+    border:1px solid #aaa;
+    border-radius:4px;
+    outline:none;
+    padding:6px;
+    box-sizing:border-box;
+    transition:.3s;
+  }
+  QLineEdit:hover{
+	 border:1px solid #000;	
+ 	transition:.3s;
+}
+  QLineEdit:focus{
+    border-color:dodgerBlue;
+    box-shadow:0 0 8px 0 dodgerBlue;
+  }</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_8">
+     <property name="geometry">
+      <rect>
+       <x>498</x>
+       <y>393</y>
+       <width>121</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>Password</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="edtPassword">
+     <property name="geometry">
+      <rect>
+       <x>619</x>
+       <y>395</y>
+       <width>251</width>
+       <height>38</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QLineEdit{
+    border:1px solid #aaa;
+    border-radius:4px;
+    outline:none;
+    padding:6px;
+    box-sizing:border-box;
+    transition:.3s;
+  }
+  QLineEdit:hover{
+	 border:1px solid #000;	
+ 	transition:.3s;
+}
+  QLineEdit:focus{
+    border-color:dodgerBlue;
+    box-shadow:0 0 8px 0 dodgerBlue;
+  }</string>
+     </property>
+     <property name="echoMode">
+      <enum>QLineEdit::Password</enum>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_9">
+     <property name="geometry">
+      <rect>
+       <x>498</x>
+       <y>437</y>
+       <width>121</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>Login as</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="lblDataEntrySuccessful">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>498</x>
+       <y>493</y>
+       <width>291</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: red;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>Incorrect Username or Password!</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_2">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>608</x>
+       <y>194</y>
+       <width>150</width>
+       <height>120</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true"> border:1px solid #fff;
+    border-radius:4px;
+    outline:none;</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/logoMTIPLarge2.png</normaloff>:/images/logoMTIPLarge2.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>200</width>
+       <height>100</height>
+      </size>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="cBoxLoginAs">
+     <property name="geometry">
+      <rect>
+       <x>619</x>
+       <y>439</y>
+       <width>251</width>
+       <height>38</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+       <kerning>true</kerning>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QComboBox{ border-width: 1px;
+ border-color: #aaa;
+ border-style: solid;
+border-radius:6; 
+}
+
+QComboBox::drop-down:button{
+background-color:transparent;
+}
+QComboBox::down-arrow {
+ 
+    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);
+    width: 25px;
+    height: 9px;
+}
+QComboBox:hover{
+	 border:1px solid #000;	
+ 	transition:.3s;
+}
+  QComboBox:focus{
+    border-color:dodgerBlue;
+    box-shadow:0 0 8px 0 dodgerBlue;
+  }
+</string>
+     </property>
+     <property name="editable">
+      <bool>false</bool>
+     </property>
+     <property name="frame">
+      <bool>true</bool>
+     </property>
+     <item>
+      <property name="text">
+       <string>Commanding Officer Secretary</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Commanding Officer</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Executive Officer</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Weapon Engineering Officer</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Marine Engineering Officer</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Supply Officer</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Principal Warfare Officer</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Officer of the Day</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Officer on Watch</string>
+      </property>
+     </item>
+    </widget>
+    <widget class="QPushButton" name="btnLogin">
+     <property name="geometry">
+      <rect>
+       <x>740</x>
+       <y>514</y>
+       <width>131</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton
+{
+    color: #ffffff;
+    background-color:#00B355;
+    border-width: 1px;
+    border-color: #007939;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+QPushButton:hover
+{
+    background-color:#00D564
+}
+QPushButton:pressed
+{
+    background-color: #00B355;
+ 	border-width: 3px;
+    border-color: #00D564;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string>Login</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/login.png</normaloff>:/images/login.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>25</width>
+       <height>25</height>
+      </size>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label">
+     <property name="geometry">
+      <rect>
+       <x>448</x>
+       <y>174</y>
+       <width>471</width>
+       <height>421</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">   border:1px solid #aaa;
+    border-radius:4px;
+    outline:none;
+    padding:6px;</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_3">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>1366</width>
+       <height>768</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgba(47, 60, 113, 0.6);</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>1366</width>
+       <height>768</height>
+      </size>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton_4">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>1366</width>
+       <height>768</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true"> border:1px solid #fff;
+    border-radius:4px;
+    outline:none;</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/shipBackground.png</normaloff>:/images/shipBackground.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>1366</width>
+       <height>768</height>
+      </size>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="btnShutdown">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>1310</x>
+       <y>707</y>
+       <width>50</width>
+       <height>51</height>
+      </rect>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QPushButton
+{
+    color: #ffffff;
+    background-color:#E3322C;
+    border-width: 1px;
+    border-color: #E6150B;
+    border-style: solid;
+    border-radius: 6;
+    padding: 3px;
+    font-size: 11pt;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+QPushButton:hover
+{
+    background-color:#F87169
+}
+QPushButton:pressed
+{
+    background-color: #E3322C;
+ 	border-width: 3px;
+    border-color: #F87169;
+    border-style: solid;
+    border-radius: 6;
+
+}</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset resource="../IconResource.qrc">
+       <normaloff>:/images/shutDown.png</normaloff>:/images/shutDown.png</iconset>
+     </property>
+     <property name="iconSize">
+      <size>
+       <width>32</width>
+       <height>32</height>
+      </size>
+     </property>
+    </widget>
+    <zorder>pushButton_4</zorder>
+    <zorder>pushButton_3</zorder>
+    <zorder>label</zorder>
+    <zorder>edtUsername</zorder>
+    <zorder>label_7</zorder>
+    <zorder>edtPassword</zorder>
+    <zorder>label_8</zorder>
+    <zorder>cBoxLoginAs</zorder>
+    <zorder>label_9</zorder>
+    <zorder>lblDataEntrySuccessful</zorder>
+    <zorder>btnLogin</zorder>
+    <zorder>pushButton_2</zorder>
+    <zorder>btnShutdown</zorder>
+   </widget>
+  </widget>
+ </widget>
+ <resources>
+  <include location="../IconResource.qrc"/>
+ </resources>
+ <connections/>
+</ui>

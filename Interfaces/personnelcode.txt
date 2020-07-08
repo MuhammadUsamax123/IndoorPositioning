@@ -1,0 +1,293 @@
+         #--------------------------------------------------------------------------------------------------
+        disableHideMarkers(self)
+        self.zoomLimit=0
+        self.moveLimit=0
+        self.moveText="*********************"
+        self.btnZoomOut.setEnabled(False)
+        self.btnMoveLeft.setEnabled(False)
+        self.btnMoveRight.setEnabled(False)
+        self.btnZoomIn.clicked.connect(self.zoomInMethod)
+        self.btnZoomOut.clicked.connect(self.zoomOutMethod)
+        self.btnMoveRight.clicked.connect(self.moveRightMethod)
+        self.btnMoveLeft.clicked.connect(self.moveLeftMethod)
+
+    def zoomInMethod(self):
+            if(self.zoomLimit==0):
+                    self.btnMarker1Room1.setGeometry(QtCore.QRect(483, 258, 51, 101))
+                    self.btnMarker2Room1.setGeometry(QtCore.QRect(421, 240, 101, 51))
+                    self.btnMarker3Room1.setGeometry(QtCore.QRect(483, 157, 51, 101))
+                    self.btnMarker1Room2.setGeometry(QtCore.QRect(552, 157, 51, 101))
+                    self.btnMarker2Room2.setGeometry(QtCore.QRect(600, 157, 51, 101))
+                    self.btnMarker3Room2.setGeometry(QtCore.QRect(613, 240, 101, 51))
+                    self.btnMarker1Room3.setGeometry(QtCore.QRect(537, 307, 51, 101))
+                    self.btnMarker2Room3.setGeometry(QtCore.QRect(586, 307, 51, 101))
+                    self.btnMarker3Room3.setGeometry(QtCore.QRect(613, 295, 101, 51))
+                    self.btnshipImage.setText("")
+                    self.btnshipImage.setIconSize(QtCore.QSize(1280, 650))
+                    self.btnMoveLeft.setEnabled(True)
+                    self.btnMoveRight.setEnabled(True)
+                    self.btnZoomOut.setEnabled(True)
+                    self.zoomLimit+=1
+            elif(self.zoomLimit==1):
+                    self.btnMarker1Room1.setGeometry(QtCore.QRect(480, 258, 51, 101))
+                    self.btnMarker2Room1.setGeometry(QtCore.QRect(418, 238, 101, 51))
+                    self.btnMarker3Room1.setGeometry(QtCore.QRect(480, 150, 51, 101))
+                    self.btnMarker1Room2.setGeometry(QtCore.QRect(562, 150, 51, 101))
+                    self.btnMarker2Room2.setGeometry(QtCore.QRect(623, 150, 51, 101))
+                    self.btnMarker3Room2.setGeometry(QtCore.QRect(636, 238, 101, 51))
+                    self.btnMarker1Room3.setGeometry(QtCore.QRect(544, 315, 51, 101))
+                    self.btnMarker2Room3.setGeometry(QtCore.QRect(600, 315, 51, 101))
+                    self.btnMarker3Room3.setGeometry(QtCore.QRect(636, 303, 101, 51))
+                    self.btnshipImage.setText("")
+                    self.btnshipImage.setIconSize(QtCore.QSize(1540, 853))
+                    self.btnMoveLeft.setEnabled(True)
+                    self.btnMoveRight.setEnabled(True)
+                    self.zoomLimit+=1
+            elif(self.zoomLimit==2):
+                    self.btnMarker1Room1.setGeometry(QtCore.QRect(476, 258, 51, 101))
+                    self.btnMarker2Room1.setGeometry(QtCore.QRect(415, 235, 101, 51))
+                    self.btnMarker3Room1.setGeometry(QtCore.QRect(476, 143, 51, 101))
+                    self.btnMarker1Room2.setGeometry(QtCore.QRect(572, 143, 51, 101))
+                    self.btnMarker2Room2.setGeometry(QtCore.QRect(647, 143, 51, 101))
+                    self.btnMarker3Room2.setGeometry(QtCore.QRect(658, 235, 101, 51))
+                    self.btnMarker1Room3.setGeometry(QtCore.QRect(552, 327, 51, 101))
+                    self.btnMarker2Room3.setGeometry(QtCore.QRect(620, 327, 51, 101))
+                    self.btnMarker3Room3.setGeometry(QtCore.QRect(658, 313, 101, 51))
+                    self.btnshipImage.setText("")
+                    self.btnMoveLeft.setEnabled(True)
+                    self.btnMoveRight.setEnabled(True)
+                    self.zoomLimit+=1
+                    self.btnshipImage.setIconSize(QtCore.QSize(1800, 995))
+                    self.btnZoomIn.setEnabled(False)
+            
+    def zoomOutMethod(self):
+            if(self.zoomLimit==1):
+                    self.btnMarker1Room1.setGeometry(QtCore.QRect(486, 258, 51, 101))
+                    self.btnMarker2Room1.setGeometry(QtCore.QRect(423, 240, 101, 51))
+                    self.btnMarker3Room1.setGeometry(QtCore.QRect(486, 163, 51, 101))
+                    self.btnMarker1Room2.setGeometry(QtCore.QRect(541, 163, 51, 101))
+                    self.btnMarker2Room2.setGeometry(QtCore.QRect(580, 163, 51, 101))
+                    self.btnMarker3Room2.setGeometry(QtCore.QRect(593, 240, 101, 51))
+                    self.btnMarker1Room3.setGeometry(QtCore.QRect(530, 298, 51, 101))
+                    self.btnMarker2Room3.setGeometry(QtCore.QRect(570, 298, 51, 101))
+                    self.btnMarker3Room3.setGeometry(QtCore.QRect(593, 286, 101, 51))
+                    self.btnshipImage.setText("")
+                    self.btnshipImage.setIconSize(QtCore.QSize(1040, 520))
+                    self.btnZoomOut.setEnabled(False)
+                    self.btnMoveLeft.setEnabled(False)
+                    self.btnMoveRight.setEnabled(False)
+                    self.zoomLimit-=1
+
+            elif(self.zoomLimit==2):
+                    self.btnMarker1Room1.setGeometry(QtCore.QRect(483, 258, 51, 101))
+                    self.btnMarker2Room1.setGeometry(QtCore.QRect(421, 240, 101, 51))
+                    self.btnMarker3Room1.setGeometry(QtCore.QRect(483, 157, 51, 101))
+                    self.btnMarker1Room2.setGeometry(QtCore.QRect(552, 157, 51, 101))
+                    self.btnMarker2Room2.setGeometry(QtCore.QRect(600, 157, 51, 101))
+                    self.btnMarker3Room2.setGeometry(QtCore.QRect(613, 240, 101, 51))
+                    self.btnMarker1Room3.setGeometry(QtCore.QRect(537, 307, 51, 101))
+                    self.btnMarker2Room3.setGeometry(QtCore.QRect(586, 307, 51, 101))
+                    self.btnMarker3Room3.setGeometry(QtCore.QRect(613, 295, 101, 51))
+                    self.btnshipImage.setText("")
+                    self.btnMoveLeft.setEnabled(True)
+                    self.btnMoveRight.setEnabled(True)
+                    self.btnshipImage.setIconSize(QtCore.QSize(1280, 650))
+                    self.zoomLimit-=1
+
+            elif(self.zoomLimit==3):
+                    self.btnMarker1Room1.setGeometry(QtCore.QRect(480, 258, 51, 101))
+                    self.btnMarker2Room1.setGeometry(QtCore.QRect(418, 238, 101, 51))
+                    self.btnMarker3Room1.setGeometry(QtCore.QRect(480, 150, 51, 101))
+                    self.btnMarker1Room2.setGeometry(QtCore.QRect(562, 150, 51, 101))
+                    self.btnMarker2Room2.setGeometry(QtCore.QRect(623, 150, 51, 101))
+                    self.btnMarker3Room2.setGeometry(QtCore.QRect(636, 238, 101, 51))
+                    self.btnMarker1Room3.setGeometry(QtCore.QRect(544, 315, 51, 101))
+                    self.btnMarker2Room3.setGeometry(QtCore.QRect(600, 315, 51, 101))
+                    self.btnMarker3Room3.setGeometry(QtCore.QRect(636, 303, 101, 51))
+                    self.btnshipImage.setText("")
+                    self.btnMoveLeft.setEnabled(True)
+                    self.btnMoveRight.setEnabled(True)
+                    self.btnshipImage.setIconSize(QtCore.QSize(1540, 780))
+                    self.btnZoomIn.setEnabled(True)
+                    self.zoomLimit-=1
+
+    def moveLeftMethod(self):
+            if(self.moveLimit<self.zoomLimit):
+                    self.btnshipImage.setLayoutDirection(QtCore.Qt.LeftToRight)
+                    self.moveText+=self.moveText
+                    self.btnshipImage.setText(self.moveText)
+                    if(self.moveLimit==0 and self.zoomLimit==1):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(355, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(293, 240, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(355, 157, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(424, 157, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(472, 157, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(485, 240, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(409, 307, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(458, 307, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(485, 295, 101, 51))
+                        
+                    elif(self.moveLimit==0 and self.zoomLimit==2):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(352, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(290, 238, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(352, 150, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(434, 150, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(496, 150, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(506, 238, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(417, 315, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(472, 315, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(506, 303, 101, 51))
+
+                    elif(self.moveLimit==1 and self.zoomLimit==2):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(226, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(164, 238, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(226, 150, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(308, 150, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(370, 150, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(380, 238, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(291, 315, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(346, 315, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(380, 303, 101, 51))
+
+                    elif(self.moveLimit==0 and self.zoomLimit==3):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(348, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(287, 235, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(348, 143, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(445, 143, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(518, 143, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(530, 235, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(424, 327, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(490, 327, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(518, 313, 101, 51))
+
+                    elif(self.moveLimit==1 and self.zoomLimit==3):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(222, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(161, 235, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(222, 143, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(319, 143, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(392, 143, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(404, 235, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(298, 327, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(364, 327, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(404, 313, 101, 51))
+
+                    elif(self.moveLimit==2 and self.zoomLimit==3):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(-30, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(-91, 235, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(-30, 143, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(67, 143, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(140, 143, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(152, 235, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(46, 327, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(112, 327, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(152, 313, 101, 51))
+                                
+                    self.moveLimit+=1
+            if(self.moveLimit<self.zoomLimit):
+                    pass
+            else:
+                    self.moveText="*********************"
+                    self.btnMoveLeft.setEnabled(False)
+                    self.btnMoveRight.setEnabled(True)
+                    self.moveLimit=0
+
+    def moveRightMethod(self):
+            if(self.moveLimit<self.zoomLimit):
+                    self.btnshipImage.setLayoutDirection(QtCore.Qt.RightToLeft)
+                    self.moveText+=self.moveText
+                    self.btnshipImage.setText(self.moveText)
+                    if(self.moveLimit==0 and self.zoomLimit==1):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(610, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(549, 240, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(610, 157, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(679, 157, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(729, 157, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(741, 240, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(664, 307, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(712, 307, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(741, 295, 101, 51))
+                        
+                    elif(self.moveLimit==0 and self.zoomLimit==2):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(607, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(546, 238, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(607, 150, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(689, 150, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(752, 150, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(763, 238, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(672, 315, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(729, 315, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(763, 303, 101, 51))
+
+                    elif(self.moveLimit==1 and self.zoomLimit==2):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(733, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(672, 238, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(733, 150, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(815, 150, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(878, 150, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(889, 238, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(798, 315, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(855, 315, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(889, 303, 101, 51))
+
+                    elif(self.moveLimit==0 and self.zoomLimit==3):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(604, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(543, 235, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(604, 143, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(701, 143, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(774, 143, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(786, 235, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(680, 327, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(746, 327, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(786, 313, 101, 51))
+
+                    elif(self.moveLimit==1 and self.zoomLimit==3):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(730, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(669, 235, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(730, 143, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(827, 143, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(900, 143, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(912, 235, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(806, 327, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(872, 327, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(912, 313, 101, 51))
+
+                    elif(self.moveLimit==2 and self.zoomLimit==3):
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(983, 258, 51, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(922, 235, 101, 51))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(983, 143, 51, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(1080, 143, 51, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(1153, 143, 51, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(1165, 235, 101, 51))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(1059, 327, 51, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(1125, 327, 51, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(1163, 313, 101, 51))
+
+                    self.moveLimit+=1
+            if(self.moveLimit<self.zoomLimit):
+                    pass
+            else:
+                    self.moveText="*********************"
+                    self.btnMoveRight.setEnabled(False)
+                    self.btnMoveLeft.setEnabled(True)
+                    self.moveLimit=0
+def disableHideMarkers(self):
+            self.btnMarker1Room1.hide()
+            self.btnMarker2Room1.hide()
+            self.btnMarker3Room1.hide()
+            self.btnMarker1Room2.hide()
+            self.btnMarker2Room2.hide()
+            self.btnMarker3Room2.hide()
+            self.btnMarker1Room3.hide()
+            self.btnMarker2Room3.hide()
+            self.btnMarker3Room3.hide()
+
+            self.btnMarker1Room1.setEnabled(False)
+            self.btnMarker2Room1.setEnabled(False)
+            self.btnMarker3Room1.setEnabled(False)
+            self.btnMarker1Room2.setEnabled(False)
+            self.btnMarker2Room2.setEnabled(False)
+            self.btnMarker3Room2.setEnabled(False)
+            self.btnMarker1Room3.setEnabled(False)
+            self.btnMarker2Room3.setEnabled(False)
+            self.btnMarker3Room3.setEnabled(False)
+
