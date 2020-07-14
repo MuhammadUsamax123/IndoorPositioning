@@ -1,5 +1,17 @@
-class ViewPunishment(object):
-    def setup_ViewPunishment(self, MainWindow):
+# -*- coding: utf-8 -*-
+
+# Form implementation generated from reading ui file 'C:\Users\home\Desktop\IndoorPosition\Interfaces\ViewPunishment.ui'
+#
+# Created by: PyQt5 UI code generator 5.13.0
+#
+# WARNING! All changes made in this file will be lost!
+
+
+from PyQt5 import QtCore, QtGui, QtWidgets
+
+
+class Ui_MainWindow(object):
+    def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1366, 765)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -772,7 +784,7 @@ class ViewPunishment(object):
         self.navViewState.setFlat(False)
         self.navViewState.setObjectName("navViewState")
         self.tblDetails = QtWidgets.QTableView(self.frame)
-        self.tblDetails.setGeometry(QtCore.QRect(306, 120, 1040, 500))
+        self.tblDetails.setGeometry(QtCore.QRect(326, 270, 1020, 350))
         font = QtGui.QFont()
         font.setPointSize(11)
         self.tblDetails.setFont(font)
@@ -782,6 +794,101 @@ class ViewPunishment(object):
         self.tblDetails.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tblDetails.setTextElideMode(QtCore.Qt.ElideMiddle)
         self.tblDetails.setObjectName("tblDetails")
+        self.label_11 = QtWidgets.QLabel(self.frame)
+        self.label_11.setGeometry(QtCore.QRect(331, 226, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_11.setFont(font)
+        self.label_11.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_11.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_11.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_11.setObjectName("label_11")
+        self.label_9 = QtWidgets.QLabel(self.frame)
+        self.label_9.setGeometry(QtCore.QRect(331, 138, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_9.setFont(font)
+        self.label_9.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_9.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_9.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_9.setObjectName("label_9")
+        self.lblPunishName = QtWidgets.QLabel(self.frame)
+        self.lblPunishName.setGeometry(QtCore.QRect(522, 182, 345, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblPunishName.setFont(font)
+        self.lblPunishName.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblPunishName.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblPunishName.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblPunishName.setObjectName("lblPunishName")
+        self.lblPunishRank = QtWidgets.QLabel(self.frame)
+        self.lblPunishRank.setGeometry(QtCore.QRect(522, 226, 345, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblPunishRank.setFont(font)
+        self.lblPunishRank.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblPunishRank.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblPunishRank.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblPunishRank.setObjectName("lblPunishRank")
+        self.label_10 = QtWidgets.QLabel(self.frame)
+        self.label_10.setGeometry(QtCore.QRect(331, 182, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_10.setFont(font)
+        self.label_10.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_10.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_10.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_10.setObjectName("label_10")
+        self.cBoxIssuingPNo = QtWidgets.QComboBox(self.frame)
+        self.cBoxIssuingPNo.setGeometry(QtCore.QRect(522, 140, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        font.setKerning(True)
+        self.cBoxIssuingPNo.setFont(font)
+        self.cBoxIssuingPNo.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.cBoxIssuingPNo.setStyleSheet("QComboBox{ border-width: 1px;\n"
+" border-color: #aaa;\n"
+" border-style: solid;\n"
+"border-radius:6; \n"
+"}\n"
+"\n"
+"QComboBox::drop-down:button{\n"
+"background-color:transparent;\n"
+"}\n"
+"QComboBox::down-arrow {\n"
+" \n"
+"    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);\n"
+"    width: 25px;\n"
+"    height: 9px;\n"
+"}\n"
+"QComboBox:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QComboBox:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"  }\n"
+"")
+        self.cBoxIssuingPNo.setEditable(False)
+        self.cBoxIssuingPNo.setFrame(True)
+        self.cBoxIssuingPNo.setObjectName("cBoxIssuingPNo")
         self.label_2.raise_()
         self.label.raise_()
         self.navViewPunishment.raise_()
@@ -805,6 +912,12 @@ class ViewPunishment(object):
         self.btnAddPunishment.raise_()
         self.navViewState.raise_()
         self.tblDetails.raise_()
+        self.label_11.raise_()
+        self.label_9.raise_()
+        self.lblPunishName.raise_()
+        self.lblPunishRank.raise_()
+        self.label_10.raise_()
+        self.cBoxIssuingPNo.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
         self.label_13.setGeometry(QtCore.QRect(306, 100, 1040, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
@@ -848,4 +961,20 @@ class ViewPunishment(object):
         self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
         self.btnAddPunishment.setText(_translate("MainWindow", "Add New Punishment Entry"))
         self.navViewState.setText(_translate("MainWindow", "Armory State Management System"))
+        self.label_11.setText(_translate("MainWindow", "Rank/ Rate:"))
+        self.label_9.setText(_translate("MainWindow", "P.No/ O.No"))
+        self.lblPunishName.setText(_translate("MainWindow", "Name"))
+        self.lblPunishRank.setText(_translate("MainWindow", "Name"))
+        self.label_10.setText(_translate("MainWindow", "Name:"))
         self.label_6.setText(_translate("MainWindow", "View Punishment Details"))
+import IconResource_rc
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    MainWindow = QtWidgets.QMainWindow()
+    ui = Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
+    sys.exit(app.exec_())

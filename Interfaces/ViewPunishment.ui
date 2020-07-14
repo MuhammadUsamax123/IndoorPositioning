@@ -1278,10 +1278,10 @@ QPushButton:pressed
     <widget class="QTableView" name="tblDetails">
      <property name="geometry">
       <rect>
-       <x>306</x>
-       <y>120</y>
-       <width>1040</width>
-       <height>500</height>
+       <x>326</x>
+       <y>270</y>
+       <width>1020</width>
+       <height>350</height>
       </rect>
      </property>
      <property name="font">
@@ -1303,6 +1303,208 @@ QPushButton:pressed
      </property>
      <property name="textElideMode">
       <enum>Qt::ElideMiddle</enum>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_11">
+     <property name="geometry">
+      <rect>
+       <x>331</x>
+       <y>226</y>
+       <width>191</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>Rank/ Rate:</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_9">
+     <property name="geometry">
+      <rect>
+       <x>331</x>
+       <y>138</y>
+       <width>191</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>P.No/ O.No</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="lblPunishName">
+     <property name="geometry">
+      <rect>
+       <x>522</x>
+       <y>182</y>
+       <width>345</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>Name</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="lblPunishRank">
+     <property name="geometry">
+      <rect>
+       <x>522</x>
+       <y>226</y>
+       <width>345</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>Name</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_10">
+     <property name="geometry">
+      <rect>
+       <x>331</x>
+       <y>182</y>
+       <width>191</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>Name:</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="cBoxIssuingPNo">
+     <property name="geometry">
+      <rect>
+       <x>522</x>
+       <y>140</y>
+       <width>345</width>
+       <height>38</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+       <kerning>true</kerning>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>PointingHandCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">QComboBox{ border-width: 1px;
+ border-color: #aaa;
+ border-style: solid;
+border-radius:6; 
+}
+
+QComboBox::drop-down:button{
+background-color:transparent;
+}
+QComboBox::down-arrow {
+ 
+    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);
+    width: 25px;
+    height: 9px;
+}
+QComboBox:hover{
+	 border:1px solid #000;	
+ 	transition:.3s;
+}
+  QComboBox:focus{
+    border-color:dodgerBlue;
+    box-shadow:0 0 8px 0 dodgerBlue;
+  }
+</string>
+     </property>
+     <property name="editable">
+      <bool>false</bool>
+     </property>
+     <property name="frame">
+      <bool>true</bool>
      </property>
     </widget>
     <zorder>label_2</zorder>
@@ -1328,6 +1530,12 @@ QPushButton:pressed
     <zorder>btnAddPunishment</zorder>
     <zorder>navViewState</zorder>
     <zorder>tblDetails</zorder>
+    <zorder>label_11</zorder>
+    <zorder>label_9</zorder>
+    <zorder>lblPunishName</zorder>
+    <zorder>lblPunishRank</zorder>
+    <zorder>label_10</zorder>
+    <zorder>cBoxIssuingPNo</zorder>
    </widget>
    <widget class="QLabel" name="label_13">
     <property name="geometry">

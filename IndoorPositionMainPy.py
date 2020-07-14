@@ -1,14 +1,9 @@
-# -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'C:\Users\home\Desktop\IndoorPosition\Interfaces\AddImpKey.ui'
-#
-# Created by: PyQt5 UI code generator 5.13.0
-#
-# WARNING! All changes made in this file will be lost!
 
 from scapy.all import ARP, Ether, srp
 import threading
 import time
+from datetime import date
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sqlite3
 from PyQt5.QtSql import QSqlQueryModel,QSqlDatabase,QSqlQuery
@@ -33,8 +28,12 @@ def createTable():
         c.execute("CREATE TABLE IF NOT EXISTS PunishmentBook('P No./ O No.' TEXT, Name TEXT, 'Rank/ Rate' TEXT, Punishment TEXT, 'From Date' TEXT, 'To Date' TEXT,'05:00' TEXT,'14:00' TEXT,'16:00' TEXT, '21:00' TEXT, Remarks TEXT)")
         c.execute("CREATE TABLE IF NOT EXISTS OODObservationBook('OOD Name' TEXT,'OOD Rank/ Rate' TEXT,Date TEXT,Observation TEXT) ")
         c.execute("CREATE TABLE IF NOT EXISTS NightRoundBook(Time TEXT, 'Cells Visited in Water' TEXT, 'Temperature of Cells' TEXT, Report TEXT, 'Petty Officer Name' TEXT, 'Officer on Watch Name' TEXT, 'Officer on Round Name' TEXT)")
-        c.execute("CREATE TABLE IF NOT EXISTS ArmPPEBook('P No./ O No.' TEXT, Name TEXT, 'Rank/ Rate' TEXT, 'Weapon Type' TEXT, 'Registration No.' TEXT, 'Spare Magazine' TEXT,'Ammo Type' TEXT,'Quantity' TEXT,'SL Pouch' TEXT, 'Ammo Consumed' TEXT,'Bullet Proof Jacket' TEXT)")
+        c.execute("CREATE TABLE IF NOT EXISTS ArmPPEBook('P No./ O No.' TEXT, Name TEXT, 'Rank/ Rate' TEXT, 'Weapon Type' TEXT, 'Registration No.' TEXT, 'Spare Magazine' TEXT,'Ammo Type' TEXT,'Quantity' TEXT,'SL Pouch' TEXT, 'Ammo Consumed' TEXT,'Extra Equiplment' TEXT)")
         c.execute("CREATE TABLE IF NOT EXISTS Login(userName TEXT, password TEXT, loginAs TEXT)")
+        c.execute("CREATE TABLE IF NOT EXISTS Bands(bandNo TEXT)")
+        c.execute("CREATE TABLE IF NOT EXISTS Arms(gunName TEXT)")
+        c.execute("CREATE TABLE IF NOT EXISTS Registrations(gunName TEXT,registrationNo Text)")
+        c.execute("CREATE TABLE IF NOT EXISTS AmmoTypes(gunName TEXT,ammoType Text)")
         return conn
 def insertData(self,query):
         try:
@@ -47,7 +46,8 @@ def insertData(self,query):
                 self.lblDataEntrySuccessful.setStyleSheet("color: green;\n""background-color:#ffffff;\n""font-size: 11pt")
                 self.lblDataEntrySuccessful.setText("Details Saved Successfully!")
                 self.lblDataEntrySuccessful.show()
-        except:
+        except Exception as e:
+                print(e)
                 self.lblDataEntrySuccessful.setStyleSheet("color: red;\n""background-color:#ffffff;\n""font-size: 11pt")
                 self.lblDataEntrySuccessful.setText("Details could not be saved!")
                 self.lblDataEntrySuccessful.show()
@@ -96,7 +96,6 @@ def resetKeysGUI(self):
         cbIssuingPNo=fillComboBoxData("SELECT [P No./ O No.] FROM PersonnelDataBook")
         if(len(cbIssuingPNo)!=0):
                 self.cBoxIssuingPNo.addItems(cbIssuingPNo)
-        
                
 
         cbIssuingName=fillComboBoxData("SELECT Name FROM PersonnelDataBook")
@@ -120,25 +119,47 @@ def resetOODGUI(self):
         cbOODName=fillComboBoxData("SELECT Name FROM PersonnelDataBook Where [Rank/ Rate]='Commodore' OR [Rank/ Rate]='Captain'")
         if(len(cbOODName)!=0):
                 self.cBoxSelectOOD.addItems(cbOODName)
-        
 
         cbOODRank=fillComboBoxData("Select [Rank/ Rate] FROM PersonnelDataBook Where [Rank/ Rate]='Commodore' OR [Rank/ Rate]='Captain'")
         if(len(cbOODRank)!=0):
                 self.listOODRank=cbOODRank.copy()
                 self.lblOODRank.setText(self.listOODRank[0])
-
-        
+def  resetAmmoTypeGUI(self):
+        self.cBoxWeaponType.clear()
+        self.edtAmmoType.clear()
+        cbWeaponType=fillComboBoxData("SELECT gunName FROM Arms")
+        if(len(cbWeaponType)!=0):
+                self.cBoxWeaponType.addItems(cbWeaponType)
+def  resetRegNoGUI(self):
+        self.cBoxWeaponType.clear()
+        self.edtRegNo.clear()
+        cbWeaponType=fillComboBoxData("SELECT gunName FROM Arms")
+        if(len(cbWeaponType)!=0):
+                self.cBoxWeaponType.addItems(cbWeaponType)
+def resetWeaponTypeGUI(self):
+        self.edtWeaponType.clear()
+def resetBandGUI(self):
+        self.edtBandNo.clear()
 def resetLoginGUI(self):
         self.edtUsername.clear()
         self.edtPassword.clear()
         self.cBoxLoginAs.setCurrentIndex(0)
+def resetEditLoginGUI(self):
+        self.edtOldUsername.clear()
+        self.edtNewUsername.clear()
+        self.edtOldPassword.clear()
+        self.edtNewPassword.clear()
+        self.cBoxLoginAs.setCurrentIndex(0)
 def resetPersonnelDataGUI(self):
-        self.edtID.clear()
+        self.cBoxID.clear()
         self.edtPNO.clear()
         self.cBoxRank.setCurrentIndex(0)
         self.cBoxDepartment.setCurrentIndex(0)
         self.cBoxBloodGroup.setCurrentIndex(0)
         self.edtName.clear()
+        cbIdNo=fillComboBoxData("SELECT bandNo FROM Bands")
+        if(len(cbIdNo)!=0):
+                self.cBoxID.addItems(cbIdNo)
 def resetTransportGUI(self):
         self.edtCarNo.clear()
         self.edtCarName.clear()
@@ -171,7 +192,6 @@ def resetVisitorGUI(self):
         cbVisitName=fillComboBoxData("SELECT Name FROM PersonnelDataBook")
         if(len(cbVisitName)!=0):
                 self.cBoxPersName.addItems(cbVisitName)
-        
 
         cbVisitRank=fillComboBoxData("Select [Rank/ Rate] FROM PersonnelDataBook")
         if(len(cbVisitRank)!=0):
@@ -207,20 +227,12 @@ def resetDutyGUI(self):
         
                  
 def resetPunishGUI(self):
-        self.morningPunish=" "
-        self.afternoonPunish=" "
-        self.eveningPunish=" "
-        self.nightPunish=" "
         self.cBoxPunishPNo.clear()
         self.lblPunishName.clear()
         self.lblPunishRank.clear()
         self.txtPunishment.clear()
         self.dtPunishStartDate.setDate(QtCore.QDate.currentDate())
         self.dtPunishFinishDate.setDate(QtCore.QDate.currentDate())
-        self.chBoxMorning.setChecked(False)
-        self.chBoxAfternoon.setChecked(False)
-        self.chBoxEvening.setChecked(False)
-        self.chBoxNight.setChecked(False)
         self.txtRemark.clear()
         cbPunishPNo=fillComboBoxData("SELECT [P No./ O No.] FROM PersonnelDataBook")
         if(len(cbPunishPNo)!=0):
@@ -277,37 +289,37 @@ def resetNightRoundGUI(self):
         self.cBoxWOName.clear()
         self.lblWORank.clear()
 
-        cbROName=fillComboBoxData("SELECT Name FROM PersonnelDataBook WHERE NOT [Rank/ Rate]='Ordinary Seaman' And NOT [Rank/ Rate]='Able Seaman' And NOT [Rank/ Rate]='Leading Seaman' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer'")
+        cbROName=fillComboBoxData("SELECT Name FROM PersonnelDataBook WHERE NOT [Rank/ Rate]='IIRank' And NOT [Rank/ Rate]='IRank' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer'")
         if(len(cbROName)!=0):
                 self.cBoxROName.addItems(cbROName)
         
                 
 
-        cbRORank=fillComboBoxData("SELECT [Rank/ Rate] FROM PersonnelDataBook WHERE NOT [Rank/ Rate]='Ordinary Seaman' And NOT [Rank/ Rate]='Able Seaman' And NOT [Rank/ Rate]='Leading Seaman' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer'")
+        cbRORank=fillComboBoxData("SELECT [Rank/ Rate] FROM PersonnelDataBook WHERE NOT [Rank/ Rate]='IIRank' And NOT [Rank/ Rate]='IRank' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer'")
         if(len(cbRORank)!=0):
                 self.listRORank= cbRORank.copy()
                 self.lblRORank.setText(self.listRORank[0])
         
 
-        cbPOName=fillComboBoxData("SELECT Name FROM PersonnelDataBook WHERE [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer'")
+        cbPOName=fillComboBoxData("SELECT Name FROM PersonnelDataBook WHERE [Rank/ Rate]='Petty Officer'")
         if(len(cbPOName)!=0):
                 self.cBoxPOName.addItems(cbPOName)
         
                 
 
-        cbPORank=fillComboBoxData("SELECT [Rank/ Rate] FROM PersonnelDataBook WHERE [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer'")
+        cbPORank=fillComboBoxData("SELECT [Rank/ Rate] FROM PersonnelDataBook WHERE [Rank/ Rate]='Petty Officer'")
         if(len(cbPORank)!=0):
                 self.listPORank= cbPORank.copy()
                 self.lblPORank.setText(self.listPORank[0])
         
 
-        cbWOName=fillComboBoxData("SELECT Name FROM PersonnelDataBook WHERE NOT [Rank/ Rate]='Ordinary Seaman' And NOT [Rank/ Rate]='Able Seaman' And NOT [Rank/ Rate]='Leading Seaman' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer'")
+        cbWOName=fillComboBoxData("SELECT Name FROM PersonnelDataBook WHERE NOT [Rank/ Rate]='IIRank' And NOT [Rank/ Rate]='IRank' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer'")
         if(len(cbWOName)!=0):
                 self.cBoxWOName.addItems(cbWOName)
         
                 
 
-        cbWORank=fillComboBoxData("SELECT [Rank/ Rate] FROM PersonnelDataBook WHERE NOT [Rank/ Rate]='Ordinary Seaman' And NOT [Rank/ Rate]='Able Seaman' And NOT [Rank/ Rate]='Leading Seaman' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer'")
+        cbWORank=fillComboBoxData("SELECT [Rank/ Rate] FROM PersonnelDataBook WHERE NOT [Rank/ Rate]='IIRank' And NOT [Rank/ Rate]='IRank' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer'")
         if(len(cbWORank)!=0):
                 self.listWORank= cbWORank.copy()
                 self.lblWORank.setText(self.listWORank[0])
@@ -317,33 +329,82 @@ def resetArmPPEGUI(self):
         self.cBoxArmPNo.clear()
         self.lblArmName.clear()
         self.lblArmRank.clear()
-        self.cBoxWeaponType.setCurrentIndex(0)
+        self.cBoxWeaponType.clear()
         self.edtRegNo.clear()
         self.edtSpareMag.clear()
-        self.cBoxAmmoType.setCurrentIndex(0)
+        self.cBoxAmmoType.clear()
         self.edtQuantity.clear()
         self.edtSLPouch.clear()
+        self.edtSpareMag.setMinimum(1)
+        self.edtSpareMag.setMaximum(3)
+        self.edtSpareMag.setValue(1)
+        self.edtSLPouch.setMinimum(1)
+        self.edtSLPouch.setMaximum(5)
+        self.edtSLPouch.setValue(1)
+        self.edtQuantity.setMinimum(10)
+        self.edtQuantity.setMaximum(100)
+        self.edtQuantity.setSingleStep(10)
+        self.edtQuantity.setValue(10)
         self.edtAmmoConsumed.clear()
         self.cBoxBPJacket.setCurrentIndex(0)
         cbArmPNo=fillComboBoxData("SELECT [P No./ O No.] FROM PersonnelDataBook")
         if(len(cbArmPNo)!=0):
                 self.cBoxArmPNo.addItems(cbArmPNo)
-        
-               
+          
 
         cbArmName=fillComboBoxData("SELECT Name FROM PersonnelDataBook")
         if(len(cbArmName)!=0):
                 self.listArmName=cbArmName.copy()
                 self.lblArmName.setText(self.listArmName[0])
         
-                
 
         cbArmRank=fillComboBoxData("Select [Rank/ Rate] FROM PersonnelDataBook")
         if(len(cbArmRank)!=0):
                 self.listArmRank= cbArmRank.copy()
                 self.lblArmRank.setText(self.listArmRank[0])
-        
-                 
+
+        gunName=fillComboBoxData("SELECT gunName FROM Arms")
+        if(len(gunName)!=0):
+                self.cBoxWeaponType.addItems(gunName)
+                regNo=fillComboBoxData("SELECT registrationNo FROM Registrations Where gunName='"+gunName[0]+"'")
+                if(len(regNo)!=0):
+                        self.edtRegNo.addItems(regNo)  
+                ammoType=fillComboBoxData("SELECT ammoType FROM AmmoTypes Where gunName='"+gunName[0]+"'")
+                if(len(ammoType)!=0):
+                        self.cBoxAmmoType.addItems(ammoType)
+def selectOneRecord(querry):
+        conn=createTable()
+        c=conn.cursor()
+        c.execute(querry)
+        querryResult=c.fetchone()
+        c.close()
+        conn.close()
+        return querryResult[0]
+
+def resetViewPunishGUI(self):
+        self.cBoxPunishPNo.clear()
+        self.lblPunishName.clear()
+        self.lblPunishRank.clear()
+
+        cbPunishName=[]
+        cbPunishRank=[]
+        cbPunishPNo=fillComboBoxData("SELECT Distinct [P No./ O No.] FROM PunishmentBook")
+        if(len(cbPunishPNo)!=0):
+                self.cBoxPunishPNo.addItems(cbPunishPNo)
+                for var in cbPunishPNo:
+                        cbPunishName.append(selectOneRecord("SELECT Distinct Name FROM PunishmentBook where [P No./ O No.]='"+var+"'"))
+                if(len(cbPunishName)!=0):
+                        self.listPunishName=cbPunishName.copy()
+                        self.lblPunishName.setText(self.listPunishName[0])
+
+                for var in cbPunishPNo:
+                        cbPunishRank.append(selectOneRecord("Select [Rank/ Rate] FROM PunishmentBook where [P No./ O No.]='"+var+"'"))
+                if(len(cbPunishRank)!=0):
+                        self.listPunishRank= cbPunishRank.copy()
+                        self.lblPunishRank.setText(self.listPunishRank[0])
+                viewQuerryString="SELECT Punishment,[From Date],[To Date],[05:00],[14:00],[16:00],[21:00],Remarks FROM PunishmentBook where [P No./ O No.]='"+cbPunishPNo[0]+"'"
+                loadViewTableData(self,viewQuerryString,8)
+
 def loadViewTableData(self,querryString,colLimit):
         self.tblDetails.reset()
         db.open()
@@ -385,27 +446,27 @@ def resetViewStateGUI(self):
                 sailorSkCount=0
 
                 totalCountQuery="Select Count (Name) From ArmoryState"
-                officerCountQuery="SELECT Count (Name) FROM ArmoryState WHERE NOT [Rank/ Rate]='Ordinary Seaman' And NOT [Rank/ Rate]='Able Seaman' And NOT [Rank/ Rate]='Leading Seaman' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer'"
-                sailorCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  [Rank/ Rate]='Ordinary Seaman' OR  [Rank/ Rate]='Able Seaman' OR [Rank/ Rate]='Leading Seaman' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer'"
+                officerCountQuery="SELECT Count (Name) FROM ArmoryState WHERE NOT [Rank/ Rate]='IIRank' And NOT [Rank/ Rate]='IRank' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer'"
+                sailorCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  [Rank/ Rate]='IIRank' OR  [Rank/ Rate]='IRank' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer'"
                 
                 totalPCountQuery="Select Count (Name) From ArmoryState Where Status='Present'"
-                officerPCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='Ordinary Seaman' And NOT [Rank/ Rate]='Able Seaman' And NOT [Rank/ Rate]='Leading Seaman' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Present') "
-                sailorPCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='Ordinary Seaman' OR  [Rank/ Rate]='Able Seaman' OR [Rank/ Rate]='Leading Seaman' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Present')"
+                officerPCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='IIRank' And NOT [Rank/ Rate]='IRank' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Present') "
+                sailorPCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='IIRank' OR  [Rank/ Rate]='IRank' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Present')"
                 
-                officerACountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='Ordinary Seaman' And NOT [Rank/ Rate]='Able Seaman' And NOT [Rank/ Rate]='Leading Seaman' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND (NOT Status='Present') "
-                sailorACountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='Ordinary Seaman' OR  [Rank/ Rate]='Able Seaman' OR [Rank/ Rate]='Leading Seaman' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (NOT Status='Present')"
+                officerACountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='IIRank' And NOT [Rank/ Rate]='IRank' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND (NOT Status='Present') "
+                sailorACountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='IIRank' OR  [Rank/ Rate]='IRank' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (NOT Status='Present')"
                 
-                officerShCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='Ordinary Seaman' And NOT [Rank/ Rate]='Able Seaman' And NOT [Rank/ Rate]='Leading Seaman' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Shifa') "
-                sailorShCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='Ordinary Seaman' OR  [Rank/ Rate]='Able Seaman' OR [Rank/ Rate]='Leading Seaman' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Shifa')"
+                officerShCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='IIRank' And NOT [Rank/ Rate]='IRank' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Shifa') "
+                sailorShCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='IIRank' OR  [Rank/ Rate]='IRank' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Shifa')"
                 
-                officerCasCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='Ordinary Seaman' And NOT [Rank/ Rate]='Able Seaman' And NOT [Rank/ Rate]='Leading Seaman' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Casual Leave') "
-                sailorCasCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='Ordinary Seaman' OR  [Rank/ Rate]='Able Seaman' OR [Rank/ Rate]='Leading Seaman' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Casual Leave')"
+                officerCasCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='IIRank' And NOT [Rank/ Rate]='IRank' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Casual Leave') "
+                sailorCasCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='IIRank' OR  [Rank/ Rate]='IRank' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Casual Leave')"
                 
-                officerPerCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='Ordinary Seaman' And NOT [Rank/ Rate]='Able Seaman' And NOT [Rank/ Rate]='Leading Seaman' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Personal Leave') "
-                sailorPerCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='Ordinary Seaman' OR  [Rank/ Rate]='Able Seaman' OR [Rank/ Rate]='Leading Seaman' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Personal Leave')"
+                officerPerCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='IIRank' And NOT [Rank/ Rate]='IRank' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Personal Leave') "
+                sailorPerCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='IIRank' OR  [Rank/ Rate]='IRank' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Personal Leave')"
                 
-                officerSKCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='Ordinary Seaman' And NOT [Rank/ Rate]='Able Seaman' And NOT [Rank/ Rate]='Leading Seaman' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Sick Leave') "
-                sailorSKCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='Ordinary Seaman' OR  [Rank/ Rate]='Able Seaman' OR [Rank/ Rate]='Leading Seaman' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Sick Leave')"
+                officerSKCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='IIRank' And NOT [Rank/ Rate]='IRank' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Sick Leave') "
+                sailorSKCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='IIRank' OR  [Rank/ Rate]='IRank' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Sick Leave')"
                 
                 conn=createTable()
                 c=conn.cursor()
@@ -846,26 +907,7 @@ def disableHideMarkers(self):
             self.btnMarker2Room3.setEnabled(False)
             self.btnMarker3Room3.setEnabled(False)
             
-def enableShowMarkers(self):
-            self.btnMarker1Room1.show()
-            self.btnMarker2Room1.show()
-            self.btnMarker3Room1.show()
-            self.btnMarker1Room2.show()
-            self.btnMarker2Room2.show()
-            self.btnMarker3Room2.show()
-            self.btnMarker1Room3.show()
-            self.btnMarker2Room3.show()
-            self.btnMarker3Room3.show()
 
-            self.btnMarker1Room1.setEnabled(True)
-            self.btnMarker2Room1.setEnabled(True)
-            self.btnMarker3Room1.setEnabled(True)
-            self.btnMarker1Room2.setEnabled(True)
-            self.btnMarker2Room2.setEnabled(True)
-            self.btnMarker3Room2.setEnabled(True)
-            self.btnMarker1Room3.setEnabled(True)
-            self.btnMarker2Room3.setEnabled(True)
-            self.btnMarker3Room3.setEnabled(True)
 ################################################################### App Class ##########################################################################
 
 class App(QtWidgets.QMainWindow):
@@ -910,7 +952,12 @@ class App(QtWidgets.QMainWindow):
         self.personnelmanagement= PersonnelManagementWidget()
         self.mob= MObWidget()
         self.login= LoginWidget()
-        self.adminsettings= AdminSettingsWidget()
+        self.addlogin= AddLoginWidget()
+        self.editlogin= EditLoginWidget()
+        self.addband= AddBandWidget()
+        self.addweapontype= AddWeaponTypeWidget()
+        self.addammotype= AddAmmoTypeWidget()
+        self.addregno= AddRegNoWidget()
 
         self.stacked = QtWidgets.QStackedWidget()
         self.setCentralWidget(self.stacked)
@@ -945,7 +992,12 @@ class App(QtWidgets.QMainWindow):
         self.stacked.addWidget(self.personnelmanagement)
         self.stacked.addWidget(self.mob)
         self.stacked.addWidget(self.login)
-        self.stacked.addWidget(self.adminsettings)
+        self.stacked.addWidget(self.addlogin)
+        self.stacked.addWidget(self.addband)
+        self.stacked.addWidget(self.editlogin)
+        self.stacked.addWidget(self.addweapontype)
+        self.stacked.addWidget(self.addammotype)
+        self.stacked.addWidget(self.addregno)
 
     def disableAdvancedFunctionality(self):
         self.viewpersonneldata.btnAddPersonnelData.setEnabled(False)
@@ -962,7 +1014,6 @@ class App(QtWidgets.QMainWindow):
         self.viewstate.navManageState.setEnabled(False)
 
     def enableAdvancedFunctionality(self):
-            
         self.viewpersonneldata.btnAddPersonnelData.setEnabled(True)
         self.viewimportantkey.btnAddImpKey.setEnabled(True)        
         self.viewgeneralkey.btnAddGenKey.setEnabled(True)
@@ -975,6 +1026,8 @@ class App(QtWidgets.QMainWindow):
         self.viewnightround.btnAddNight.setEnabled(True)
         self.viewarmppe.btnAddArmPPE.setEnabled(True)
         self.viewstate.navManageState.setEnabled(True)
+
+
 
 
     def change_view(self, option):
@@ -1008,8 +1061,7 @@ class App(QtWidgets.QMainWindow):
             loadViewTableData(self.viewduty,viewQuerryString,7)
             self.stacked.setCurrentWidget(self.viewduty)
         elif(option==8):
-            viewQuerryString="SELECT * FROM PunishmentBook"
-            loadViewTableData(self.viewpunish,viewQuerryString,11)
+            resetViewPunishGUI(self.viewpunish)
             self.stacked.setCurrentWidget(self.viewpunish)
         elif(option==9):
             viewQuerryString="SELECT * FROM OODObservationBook"
@@ -1095,10 +1147,29 @@ class App(QtWidgets.QMainWindow):
             self.login.lblDataEntrySuccessful.hide()
             self.stacked.setCurrentWidget(self.login)
         elif(option==30):
-            resetLoginGUI(self.adminsettings)
-            self.adminsettings.lblDataEntrySuccessful.hide()
-            self.stacked.setCurrentWidget(self.adminsettings)
-
+            resetLoginGUI(self.addlogin)
+            self.addlogin.lblDataEntrySuccessful.hide()
+            self.stacked.setCurrentWidget(self.addlogin)
+        elif(option==31):
+            resetEditLoginGUI(self.editlogin)
+            self.editlogin.lblDataEntrySuccessful.hide()
+            self.stacked.setCurrentWidget(self.editlogin)
+        elif(option==32):
+            resetBandGUI(self.addband)
+            self.addband.lblDataEntrySuccessful.hide()
+            self.stacked.setCurrentWidget(self.addband)
+        elif(option==33):
+            resetWeaponTypeGUI(self.addweapontype)
+            self.addweapontype.lblDataEntrySuccessful.hide()
+            self.stacked.setCurrentWidget(self.addweapontype)
+        elif(option==34):
+            resetAmmoTypeGUI(self.addammotype)
+            self.addammotype.lblDataEntrySuccessful.hide()
+            self.stacked.setCurrentWidget(self.addammotype)
+        elif(option==35):
+            resetRegNoGUI(self.addregno)
+            self.addregno.lblDataEntrySuccessful.hide()
+            self.stacked.setCurrentWidget(self.addregno)
 ##################################################################### ComboBox and Button Widget Class########################################
 
 class BtnCall(QtWidgets.QPushButton):
@@ -1113,8 +1184,9 @@ class BtnCall(QtWidgets.QPushButton):
         else:
                 self.setEnabled(False)
         self.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.setStyleSheet("QPushButton\n"
+        self.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #000000;\n"
 "    background-color:#ffffff;\n"
 "    border-width: 1px;\n"
@@ -1220,8 +1292,9 @@ class AddImportantKey(object):
         font.setPointSize(11)
         self.navViewImpKeyDetails.setFont(font)
         self.navViewImpKeyDetails.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewImpKeyDetails.setStyleSheet("QPushButton\n"
+        self.navViewImpKeyDetails.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -1262,6 +1335,7 @@ class AddImportantKey(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -1304,6 +1378,7 @@ class AddImportantKey(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -1350,6 +1425,7 @@ class AddImportantKey(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -1393,6 +1469,7 @@ class AddImportantKey(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -1435,6 +1512,7 @@ class AddImportantKey(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -1477,6 +1555,7 @@ class AddImportantKey(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -1519,6 +1598,7 @@ class AddImportantKey(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -1561,6 +1641,7 @@ class AddImportantKey(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -1608,6 +1689,7 @@ class AddImportantKey(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -1650,6 +1732,7 @@ class AddImportantKey(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -1692,6 +1775,7 @@ class AddImportantKey(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -1734,6 +1818,7 @@ class AddImportantKey(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -1776,6 +1861,7 @@ class AddImportantKey(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -1818,6 +1904,7 @@ class AddImportantKey(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -2137,6 +2224,7 @@ class AddImportantKey(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         self.pushButton.setIcon(icon2)
         self.pushButton.setIconSize(QtCore.QSize(32, 32))
@@ -2162,6 +2250,7 @@ class AddImportantKey(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -2262,8 +2351,9 @@ class AddImportantKey(object):
         font.setPointSize(11)
         self.btnAddImpKey.setFont(font)
         self.btnAddImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddImpKey.setStyleSheet("QPushButton\n"
+        self.btnAddImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -2304,6 +2394,7 @@ class AddImportantKey(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -2346,6 +2437,7 @@ class AddImportantKey(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -2388,6 +2480,7 @@ class AddImportantKey(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -2638,8 +2731,9 @@ class AddPersonnelData(object):
         font.setPointSize(11)
         self.navViewPersonnelDetails.setFont(font)
         self.navViewPersonnelDetails.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewPersonnelDetails.setStyleSheet("QPushButton\n"
+        self.navViewPersonnelDetails.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -2680,6 +2774,7 @@ class AddPersonnelData(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -2722,6 +2817,7 @@ class AddPersonnelData(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -2764,6 +2860,7 @@ class AddPersonnelData(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -2806,6 +2903,7 @@ class AddPersonnelData(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -2848,6 +2946,7 @@ class AddPersonnelData(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -2890,6 +2989,7 @@ class AddPersonnelData(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -2932,6 +3032,7 @@ class AddPersonnelData(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -2974,6 +3075,7 @@ class AddPersonnelData(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -3021,6 +3123,7 @@ class AddPersonnelData(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -3063,6 +3166,7 @@ class AddPersonnelData(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -3105,6 +3209,7 @@ class AddPersonnelData(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -3147,6 +3252,7 @@ class AddPersonnelData(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -3189,6 +3295,7 @@ class AddPersonnelData(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -3231,6 +3338,7 @@ class AddPersonnelData(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -3276,29 +3384,41 @@ class AddPersonnelData(object):
 "font-size: 11pt")
         self.label_7.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.label_7.setObjectName("label_7")
-        self.edtID = QtWidgets.QLineEdit(self.frame)
-        self.edtID.setGeometry(QtCore.QRect(522, 140, 345, 38))
+        self.cBoxID = QtWidgets.QComboBox(self.frame)
+        self.cBoxID.setGeometry(QtCore.QRect(522, 140, 345, 38))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.edtID.setFont(font)
-        self.edtID.setStyleSheet("QLineEdit{\n"
-"    border:1px solid #aaa;\n"
-"    border-radius:4px;\n"
-"    outline:none;\n"
-"    padding:6px;\n"
-
-
-"  }\n"
-"  QLineEdit:hover{\n"
+        font.setKerning(True)
+        self.cBoxID.setFont(font)
+        self.cBoxID.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.cBoxID.setStyleSheet("QComboBox{ border-width: 1px;\n"
+" border-color: #aaa;\n"
+" border-style: solid;\n"
+"border-radius:6; \n"
+"}\n"
+"\n"
+"QComboBox::drop-down:button{\n"
+"background-color:transparent;\n"
+"}\n"
+"QComboBox::down-arrow {\n"
+" \n"
+"    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);\n"
+"    width: 25px;\n"
+"    height: 9px;\n"
+"}\n"
+"QComboBox:hover{\n"
 "     border:1px solid #000;    \n"
 
 "}\n"
-"  QLineEdit:focus{\n"
+"  QComboBox:focus{\n"
 "    border-color:dodgerBlue;\n"
 
-"  }")
-        self.edtID.setObjectName("edtID")
+"  }\n"
+"")
+        self.cBoxID.setEditable(False)
+        self.cBoxID.setFrame(True)
+        self.cBoxID.setObjectName("cBoxID")
         self.label_8 = QtWidgets.QLabel(self.frame)
         self.label_8.setGeometry(QtCore.QRect(331, 182, 191, 44))
         font = QtGui.QFont()
@@ -3404,6 +3524,7 @@ class AddPersonnelData(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         icon15 = QtGui.QIcon()
         icon15.addPixmap(QtGui.QPixmap(":/images/personnelData.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -3431,6 +3552,7 @@ class AddPersonnelData(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -3524,7 +3646,10 @@ class AddPersonnelData(object):
         self.cBoxDepartment.setEditable(False)
         self.cBoxDepartment.setFrame(True)
         self.cBoxDepartment.setObjectName("cBoxDepartment")
-       
+        self.cBoxDepartment.addItem("")
+        self.cBoxDepartment.addItem("")
+        self.cBoxDepartment.addItem("")
+        self.cBoxDepartment.addItem("")
         self.cBoxBloodGroup = QtWidgets.QComboBox(self.frame)
         self.cBoxBloodGroup.setGeometry(QtCore.QRect(522, 360, 345, 38))
         font = QtGui.QFont()
@@ -3577,6 +3702,7 @@ class AddPersonnelData(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -3619,6 +3745,7 @@ class AddPersonnelData(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -3661,6 +3788,7 @@ class AddPersonnelData(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -3756,6 +3884,8 @@ class AddPersonnelData(object):
         self.label_4.raise_()
         self.navViewMOB.raise_()
         self.navViewLocation.raise_()
+        self.pushButton.raise_()
+        self.pushButton_2.raise_()
         self.navViewManagement.raise_()
         self.navViewPPE.raise_()
         self.navViewOOD.raise_()
@@ -3763,22 +3893,20 @@ class AddPersonnelData(object):
         self.navViewStateArmory.raise_()
         self.btnLogout.raise_()
         self.label_7.raise_()
-        self.edtID.raise_()
         self.label_8.raise_()
-        self.edtPNO.raise_()
         self.label_9.raise_()
         self.label_10.raise_()
         self.label_11.raise_()
         self.label_12.raise_()
         self.lblDataEntrySuccessful.raise_()
-        self.pushButton.raise_()
-        self.pushButton_2.raise_()
         self.navViewPersonnel.raise_()
-        self.edtName.raise_()
-        self.cBoxDepartment.raise_()
-        self.cBoxBloodGroup.raise_()
-        self.navViewStatePersonnel.raise_()
+        self.navViewStatePersonnel.raise_()        
+        self.cBoxID.raise_()
+        self.edtPNO.raise_()
         self.cBoxRank.raise_()
+        self.edtName.raise_()
+        self.cBoxBloodGroup.raise_()
+        self.cBoxDepartment.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
         self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
@@ -3803,8 +3931,9 @@ class AddPersonnelData(object):
         font.setPointSize(11)
         self.btnAddPersonnelEntry.setFont(font)
         self.btnAddPersonnelEntry.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddPersonnelEntry.setStyleSheet("QPushButton\n"
+        self.btnAddPersonnelEntry.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -3897,6 +4026,10 @@ class AddPersonnelData(object):
         self.cBoxBloodGroup.setItemText(5, _translate("MainWindow", "O-"))
         self.cBoxBloodGroup.setItemText(6, _translate("MainWindow", "B-"))
         self.cBoxBloodGroup.setItemText(7, _translate("MainWindow", "AB-"))
+        self.cBoxDepartment.setItemText(0, _translate("MainWindow", "Operation"))
+        self.cBoxDepartment.setItemText(1, _translate("MainWindow", "Supply"))
+        self.cBoxDepartment.setItemText(2, _translate("MainWindow", "Marine Engineering"))
+        self.cBoxDepartment.setItemText(3, _translate("MainWindow", "Weapon Engineering"))
         self.label_6.setText(_translate("MainWindow", "Enter Personnel Details"))
         self.btnAddPersonnelEntry.setText(_translate("MainWindow", "Add New Personnel Entry"))
 
@@ -3920,20 +4053,20 @@ class AddPersonnelData(object):
 
         self.navViewPersonnelDetails.clicked.connect(self.navViewPersonnelMethod)
         self.btnAddPersonnelEntry.clicked.connect(self.addPersonnelDataEntry)
-        self.edtID.textEdited.connect(self.resetSuccess)
+        self.cBoxID.activated.connect(self.resetSuccess)
         self.edtPNO.textEdited.connect(self.resetSuccess)
         self.cBoxRank.activated.connect(self.resetSuccess)
         self.edtName.textEdited.connect(self.resetSuccess)
         self.cBoxDepartment.activated.connect(self.resetSuccess)
         self.cBoxBloodGroup.activated.connect(self.resetSuccess)
     def addPersonnelDataEntry(self):
-            persID=self.edtID.text()
+            persID=self.cBoxID.currentText()
             persPno=self.edtPNO.text()
             persRank=self.cBoxRank.currentText()
             persName=self.edtName.text()
             persDepart=self.cBoxDepartment.currentText()
             persBG=self.cBoxBloodGroup.currentText()
-            if(persID!="" and persPno!="" and persRank!="" and persName!="" and persDepart!="" and persBG!=""):
+            if(persPno!=""and persName!=""):
                     queryString="INSERT INTO PersonnelDataBook VALUES('"+persID+"',"+"'"+persPno+"',"+"'"+persRank+"',"+"'"+persName+"',"+"'"+persDepart+"',"+"'"+persBG+"')"
                     insertData(self,queryString)
                     queryString="INSERT INTO ArmoryState VALUES('"+persID+"',"+"'"+persPno+"',"+"'"+persRank+"',"+"'"+persName+"',"+"'"+persDepart+"',"+"'"+persBG+"','Present')"
@@ -4021,8 +4154,9 @@ class AddGeneralKey(object):
         font.setPointSize(11)
         self.navViewGenKeyDetails.setFont(font)
         self.navViewGenKeyDetails.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewGenKeyDetails.setStyleSheet("QPushButton\n"
+        self.navViewGenKeyDetails.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -4063,6 +4197,7 @@ class AddGeneralKey(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -4105,6 +4240,7 @@ class AddGeneralKey(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -4147,6 +4283,7 @@ class AddGeneralKey(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -4194,6 +4331,7 @@ class AddGeneralKey(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -4236,6 +4374,7 @@ class AddGeneralKey(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -4278,6 +4417,7 @@ class AddGeneralKey(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -4320,6 +4460,7 @@ class AddGeneralKey(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -4362,6 +4503,7 @@ class AddGeneralKey(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -4409,6 +4551,7 @@ class AddGeneralKey(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -4451,6 +4594,7 @@ class AddGeneralKey(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -4493,6 +4637,7 @@ class AddGeneralKey(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -4535,6 +4680,7 @@ class AddGeneralKey(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -4577,6 +4723,7 @@ class AddGeneralKey(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -4619,6 +4766,7 @@ class AddGeneralKey(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -4938,6 +5086,7 @@ class AddGeneralKey(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         self.pushButton.setIcon(icon3)
         self.pushButton.setIconSize(QtCore.QSize(32, 32))
@@ -4963,6 +5112,7 @@ class AddGeneralKey(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -5063,8 +5213,9 @@ class AddGeneralKey(object):
         font.setPointSize(11)
         self.btnAddGenKey.setFont(font)
         self.btnAddGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddGenKey.setStyleSheet("QPushButton\n"
+        self.btnAddGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -5105,6 +5256,7 @@ class AddGeneralKey(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -5147,6 +5299,7 @@ class AddGeneralKey(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -5189,6 +5342,7 @@ class AddGeneralKey(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -5440,8 +5594,9 @@ class AddOOD(object):
         font.setPointSize(11)
         self.navViewOODObservationDetails.setFont(font)
         self.navViewOODObservationDetails.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewOODObservationDetails.setStyleSheet("QPushButton\n"
+        self.navViewOODObservationDetails.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -5487,6 +5642,7 @@ class AddOOD(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -5529,6 +5685,7 @@ class AddOOD(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -5571,6 +5728,7 @@ class AddOOD(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -5613,6 +5771,7 @@ class AddOOD(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -5828,8 +5987,9 @@ class AddOOD(object):
         font.setPointSize(11)
         self.btnAddOODObservation.setFont(font)
         self.btnAddOODObservation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddOODObservation.setStyleSheet("QPushButton\n"
+        self.btnAddOODObservation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -5870,6 +6030,7 @@ class AddOOD(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         icon6 = QtGui.QIcon()
         icon6.addPixmap(QtGui.QPixmap(":/images/oodObserve.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -5910,6 +6071,7 @@ class AddOOD(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -5952,6 +6114,7 @@ class AddOOD(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -5994,6 +6157,7 @@ class AddOOD(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -6036,6 +6200,7 @@ class AddOOD(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -6078,6 +6243,7 @@ class AddOOD(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -6121,6 +6287,7 @@ class AddOOD(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -6163,6 +6330,7 @@ class AddOOD(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -6205,6 +6373,7 @@ class AddOOD(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -6248,6 +6417,7 @@ class AddOOD(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -6292,6 +6462,7 @@ class AddOOD(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -6334,6 +6505,7 @@ class AddOOD(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -6389,6 +6561,7 @@ class AddOOD(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -6431,6 +6604,7 @@ class AddOOD(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -6473,6 +6647,7 @@ class AddOOD(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -6607,7 +6782,7 @@ class AddOOD(object):
     def addOODObservation(self):
              cbValOOD=self.cBoxSelectOOD.currentText()
              lblValOODRank=self.lblOODRank.text()
-             observationDate=self.dtObservationDate.date().toString()
+             observationDate=self.dtObservationDate.date().toString("dd-MM-yyyy")
              observationText=self.txtObservation.toPlainText()
              if(cbValOOD!="" and lblValOODRank!="" and observationDate!="" and observationText!=""):
                      queryString="INSERT INTO OODObservationBook VALUES('"+cbValOOD+"',"+"'"+lblValOODRank+"',"+"'"+observationDate+"',"+"'"+observationText+"')"
@@ -6698,8 +6873,9 @@ class AddTransport(object):
         font.setPointSize(11)
         self.navViewTransportDetails.setFont(font)
         self.navViewTransportDetails.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewTransportDetails.setStyleSheet("QPushButton\n"
+        self.navViewTransportDetails.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -6740,6 +6916,7 @@ class AddTransport(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -6782,6 +6959,7 @@ class AddTransport(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -6824,6 +7002,7 @@ class AddTransport(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -6868,6 +7047,7 @@ class AddTransport(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -6909,6 +7089,7 @@ class AddTransport(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -6955,6 +7136,7 @@ class AddTransport(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -6997,6 +7179,7 @@ class AddTransport(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -7039,6 +7222,7 @@ class AddTransport(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -7086,6 +7270,7 @@ class AddTransport(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -7128,6 +7313,7 @@ class AddTransport(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -7170,6 +7356,7 @@ class AddTransport(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -7212,6 +7399,7 @@ class AddTransport(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -7254,6 +7442,7 @@ class AddTransport(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -7296,6 +7485,7 @@ class AddTransport(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -7351,6 +7541,7 @@ class AddTransport(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         self.pushButton.setIcon(icon5)
         self.pushButton.setIconSize(QtCore.QSize(32, 32))
@@ -7376,6 +7567,7 @@ class AddTransport(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -7785,8 +7977,9 @@ class AddTransport(object):
         font.setPointSize(11)
         self.btnAddTransport.setFont(font)
         self.btnAddTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddTransport.setStyleSheet("QPushButton\n"
+        self.btnAddTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -7827,6 +8020,7 @@ class AddTransport(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -7869,6 +8063,7 @@ class AddTransport(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -7911,6 +8106,7 @@ class AddTransport(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -8160,8 +8356,9 @@ class AddVisitor(object):
         font.setPointSize(11)
         self.navViewVisitorDetails.setFont(font)
         self.navViewVisitorDetails.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewVisitorDetails.setStyleSheet("QPushButton\n"
+        self.navViewVisitorDetails.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -8202,6 +8399,7 @@ class AddVisitor(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -8244,6 +8442,7 @@ class AddVisitor(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -8286,6 +8485,7 @@ class AddVisitor(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -8329,6 +8529,7 @@ class AddVisitor(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -8374,6 +8575,7 @@ class AddVisitor(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -8416,6 +8618,7 @@ class AddVisitor(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -8458,6 +8661,7 @@ class AddVisitor(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -8500,6 +8704,7 @@ class AddVisitor(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -8547,6 +8752,7 @@ class AddVisitor(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -8589,6 +8795,7 @@ class AddVisitor(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -8631,6 +8838,7 @@ class AddVisitor(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -8673,6 +8881,7 @@ class AddVisitor(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -8715,6 +8924,7 @@ class AddVisitor(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -8757,6 +8967,7 @@ class AddVisitor(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -8812,6 +9023,7 @@ class AddVisitor(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         self.pushButton.setIcon(icon4)
         self.pushButton.setIconSize(QtCore.QSize(32, 32))
@@ -8837,6 +9049,7 @@ class AddVisitor(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -9353,6 +9566,7 @@ class AddVisitor(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -9395,6 +9609,7 @@ class AddVisitor(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -9437,6 +9652,7 @@ class AddVisitor(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -9536,8 +9752,9 @@ class AddVisitor(object):
         font.setPointSize(11)
         self.btnAddVisitor.setFont(font)
         self.btnAddVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddVisitor.setStyleSheet("QPushButton\n"
+        self.btnAddVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -9739,8 +9956,9 @@ class AddDuty(object):
         font.setPointSize(11)
         self.navViewDutyDetails.setFont(font)
         self.navViewDutyDetails.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewDutyDetails.setStyleSheet("QPushButton\n"
+        self.navViewDutyDetails.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -9794,6 +10012,7 @@ class AddDuty(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         icon1 = QtGui.QIcon()
         icon1.addPixmap(QtGui.QPixmap(":/images/duty.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -10012,8 +10231,9 @@ class AddDuty(object):
         font.setPointSize(11)
         self.btnAddDuty.setFont(font)
         self.btnAddDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddDuty.setStyleSheet("QPushButton\n"
+        self.btnAddDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -10154,6 +10374,7 @@ class AddDuty(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -10196,6 +10417,7 @@ class AddDuty(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -10238,6 +10460,7 @@ class AddDuty(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -10280,6 +10503,7 @@ class AddDuty(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -10322,6 +10546,7 @@ class AddDuty(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -10364,6 +10589,7 @@ class AddDuty(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -10407,6 +10633,7 @@ class AddDuty(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -10449,6 +10676,7 @@ class AddDuty(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -10491,6 +10719,7 @@ class AddDuty(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -10540,6 +10769,7 @@ class AddDuty(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -10582,6 +10812,7 @@ class AddDuty(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -10624,6 +10855,7 @@ class AddDuty(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -10666,6 +10898,7 @@ class AddDuty(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -10704,6 +10937,7 @@ class AddDuty(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -10746,6 +10980,7 @@ class AddDuty(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -10788,6 +11023,7 @@ class AddDuty(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -10830,6 +11066,7 @@ class AddDuty(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -10872,6 +11109,7 @@ class AddDuty(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -11128,8 +11366,9 @@ class AddPunish(object):
         font.setPointSize(11)
         self.navViewPunishDetails.setFont(font)
         self.navViewPunishDetails.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewPunishDetails.setStyleSheet("QPushButton\n"
+        self.navViewPunishDetails.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -11170,6 +11409,7 @@ class AddPunish(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -11216,6 +11456,7 @@ class AddPunish(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -11258,6 +11499,7 @@ class AddPunish(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -11302,6 +11544,7 @@ class AddPunish(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -11344,6 +11587,7 @@ class AddPunish(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -11386,6 +11630,7 @@ class AddPunish(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -11428,6 +11673,7 @@ class AddPunish(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -11470,6 +11716,7 @@ class AddPunish(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -11517,6 +11764,7 @@ class AddPunish(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -11559,6 +11807,7 @@ class AddPunish(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -11601,6 +11850,7 @@ class AddPunish(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -11643,6 +11893,7 @@ class AddPunish(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -11685,6 +11936,7 @@ class AddPunish(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -11727,6 +11979,7 @@ class AddPunish(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -11810,7 +12063,7 @@ class AddPunish(object):
         self.label_11.setObjectName("label_11")
         self.lblDataEntrySuccessful = QtWidgets.QLabel(self.frame)
         self.lblDataEntrySuccessful.setEnabled(True)
-        self.lblDataEntrySuccessful.setGeometry(QtCore.QRect(331, 650, 361, 44))
+        self.lblDataEntrySuccessful.setGeometry(QtCore.QRect(331, 550, 361, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -11830,6 +12083,7 @@ class AddPunish(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         self.pushButton.setIcon(icon1)
         self.pushButton.setIconSize(QtCore.QSize(32, 32))
@@ -11855,6 +12109,7 @@ class AddPunish(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -11949,14 +12204,15 @@ class AddPunish(object):
         self.lblPunishRank.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.lblPunishRank.setObjectName("lblPunishRank")
         self.btnAddPunish = QtWidgets.QPushButton(self.frame)
-        self.btnAddPunish.setGeometry(QtCore.QRect(560, 671, 271, 44))
+        self.btnAddPunish.setGeometry(QtCore.QRect(560, 572, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
         self.btnAddPunish.setFont(font)
         self.btnAddPunish.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddPunish.setStyleSheet("QPushButton\n"
+        self.btnAddPunish.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -11997,6 +12253,7 @@ class AddPunish(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -12039,6 +12296,7 @@ class AddPunish(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -12081,6 +12339,7 @@ class AddPunish(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -12110,43 +12369,6 @@ class AddPunish(object):
         self.btnLogout.setIconSize(QtCore.QSize(32, 32))
         self.btnLogout.setFlat(False)
         self.btnLogout.setObjectName("btnLogout")
-        self.label_14 = QtWidgets.QLabel(self.frame)
-        self.label_14.setGeometry(QtCore.QRect(321, 472, 515, 86))
-        self.label_14.setStyleSheet("    background-color:#ffffff;\n"
-"    border-width: 1px;\n"
-"    border-color: #A0A0A0;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;")
-        self.label_14.setText("")
-        self.label_14.setObjectName("label_14")
-        self.chBoxMorning = QtWidgets.QCheckBox(self.frame)
-        self.chBoxMorning.setGeometry(QtCore.QRect(355, 494, 131, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.chBoxMorning.setFont(font)
-        self.chBoxMorning.setObjectName("chBoxMorning")
-        self.chBoxAfternoon = QtWidgets.QCheckBox(self.frame)
-        self.chBoxAfternoon.setGeometry(QtCore.QRect(486, 494, 131, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.chBoxAfternoon.setFont(font)
-        self.chBoxAfternoon.setObjectName("chBoxAfternoon")
-        self.chBoxEvening = QtWidgets.QCheckBox(self.frame)
-        self.chBoxEvening.setGeometry(QtCore.QRect(617, 494, 131, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.chBoxEvening.setFont(font)
-        self.chBoxEvening.setObjectName("chBoxEvening")
-        self.chBoxNight = QtWidgets.QCheckBox(self.frame)
-        self.chBoxNight.setGeometry(QtCore.QRect(748, 494, 61, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.chBoxNight.setFont(font)
-        self.chBoxNight.setObjectName("chBoxNight")
         self.txtPunishment = QtWidgets.QPlainTextEdit(self.frame)
         self.txtPunishment.setEnabled(True)
         self.txtPunishment.setGeometry(QtCore.QRect(490, 272, 345, 86))
@@ -12171,7 +12393,7 @@ class AddPunish(object):
 "  }")
         self.txtPunishment.setObjectName("txtPunishment")
         self.label_15 = QtWidgets.QLabel(self.frame)
-        self.label_15.setGeometry(QtCore.QRect(331, 562, 159, 44))
+        self.label_15.setGeometry(QtCore.QRect(331, 452, 159, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -12184,7 +12406,7 @@ class AddPunish(object):
         self.label_15.setObjectName("label_15")
         self.txtRemark = QtWidgets.QPlainTextEdit(self.frame)
         self.txtRemark.setEnabled(True)
-        self.txtRemark.setGeometry(QtCore.QRect(480, 564, 351, 80))
+        self.txtRemark.setGeometry(QtCore.QRect(490, 454, 345, 86))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -12370,11 +12592,6 @@ class AddPunish(object):
         self.lblPunishRank.raise_()
         self.btnAddPunish.raise_()
         self.navViewStatePersonnel.raise_()
-        self.label_14.raise_()
-        self.chBoxMorning.raise_()
-        self.chBoxAfternoon.raise_()
-        self.chBoxEvening.raise_()
-        self.chBoxNight.raise_()
         self.txtPunishment.raise_()
         self.label_15.raise_()
         self.txtRemark.raise_()
@@ -12399,18 +12616,7 @@ class AddPunish(object):
 "font-size: 11pt")
         self.label_6.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.label_6.setObjectName("label_6")
-        self.label_12 = QtWidgets.QLabel(self.centralwidget)
-        self.label_12.setGeometry(QtCore.QRect(326, 450, 121, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.label_12.setFont(font)
-        self.label_12.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.label_12.setStyleSheet("color: #000000;\n"
-"background-color:#ffffff;\n"
-"font-size: 11pt")
-        self.label_12.setAlignment(QtCore.Qt.AlignCenter)
-        self.label_12.setObjectName("label_12")
+        
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
@@ -12447,25 +12653,16 @@ class AddPunish(object):
         self.lblPunishRank.setText(_translate("MainWindow", "Name"))
         self.btnAddPunish.setText(_translate("MainWindow", "Add New Punishment Entry"))
         self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
-        self.chBoxMorning.setText(_translate("MainWindow", "05:00"))
-        self.chBoxAfternoon.setText(_translate("MainWindow", "14:00"))
-        self.chBoxEvening.setText(_translate("MainWindow", "16:00"))
-        self.chBoxNight.setText(_translate("MainWindow", "21:00"))
         self.label_15.setText(_translate("MainWindow", "Remarks"))
         self.label_16.setText(_translate("MainWindow", "From Date"))
         self.label_17.setText(_translate("MainWindow", "To Date"))
         self.label_6.setText(_translate("MainWindow", "Enter Punishment Details"))
-        self.label_12.setText(_translate("MainWindow", "Punishment Time"))
 
 
 #----------------------------------------backend for Add Punish Interface----------------------------------------------  
         resetPunishGUI(self)
         listPunishName=[]
         listPunishRank=[]
-        morningPunish=" "
-        afternoonPunish=" "
-        eveningPunish=" "
-        nightPunish=" "
         self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
         self.navViewImpKey.clicked.connect(self.navViewImportantKeyMethod)
         self.navViewGenKey.clicked.connect(self.navViewGeneralKeyMethod)
@@ -12482,42 +12679,13 @@ class AddPunish(object):
         self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
         self.navViewMOB.clicked.connect(self.navMOBMethod)
         self.btnLogout.clicked.connect(self.navLogoutMethod)
-
         self.navViewPunishDetails.clicked.connect(self.navViewPunishMethod)
         self.cBoxPunishPNo.activated.connect(self.resetSuccess)
         self.cBoxPunishPNo.activated.connect(self.setLabelText)
-        self.chBoxMorning.stateChanged.connect(self.resetSuccess)
-        self.chBoxMorning.stateChanged.connect(self.setCheckboxValue)
-        self.chBoxAfternoon.stateChanged.connect(self.resetSuccess)
-        self.chBoxAfternoon.stateChanged.connect(self.setCheckboxValue)
-        self.chBoxEvening.stateChanged.connect(self.resetSuccess)
-        self.chBoxEvening.stateChanged.connect(self.setCheckboxValue)
-        self.chBoxNight.stateChanged.connect(self.resetSuccess)
-        self.chBoxNight.stateChanged.connect(self.setCheckboxValue)
         self.btnAddPunish.clicked.connect(self.addPunishEntry)
         self.txtPunishment.textChanged.connect(self.resetSuccess)
         self.txtRemark.textChanged.connect(self.resetSuccess)
-    def setCheckboxValue(self):
-            if(self.chBoxMorning.isChecked()==True):
-                    self.morningPunish="Punished"
-            else:
-                    self.morningPunish=" "
-
-            if(self.chBoxAfternoon.isChecked()==True):
-                    self.afternoonPunish="Punished"
-            else:
-                    self.afternoonPunish=" "
-
-            if(self.chBoxEvening.isChecked()==True):
-                    self.eveningPunish="Punished"
-            else:
-                    self.eveningPunish=" "
-
-            if(self.chBoxNight.isChecked()==True):
-                    self.nightPunish="Punished"
-            else:
-                    self.nightPunish=" "
-
+    
     def setLabelText(self,cbIndex):
              self.lblPunishName.setText(self.listPunishName[cbIndex])
              self.lblPunishRank.setText(self.listPunishRank[cbIndex])
@@ -12527,17 +12695,23 @@ class AddPunish(object):
             punishName=self.lblPunishName.text()
             punishRank=self.lblPunishRank.text()
             punishText=self.txtPunishment.toPlainText()
-            punishStartDate=self.dtPunishStartDate.date().toString()
-            punishFinishDate=self.dtPunishFinishDate.date().toString()
-            punishMorning=self.morningPunish
-            punishAfternoon=self.afternoonPunish
-            punishEvening=self.eveningPunish
-            punishNight=self.nightPunish
+            punishStartDate=self.dtPunishStartDate.date().toString("dd-MM-yyyy")
+            punishFinishDate=self.dtPunishFinishDate.date().toString("dd-MM-yyyy")
             punishRemark=self.txtRemark.toPlainText()
-            
-            if((punishText!="" and punishRemark!="") and (punishMorning!=" " or punishAfternoon!=" " or punishEvening!=" " or punishNight!=" ")):
-                    queryString="INSERT INTO PunishmentBook VALUES('"+punishPNo+"',"+"'"+punishName+"',"+"'"+punishRank+"',"+"'"+punishText+"',"+"'"+punishStartDate+"',"+"'"+punishFinishDate+"',"+"'"+punishMorning+"',"+"'"+punishAfternoon+"',"+"'"+punishEvening+"'," +"'"+punishNight+"'," + "'"+punishRemark+"')"
-                    insertData(self,queryString)
+            tempVarStart=punishStartDate.split("-")
+            tempVarEnd=punishFinishDate.split("-")
+            d0 = date(int(tempVarStart[2]), int(tempVarStart[1]), int(tempVarStart[0]))
+            d1 = date(int(tempVarEnd[2]), int(tempVarEnd[1]), int(tempVarEnd[0]))
+            delta = d1 - d0
+            days=delta.days+1
+            print(days)
+            if(punishText!="" and punishRemark!=""):
+                for i in range(days):
+                    if(self.lblDataEntrySuccessful.text()!="Details could not be saved!"):
+                        queryString="INSERT INTO PunishmentBook VALUES('"+punishPNo+"',"+"'"+punishName+"',"+"'"+punishRank+"',"+"'"+punishText+"',"+"'"+punishStartDate+"',"+"'"+punishFinishDate+"',"+"' ',"+"' ',"+"' '," +"' '," + "'"+punishRemark+"')"
+                        insertData(self,queryString)
+                    else:
+                        break
                     if(self.lblDataEntrySuccessful.text()!="Details could not be saved!"):
                             resetPunishGUI(self)    
                             self.lblDataEntrySuccessful.show()
@@ -12620,8 +12794,9 @@ class AddGangway(object):
         font.setPointSize(11)
         self.navViewGangwayDetails.setFont(font)
         self.navViewGangwayDetails.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewGangwayDetails.setStyleSheet("QPushButton\n"
+        self.navViewGangwayDetails.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -12667,6 +12842,7 @@ class AddGangway(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -12709,6 +12885,7 @@ class AddGangway(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -12751,6 +12928,7 @@ class AddGangway(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -12793,6 +12971,7 @@ class AddGangway(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -13011,6 +13190,7 @@ class AddGangway(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         icon5 = QtGui.QIcon()
         icon5.addPixmap(QtGui.QPixmap(":/images/gangway.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -13051,6 +13231,7 @@ class AddGangway(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -13093,6 +13274,7 @@ class AddGangway(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -13135,6 +13317,7 @@ class AddGangway(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -13180,6 +13363,7 @@ class AddGangway(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -13222,6 +13406,7 @@ class AddGangway(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -13265,6 +13450,7 @@ class AddGangway(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -13307,6 +13493,7 @@ class AddGangway(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -13349,6 +13536,7 @@ class AddGangway(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -13392,6 +13580,7 @@ class AddGangway(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -13434,6 +13623,7 @@ class AddGangway(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -13476,6 +13666,7 @@ class AddGangway(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -13531,6 +13722,7 @@ class AddGangway(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -13573,6 +13765,7 @@ class AddGangway(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -13615,6 +13808,7 @@ class AddGangway(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -13835,8 +14029,9 @@ class AddGangway(object):
         font.setPointSize(11)
         self.btnAddGangway.setFont(font)
         self.btnAddGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddGangway.setStyleSheet("QPushButton\n"
+        self.btnAddGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -13986,7 +14181,7 @@ class AddGangway(object):
              self.lblIssuedRank.setText(self.listIssuedRank[cbIndex])
 
     def addGangwayEntry(self):
-            gangwayDate=self.dtGangwayDate.date().toString()
+            gangwayDate=self.dtGangwayDate.date().toString("dd-MM-yyyy")
             gangwayPlace=self.edtPlace.text()
             gangwayArticle=self.edtArticle.text()
             gangwayQuality=self.edtQuality.text()
@@ -14079,8 +14274,9 @@ class AddNightRound(object):
         font.setPointSize(11)
         self.navViewNightRoundDetails.setFont(font)
         self.navViewNightRoundDetails.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewNightRoundDetails.setStyleSheet("QPushButton\n"
+        self.navViewNightRoundDetails.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -14121,6 +14317,7 @@ class AddNightRound(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -14163,6 +14360,7 @@ class AddNightRound(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -14205,6 +14403,7 @@ class AddNightRound(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -14247,6 +14446,7 @@ class AddNightRound(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -14289,6 +14489,7 @@ class AddNightRound(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -14331,6 +14532,7 @@ class AddNightRound(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -14373,6 +14575,7 @@ class AddNightRound(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -14415,6 +14618,7 @@ class AddNightRound(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -14467,6 +14671,7 @@ class AddNightRound(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -14509,6 +14714,7 @@ class AddNightRound(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -14551,6 +14757,7 @@ class AddNightRound(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -14593,6 +14800,7 @@ class AddNightRound(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -14635,6 +14843,7 @@ class AddNightRound(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -14677,6 +14886,7 @@ class AddNightRound(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -14893,6 +15103,7 @@ class AddNightRound(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         self.pushButton.setIcon(icon8)
         self.pushButton.setIconSize(QtCore.QSize(32, 32))
@@ -14918,6 +15129,7 @@ class AddNightRound(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -14994,8 +15206,9 @@ class AddNightRound(object):
         font.setPointSize(11)
         self.btnAddNightRound.setFont(font)
         self.btnAddNightRound.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddNightRound.setStyleSheet("QPushButton\n"
+        self.btnAddNightRound.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -15036,6 +15249,7 @@ class AddNightRound(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -15078,6 +15292,7 @@ class AddNightRound(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -15120,6 +15335,7 @@ class AddNightRound(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -15591,8 +15807,9 @@ class AddArmPPE(object):
         font.setPointSize(11)
         self.navViewArmPPEDetails.setFont(font)
         self.navViewArmPPEDetails.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewArmPPEDetails.setStyleSheet("QPushButton\n"
+        self.navViewArmPPEDetails.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -15633,6 +15850,7 @@ class AddArmPPE(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -15675,6 +15893,7 @@ class AddArmPPE(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -15717,6 +15936,7 @@ class AddArmPPE(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -15760,6 +15980,7 @@ class AddArmPPE(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -15802,6 +16023,7 @@ class AddArmPPE(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -15844,6 +16066,7 @@ class AddArmPPE(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -15886,6 +16109,7 @@ class AddArmPPE(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -15928,6 +16152,7 @@ class AddArmPPE(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -15975,6 +16200,7 @@ class AddArmPPE(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -16017,6 +16243,7 @@ class AddArmPPE(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -16059,6 +16286,7 @@ class AddArmPPE(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -16101,6 +16329,7 @@ class AddArmPPE(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -16147,6 +16376,7 @@ class AddArmPPE(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -16189,6 +16419,7 @@ class AddArmPPE(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -16234,28 +16465,71 @@ class AddArmPPE(object):
 "font-size: 11pt")
         self.label_7.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.label_7.setObjectName("label_7")
-        self.edtSLPouch = QtWidgets.QLineEdit(self.frame)
+        self.edtSLPouch = QtWidgets.QSpinBox(self.frame)
         self.edtSLPouch.setGeometry(QtCore.QRect(490, 492, 345, 38))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
         self.edtSLPouch.setFont(font)
-        self.edtSLPouch.setStyleSheet("QLineEdit{\n"
+        self.edtSLPouch.setStyleSheet("QSpinBox{\n"
 "    border:1px solid #aaa;\n"
-"    border-radius:4px;\n"
+"    border-radius:6px;\n"
 "    outline:none;\n"
 "    padding:6px;\n"
 
 
 "  }\n"
-"  QLineEdit:hover{\n"
+"  QSpinBox:hover{\n"
 "     border:1px solid #000;    \n"
 
 "}\n"
-"  QLineEdit:focus{\n"
+"  QSpinBox:focus{\n"
 "    border-color:dodgerBlue;\n"
 
-"  }")
+"border-radius: 6;\n"
+"  }\n"
+"    QSpinBox::up-button{\n"
+" subcontrol-origin: border;\n"
+"subcontrol-position: top right;\n"
+"width: 25px;\n"
+" border: none;\n"
+"image: url(:/images/dropUpTime.png);\n"
+"}\n"
+"QSpinBox::down-button {\n"
+" subcontrol-origin: border;\n"
+" subcontrol-position: bottom right;\n"
+" width: 25px;\n"
+" border: none;\n"
+"\n"
+"image: url(:/images/dropDownTime.png);\n"
+"\n"
+"}\n"
+"QSpinBox::down-button:hover {\n"
+" border: 1px solid rgba(0, 0, 0, 0%);\n"
+"border-bottom: 1px solid rgb(0, 0, 0);\n"
+" border-right: 1px solid rgb(0, 0, 0);\n"
+"background-color:#e6e6e6;\n"
+"    \n"
+"}\n"
+"QSpinBox::up-button:hover {\n"
+" border: 1px solid rgba(0, 0, 0, 0%);\n"
+"border-top: 1px solid rgb(0, 0, 0);\n"
+" border-right: 1px solid rgb(0, 0, 0);\n"
+"background-color:#e6e6e6;\n"
+"\n"
+"}\n"
+"QSpinBox::up-button:focus{\n"
+" border: 1px solid rgba(0, 0, 0, 0%);\n"
+"border-top: 1px solid dodgerBlue;\n"
+" border-right: 1px solid dodgerBlue;\n"
+"\n"
+"}\n"
+"QSpinBox::down-button:focus{\n"
+" border: 1px solid rgba(0, 0, 0, 0%);\n"
+"border-bottom: 1px solid dodgerBlue;\n"
+" border-right: 1px solid dodgerBlue;\n"
+"\n"
+"}")
         self.edtSLPouch.setObjectName("edtSLPouch")
         self.label_8 = QtWidgets.QLabel(self.frame)
         self.label_8.setGeometry(QtCore.QRect(331, 534, 159, 44))
@@ -16350,6 +16624,7 @@ class AddArmPPE(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         self.pushButton.setIcon(icon12)
         self.pushButton.setIconSize(QtCore.QSize(32, 32))
@@ -16375,6 +16650,7 @@ class AddArmPPE(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -16468,29 +16744,41 @@ class AddArmPPE(object):
 "font-size: 11pt")
         self.lblArmRank.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.lblArmRank.setObjectName("lblArmRank")
-        self.edtRegNo = QtWidgets.QLineEdit(self.frame)
+        self.edtRegNo =  QtWidgets.QComboBox(self.frame)
         self.edtRegNo.setGeometry(QtCore.QRect(490, 316, 345, 38))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
+        font.setKerning(True)
         self.edtRegNo.setFont(font)
-        self.edtRegNo.setStyleSheet("QLineEdit{\n"
-"    border:1px solid #aaa;\n"
-"    border-radius:4px;\n"
-"    outline:none;\n"
-"    padding:6px;\n"
-
-
-"  }\n"
-"  QLineEdit:hover{\n"
+        self.edtRegNo.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.edtRegNo.setStyleSheet("QComboBox{ border-width: 1px;\n"
+" border-color: #aaa;\n"
+" border-style: solid;\n"
+"border-radius:6; \n"
+"}\n"
+"\n"
+"QComboBox::drop-down:button{\n"
+"background-color:transparent;\n"
+"}\n"
+"QComboBox::down-arrow {\n"
+" \n"
+"    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);\n"
+"    width: 25px;\n"
+"    height: 9px;\n"
+"}\n"
+"QComboBox:hover{\n"
 "     border:1px solid #000;    \n"
 
 "}\n"
-"  QLineEdit:focus{\n"
+"  QComboBox:focus{\n"
 "    border-color:dodgerBlue;\n"
 
-"  }")
-        self.edtRegNo.setObjectName("edtRegNo.")
+"  }\n"
+"")
+        self.edtRegNo.setEditable(False)
+        self.edtRegNo.setFrame(True)
+        self.edtRegNo.setObjectName("edtRegNo")
         self.label_12 = QtWidgets.QLabel(self.frame)
         self.label_12.setGeometry(QtCore.QRect(331, 314, 159, 44))
         font = QtGui.QFont()
@@ -16558,29 +16846,74 @@ class AddArmPPE(object):
 "font-size: 11pt")
         self.label_14.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.label_14.setObjectName("label_14")
-        self.edtSpareMag = QtWidgets.QLineEdit(self.frame)
+        self.edtSpareMag = QtWidgets.QSpinBox(self.frame)
         self.edtSpareMag.setGeometry(QtCore.QRect(490, 360, 345, 38))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
         self.edtSpareMag.setFont(font)
-        self.edtSpareMag.setStyleSheet("QLineEdit{\n"
+        self.edtSpareMag.setStyleSheet("QSpinBox{\n"
 "    border:1px solid #aaa;\n"
-"    border-radius:4px;\n"
+"    border-radius:6px;\n"
 "    outline:none;\n"
 "    padding:6px;\n"
 
 
 "  }\n"
-"  QLineEdit:hover{\n"
+"  QSpinBox:hover{\n"
 "     border:1px solid #000;    \n"
 
 "}\n"
-"  QLineEdit:focus{\n"
+"  QSpinBox:focus{\n"
 "    border-color:dodgerBlue;\n"
 
-"  }")
+"border-radius: 6;\n"
+"  }\n"
+"    QSpinBox::up-button{\n"
+" subcontrol-origin: border;\n"
+"subcontrol-position: top right;\n"
+"width: 25px;\n"
+" border: none;\n"
+"image: url(:/images/dropUpTime.png);\n"
+"}\n"
+"QSpinBox::down-button {\n"
+" subcontrol-origin: border;\n"
+" subcontrol-position: bottom right;\n"
+" width: 25px;\n"
+" border: none;\n"
+"\n"
+"image: url(:/images/dropDownTime.png);\n"
+"\n"
+"}\n"
+"QSpinBox::down-button:hover {\n"
+" border: 1px solid rgba(0, 0, 0, 0%);\n"
+"border-bottom: 1px solid rgb(0, 0, 0);\n"
+" border-right: 1px solid rgb(0, 0, 0);\n"
+"background-color:#e6e6e6;\n"
+"    \n"
+"}\n"
+"QSpinBox::up-button:hover {\n"
+" border: 1px solid rgba(0, 0, 0, 0%);\n"
+"border-top: 1px solid rgb(0, 0, 0);\n"
+" border-right: 1px solid rgb(0, 0, 0);\n"
+"background-color:#e6e6e6;\n"
+"\n"
+"}\n"
+"QSpinBox::up-button:focus{\n"
+" border: 1px solid rgba(0, 0, 0, 0%);\n"
+"border-top: 1px solid dodgerBlue;\n"
+" border-right: 1px solid dodgerBlue;\n"
+"\n"
+"}\n"
+"QSpinBox::down-button:focus{\n"
+" border: 1px solid rgba(0, 0, 0, 0%);\n"
+"border-bottom: 1px solid dodgerBlue;\n"
+" border-right: 1px solid dodgerBlue;\n"
+"\n"
+"}")
         self.edtSpareMag.setObjectName("edtSpareMag")
+
+
         self.label_15 = QtWidgets.QLabel(self.frame)
         self.label_15.setGeometry(QtCore.QRect(331, 358, 159, 44))
         font = QtGui.QFont()
@@ -16657,6 +16990,7 @@ class AddArmPPE(object):
         self.cBoxBPJacket.addItem("")
         self.cBoxBPJacket.addItem("")
         self.cBoxBPJacket.addItem("")
+        self.cBoxBPJacket.addItem("")
         self.label_18 = QtWidgets.QLabel(self.frame)
         self.label_18.setGeometry(QtCore.QRect(331, 578, 159, 44))
         font = QtGui.QFont()
@@ -16710,29 +17044,73 @@ class AddArmPPE(object):
         self.cBoxAmmoType.addItem("")
         self.cBoxAmmoType.addItem("")
         self.cBoxAmmoType.addItem("")
-        self.edtQuantity = QtWidgets.QLineEdit(self.frame)
+        self.edtQuantity = QtWidgets.QSpinBox(self.frame)
         self.edtQuantity.setGeometry(QtCore.QRect(490, 448, 345, 38))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
         self.edtQuantity.setFont(font)
-        self.edtQuantity.setStyleSheet("QLineEdit{\n"
+        self.edtQuantity.setStyleSheet("QSpinBox{\n"
 "    border:1px solid #aaa;\n"
-"    border-radius:4px;\n"
+"    border-radius:6px;\n"
 "    outline:none;\n"
 "    padding:6px;\n"
 
 
 "  }\n"
-"  QLineEdit:hover{\n"
+"  QSpinBox:hover{\n"
 "     border:1px solid #000;    \n"
 
 "}\n"
-"  QLineEdit:focus{\n"
+"  QSpinBox:focus{\n"
 "    border-color:dodgerBlue;\n"
 
-"  }")
+"border-radius: 6;\n"
+"  }\n"
+"    QSpinBox::up-button{\n"
+" subcontrol-origin: border;\n"
+"subcontrol-position: top right;\n"
+"width: 25px;\n"
+" border: none;\n"
+"image: url(:/images/dropUpTime.png);\n"
+"}\n"
+"QSpinBox::down-button {\n"
+" subcontrol-origin: border;\n"
+" subcontrol-position: bottom right;\n"
+" width: 25px;\n"
+" border: none;\n"
+"\n"
+"image: url(:/images/dropDownTime.png);\n"
+"\n"
+"}\n"
+"QSpinBox::down-button:hover {\n"
+" border: 1px solid rgba(0, 0, 0, 0%);\n"
+"border-bottom: 1px solid rgb(0, 0, 0);\n"
+" border-right: 1px solid rgb(0, 0, 0);\n"
+"background-color:#e6e6e6;\n"
+"    \n"
+"}\n"
+"QSpinBox::up-button:hover {\n"
+" border: 1px solid rgba(0, 0, 0, 0%);\n"
+"border-top: 1px solid rgb(0, 0, 0);\n"
+" border-right: 1px solid rgb(0, 0, 0);\n"
+"background-color:#e6e6e6;\n"
+"\n"
+"}\n"
+"QSpinBox::up-button:focus{\n"
+" border: 1px solid rgba(0, 0, 0, 0%);\n"
+"border-top: 1px solid dodgerBlue;\n"
+" border-right: 1px solid dodgerBlue;\n"
+"\n"
+"}\n"
+"QSpinBox::down-button:focus{\n"
+" border: 1px solid rgba(0, 0, 0, 0%);\n"
+"border-bottom: 1px solid dodgerBlue;\n"
+" border-right: 1px solid dodgerBlue;\n"
+"\n"
+"}")
         self.edtQuantity.setObjectName("edtQuantity")
+
         self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
         self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
         font = QtGui.QFont()
@@ -16742,6 +17120,7 @@ class AddArmPPE(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -16784,6 +17163,7 @@ class AddArmPPE(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -16826,6 +17206,7 @@ class AddArmPPE(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -16862,8 +17243,9 @@ class AddArmPPE(object):
         font.setPointSize(11)
         self.btnAddArmPPE.setFont(font)
         self.btnAddArmPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddArmPPE.setStyleSheet("QPushButton\n"
+        self.btnAddArmPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -16895,6 +17277,7 @@ class AddArmPPE(object):
         self.btnAddArmPPE.setIcon(icon18)
         self.btnAddArmPPE.setIconSize(QtCore.QSize(25, 25))
         self.btnAddArmPPE.setObjectName("btnAddArmPPE")
+        
         self.label_2.raise_()
         self.label.raise_()
         self.navViewArmPPEDetails.raise_()
@@ -17008,12 +17391,13 @@ class AddArmPPE(object):
         self.label_15.setText(_translate("MainWindow", "Spare Magazine"))
         self.label_16.setText(_translate("MainWindow", "Ammo. Type"))
         self.label_17.setText(_translate("MainWindow", "Quantity"))
-        self.cBoxBPJacket.setItemText(0, _translate("MainWindow", "Bullet Proof Helmet"))
-        self.cBoxBPJacket.setItemText(1, _translate("MainWindow", "Steel Proof Helmet"))
-        self.cBoxBPJacket.setItemText(2, _translate("MainWindow", "Torch"))
-        self.cBoxBPJacket.setItemText(3, _translate("MainWindow", "Whistle"))
-        self.cBoxBPJacket.setItemText(4, _translate("MainWindow", "Elbow + Knee Pad"))
-        self.label_18.setText(_translate("MainWindow", "Bullet Proof Jacket"))
+        self.cBoxBPJacket.setItemText(0, _translate("MainWindow", "Bullet Proof Jacket"))
+        self.cBoxBPJacket.setItemText(1, _translate("MainWindow", "Bullet Proof Helmet"))
+        self.cBoxBPJacket.setItemText(2, _translate("MainWindow", "Steel Proof Helmet"))
+        self.cBoxBPJacket.setItemText(3, _translate("MainWindow", "Torch"))
+        self.cBoxBPJacket.setItemText(4, _translate("MainWindow", "Whistle"))
+        self.cBoxBPJacket.setItemText(5, _translate("MainWindow", "Elbow + Knee Pad"))
+        self.label_18.setText(_translate("MainWindow", "Extra Equipment"))
         self.cBoxAmmoType.setItemText(0, _translate("MainWindow", "Cartridge, 5.56-mm, Ball, M193"))
         self.cBoxAmmoType.setItemText(1, _translate("MainWindow", "Cartridge, 5.56-mm, Tracer, M196"))
         self.cBoxAmmoType.setItemText(2, _translate("MainWindow", "Cartridge, 5.56-mm, Dummy, M199"))
@@ -17049,31 +17433,38 @@ class AddArmPPE(object):
         self.cBoxArmPNo.activated.connect(self.setLabelText)
         self.cBoxArmPNo.activated.connect(self.resetSuccess)
         self.cBoxWeaponType.activated.connect(self.resetSuccess)
+        self.cBoxWeaponType.activated.connect(self.setCBoxItems)
         self.cBoxAmmoType.activated.connect(self.resetSuccess)
         self.cBoxBPJacket.activated.connect(self.resetSuccess)
-        self.edtRegNo.textEdited.connect(self.resetSuccess)
-        self.edtSpareMag.textEdited.connect(self.resetSuccess)
-        self.edtQuantity.textEdited.connect(self.resetSuccess)
-        self.edtSLPouch.textEdited.connect(self.resetSuccess)
+        self.edtRegNo.activated.connect(self.resetSuccess)
         self.edtAmmoConsumed.textEdited.connect(self.resetSuccess)
         self.btnAddArmPPE.clicked.connect(self.addArmPPEEntry)
     def setLabelText(self,cbIndex):
              self.lblArmName.setText(self.listArmName[cbIndex])
              self.lblArmRank.setText(self.listArmRank[cbIndex])
+    def setCBoxItems(self,cbIndex):
+        regNo=fillComboBoxData("SELECT registrationNo FROM Registrations Where gunName='"+self.cBoxWeaponType.currentText()+"'")
+        if(len(regNo)!=0):
+                self.edtRegNo.addItems(regNo)  
+        self.cBoxAmmoType.clear()
+        ammoType=fillComboBoxData("SELECT ammoType FROM AmmoTypes Where gunName='"+self.cBoxWeaponType.currentText()+"'")
+        if(len(ammoType)!=0):
+                self.cBoxAmmoType.addItems(ammoType)
+             
     def addArmPPEEntry(self):
 
             armPNo=self.cBoxArmPNo.currentText()
             armName=self.lblArmName.text()
             armRank=self.lblArmRank.text()
             armWeaponType=self.cBoxWeaponType.currentText()
-            armRegNo=self.edtRegNo.text()
-            armSpareMag=self.edtSpareMag.text()
+            armRegNo=self.edtRegNo.currentText()
+            armSpareMag=str(self.edtSpareMag.value())
             armAmmoType=self.cBoxAmmoType.currentText()
-            armQuantity=self.edtQuantity.text()
-            armSLPouch=self.edtSLPouch.text()
+            armQuantity=str(self.edtQuantity.value())
+            armSLPouch=str(self.edtSLPouch.value())
             armAmmoConsumed=self.edtAmmoConsumed.text()
             armBPJacket=self.cBoxBPJacket.currentText()
-            if(armRegNo!="" and armSpareMag!="" and armQuantity!="" and armSLPouch!="" and armAmmoConsumed!=""):
+            if(armRegNo!=""and armAmmoConsumed!=""):
                     queryString="INSERT INTO ArmPPEBook VALUES('"+armPNo+"',"+"'"+armName+"',"+"'"+armRank+"',"+"'"+armWeaponType+"',"+"'"+armRegNo+"',"+"'"+armSpareMag+"',"+"'"+armAmmoType+"',"+"'"+armQuantity+"',"+"'"+armSLPouch+"',"+"'"+armAmmoConsumed+"',"+"'"+armBPJacket+"')"
                     insertData(self,queryString)
                     if(self.lblDataEntrySuccessful.text()!="Details could not be saved!"):
@@ -17161,6 +17552,7 @@ class ViewPersonnelData(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -17203,6 +17595,7 @@ class ViewPersonnelData(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -17245,6 +17638,7 @@ class ViewPersonnelData(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -17288,6 +17682,7 @@ class ViewPersonnelData(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -17330,6 +17725,7 @@ class ViewPersonnelData(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -17372,6 +17768,7 @@ class ViewPersonnelData(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -17414,6 +17811,7 @@ class ViewPersonnelData(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -17456,6 +17854,7 @@ class ViewPersonnelData(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -17503,6 +17902,7 @@ class ViewPersonnelData(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -17545,6 +17945,7 @@ class ViewPersonnelData(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -17587,6 +17988,7 @@ class ViewPersonnelData(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -17629,6 +18031,7 @@ class ViewPersonnelData(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -17671,6 +18074,7 @@ class ViewPersonnelData(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -17713,6 +18117,7 @@ class ViewPersonnelData(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -17755,6 +18160,7 @@ class ViewPersonnelData(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         icon14 = QtGui.QIcon()
         icon14.addPixmap(QtGui.QPixmap(":/images/personnelData.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -17782,6 +18188,7 @@ class ViewPersonnelData(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -17825,8 +18232,9 @@ class ViewPersonnelData(object):
         font.setPointSize(11)
         self.btnAddPersonnelData.setFont(font)
         self.btnAddPersonnelData.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddPersonnelData.setStyleSheet("QPushButton\n"
+        self.btnAddPersonnelData.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -17867,6 +18275,7 @@ class ViewPersonnelData(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -17909,6 +18318,7 @@ class ViewPersonnelData(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -17951,6 +18361,7 @@ class ViewPersonnelData(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -18155,6 +18566,7 @@ class ViewImpKey(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -18197,6 +18609,7 @@ class ViewImpKey(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -18243,6 +18656,7 @@ class ViewImpKey(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -18286,6 +18700,7 @@ class ViewImpKey(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -18328,6 +18743,7 @@ class ViewImpKey(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -18370,6 +18786,7 @@ class ViewImpKey(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -18412,6 +18829,7 @@ class ViewImpKey(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -18454,6 +18872,7 @@ class ViewImpKey(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -18501,6 +18920,7 @@ class ViewImpKey(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -18543,6 +18963,7 @@ class ViewImpKey(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -18585,6 +19006,7 @@ class ViewImpKey(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -18627,6 +19049,7 @@ class ViewImpKey(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -18669,6 +19092,7 @@ class ViewImpKey(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -18711,6 +19135,7 @@ class ViewImpKey(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -18753,6 +19178,7 @@ class ViewImpKey(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         self.pushButton.setIcon(icon1)
         self.pushButton.setIconSize(QtCore.QSize(32, 32))
@@ -18778,6 +19204,7 @@ class ViewImpKey(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -18819,8 +19246,9 @@ class ViewImpKey(object):
         font.setPointSize(11)
         self.btnAddImpKey.setFont(font)
         self.btnAddImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddImpKey.setStyleSheet("QPushButton\n"
+        self.btnAddImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -18861,6 +19289,7 @@ class ViewImpKey(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -18903,6 +19332,7 @@ class ViewImpKey(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -18945,6 +19375,7 @@ class ViewImpKey(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -19150,6 +19581,7 @@ class ViewGenKey(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -19192,6 +19624,7 @@ class ViewGenKey(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -19234,6 +19667,7 @@ class ViewGenKey(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -19281,6 +19715,7 @@ class ViewGenKey(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -19323,6 +19758,7 @@ class ViewGenKey(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -19365,6 +19801,7 @@ class ViewGenKey(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -19407,6 +19844,7 @@ class ViewGenKey(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -19449,6 +19887,7 @@ class ViewGenKey(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -19496,6 +19935,7 @@ class ViewGenKey(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -19538,6 +19978,7 @@ class ViewGenKey(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -19580,6 +20021,7 @@ class ViewGenKey(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -19622,6 +20064,7 @@ class ViewGenKey(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -19664,6 +20107,7 @@ class ViewGenKey(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -19706,6 +20150,7 @@ class ViewGenKey(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -19748,6 +20193,7 @@ class ViewGenKey(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         self.pushButton.setIcon(icon2)
         self.pushButton.setIconSize(QtCore.QSize(32, 32))
@@ -19773,6 +20219,7 @@ class ViewGenKey(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -19814,8 +20261,9 @@ class ViewGenKey(object):
         font.setPointSize(11)
         self.btnAddGenKey.setFont(font)
         self.btnAddGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddGenKey.setStyleSheet("QPushButton\n"
+        self.btnAddGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -19856,6 +20304,7 @@ class ViewGenKey(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -19898,6 +20347,7 @@ class ViewGenKey(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -19940,6 +20390,7 @@ class ViewGenKey(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -20146,6 +20597,7 @@ class ViewVisitor(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -20188,6 +20640,7 @@ class ViewVisitor(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -20230,6 +20683,7 @@ class ViewVisitor(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -20273,6 +20727,7 @@ class ViewVisitor(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -20319,6 +20774,7 @@ class ViewVisitor(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -20361,6 +20817,7 @@ class ViewVisitor(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -20403,6 +20860,7 @@ class ViewVisitor(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -20445,6 +20903,7 @@ class ViewVisitor(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -20492,6 +20951,7 @@ class ViewVisitor(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -20534,6 +20994,7 @@ class ViewVisitor(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -20576,6 +21037,7 @@ class ViewVisitor(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -20618,6 +21080,7 @@ class ViewVisitor(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -20660,6 +21123,7 @@ class ViewVisitor(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -20702,6 +21166,7 @@ class ViewVisitor(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -20744,6 +21209,7 @@ class ViewVisitor(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         self.pushButton.setIcon(icon3)
         self.pushButton.setIconSize(QtCore.QSize(32, 32))
@@ -20769,6 +21235,7 @@ class ViewVisitor(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -20810,8 +21277,9 @@ class ViewVisitor(object):
         font.setPointSize(11)
         self.btnAddVisitor.setFont(font)
         self.btnAddVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddVisitor.setStyleSheet("QPushButton\n"
+        self.btnAddVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -20852,6 +21320,7 @@ class ViewVisitor(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -20894,6 +21363,7 @@ class ViewVisitor(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -20936,6 +21406,7 @@ class ViewVisitor(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -21140,6 +21611,7 @@ class ViewTransport(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -21182,6 +21654,7 @@ class ViewTransport(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -21224,6 +21697,7 @@ class ViewTransport(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -21267,6 +21741,7 @@ class ViewTransport(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -21309,6 +21784,7 @@ class ViewTransport(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -21356,6 +21832,7 @@ class ViewTransport(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -21398,6 +21875,7 @@ class ViewTransport(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -21440,6 +21918,7 @@ class ViewTransport(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -21487,6 +21966,7 @@ class ViewTransport(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -21529,6 +22009,7 @@ class ViewTransport(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -21571,6 +22052,7 @@ class ViewTransport(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -21613,6 +22095,7 @@ class ViewTransport(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -21655,6 +22138,7 @@ class ViewTransport(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -21697,6 +22181,7 @@ class ViewTransport(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -21739,6 +22224,7 @@ class ViewTransport(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         self.pushButton.setIcon(icon4)
         self.pushButton.setIconSize(QtCore.QSize(32, 32))
@@ -21764,6 +22250,7 @@ class ViewTransport(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -21805,8 +22292,9 @@ class ViewTransport(object):
         font.setPointSize(11)
         self.btnAddTransport.setFont(font)
         self.btnAddTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddTransport.setStyleSheet("QPushButton\n"
+        self.btnAddTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -21847,6 +22335,7 @@ class ViewTransport(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -21889,6 +22378,7 @@ class ViewTransport(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -21931,6 +22421,7 @@ class ViewTransport(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -22135,6 +22626,7 @@ class ViewGangway(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -22177,6 +22669,7 @@ class ViewGangway(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -22219,6 +22712,7 @@ class ViewGangway(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -22262,6 +22756,7 @@ class ViewGangway(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -22304,6 +22799,7 @@ class ViewGangway(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -22346,6 +22842,7 @@ class ViewGangway(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -22393,6 +22890,7 @@ class ViewGangway(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -22435,6 +22933,7 @@ class ViewGangway(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -22482,6 +22981,7 @@ class ViewGangway(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -22524,6 +23024,7 @@ class ViewGangway(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -22566,6 +23067,7 @@ class ViewGangway(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -22608,6 +23110,7 @@ class ViewGangway(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -22650,6 +23153,7 @@ class ViewGangway(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -22692,6 +23196,7 @@ class ViewGangway(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -22734,6 +23239,7 @@ class ViewGangway(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         self.pushButton.setIcon(icon5)
         self.pushButton.setIconSize(QtCore.QSize(32, 32))
@@ -22759,6 +23265,7 @@ class ViewGangway(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -22800,8 +23307,9 @@ class ViewGangway(object):
         font.setPointSize(11)
         self.btnAddGangway.setFont(font)
         self.btnAddGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddGangway.setStyleSheet("QPushButton\n"
+        self.btnAddGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -22842,6 +23350,7 @@ class ViewGangway(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -22884,6 +23393,7 @@ class ViewGangway(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -22926,6 +23436,7 @@ class ViewGangway(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -23130,6 +23641,7 @@ class ViewDuty(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -23172,6 +23684,7 @@ class ViewDuty(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -23214,6 +23727,7 @@ class ViewDuty(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -23257,6 +23771,7 @@ class ViewDuty(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -23300,6 +23815,7 @@ class ViewDuty(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -23342,6 +23858,7 @@ class ViewDuty(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -23384,6 +23901,7 @@ class ViewDuty(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -23430,6 +23948,7 @@ class ViewDuty(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -23477,6 +23996,7 @@ class ViewDuty(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -23519,6 +24039,7 @@ class ViewDuty(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -23561,6 +24082,7 @@ class ViewDuty(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -23603,6 +24125,7 @@ class ViewDuty(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -23645,6 +24168,7 @@ class ViewDuty(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -23687,6 +24211,7 @@ class ViewDuty(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -23729,6 +24254,7 @@ class ViewDuty(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         self.pushButton.setIcon(icon6)
         self.pushButton.setIconSize(QtCore.QSize(32, 32))
@@ -23754,6 +24280,7 @@ class ViewDuty(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -23795,8 +24322,9 @@ class ViewDuty(object):
         font.setPointSize(11)
         self.btnAddDuty.setFont(font)
         self.btnAddDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddDuty.setStyleSheet("QPushButton\n"
+        self.btnAddDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -23837,6 +24365,7 @@ class ViewDuty(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -23879,6 +24408,7 @@ class ViewDuty(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -23921,6 +24451,7 @@ class ViewDuty(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -24125,6 +24656,7 @@ class ViewPunishment(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -24172,6 +24704,7 @@ class ViewPunishment(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -24214,6 +24747,7 @@ class ViewPunishment(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -24257,6 +24791,7 @@ class ViewPunishment(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -24299,6 +24834,7 @@ class ViewPunishment(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -24341,6 +24877,7 @@ class ViewPunishment(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -24383,6 +24920,7 @@ class ViewPunishment(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -24425,6 +24963,7 @@ class ViewPunishment(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -24472,6 +25011,7 @@ class ViewPunishment(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -24514,6 +25054,7 @@ class ViewPunishment(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -24556,6 +25097,7 @@ class ViewPunishment(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -24598,6 +25140,7 @@ class ViewPunishment(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -24640,6 +25183,7 @@ class ViewPunishment(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -24682,6 +25226,7 @@ class ViewPunishment(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -24724,6 +25269,7 @@ class ViewPunishment(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         self.pushButton.setIcon(icon)
         self.pushButton.setIconSize(QtCore.QSize(32, 32))
@@ -24749,6 +25295,7 @@ class ViewPunishment(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -24790,8 +25337,9 @@ class ViewPunishment(object):
         font.setPointSize(11)
         self.btnAddPunishment.setFont(font)
         self.btnAddPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddPunishment.setStyleSheet("QPushButton\n"
+        self.btnAddPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -24832,6 +25380,7 @@ class ViewPunishment(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -24874,6 +25423,7 @@ class ViewPunishment(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -24916,6 +25466,7 @@ class ViewPunishment(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -24946,7 +25497,7 @@ class ViewPunishment(object):
         self.btnLogout.setFlat(False)
         self.btnLogout.setObjectName("btnLogout")
         self.tblDetails = QtWidgets.QTableView(self.frame)
-        self.tblDetails.setGeometry(QtCore.QRect(326, 120, 1010, 500))
+        self.tblDetails.setGeometry(QtCore.QRect(326, 270, 1020, 350))
         font = QtGui.QFont()
         font.setPointSize(11)
         self.tblDetails.setFont(font)
@@ -24956,6 +25507,101 @@ class ViewPunishment(object):
         self.tblDetails.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tblDetails.setTextElideMode(QtCore.Qt.ElideMiddle)
         self.tblDetails.setObjectName("tblDetails")
+        self.label_9 = QtWidgets.QLabel(self.frame)
+        self.label_9.setGeometry(QtCore.QRect(331, 138, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_9.setFont(font)
+        self.label_9.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_9.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_9.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_9.setObjectName("label_9")
+        self.label_10 = QtWidgets.QLabel(self.frame)
+        self.label_10.setGeometry(QtCore.QRect(331, 182, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_10.setFont(font)
+        self.label_10.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_10.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_10.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_10.setObjectName("label_10")
+        self.label_11 = QtWidgets.QLabel(self.frame)
+        self.label_11.setGeometry(QtCore.QRect(331, 226, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_11.setFont(font)
+        self.label_11.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_11.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_11.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_11.setObjectName("label_11")
+        self.lblPunishName = QtWidgets.QLabel(self.frame)
+        self.lblPunishName.setGeometry(QtCore.QRect(522, 182, 345, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblPunishName.setFont(font)
+        self.lblPunishName.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblPunishName.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblPunishName.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblPunishName.setObjectName("lblPunishName")
+        self.lblPunishRank = QtWidgets.QLabel(self.frame)
+        self.lblPunishRank.setGeometry(QtCore.QRect(522, 226, 345, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblPunishRank.setFont(font)
+        self.lblPunishRank.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblPunishRank.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblPunishRank.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblPunishRank.setObjectName("lblPunishRank")
+        self.cBoxPunishPNo = QtWidgets.QComboBox(self.frame)
+        self.cBoxPunishPNo.setGeometry(QtCore.QRect(522, 140, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        font.setKerning(True)
+        self.cBoxPunishPNo.setFont(font)
+        self.cBoxPunishPNo.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.cBoxPunishPNo.setStyleSheet("QComboBox{ border-width: 1px;\n"
+" border-color: #aaa;\n"
+" border-style: solid;\n"
+"border-radius:6; \n"
+"}\n"
+"\n"
+"QComboBox::drop-down:button{\n"
+"background-color:transparent;\n"
+"}\n"
+"QComboBox::down-arrow {\n"
+" \n"
+"    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);\n"
+"    width: 25px;\n"
+"    height: 9px;\n"
+"}\n"
+"QComboBox:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QComboBox:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"  }\n"
+"")
+        self.cBoxPunishPNo.setEditable(False)
+        self.cBoxPunishPNo.setFrame(True)
+        self.cBoxPunishPNo.setObjectName("cBoxPunishPNo")
         self.label_2.raise_()
         self.label.raise_()
         self.navViewPunishment.raise_()
@@ -24981,6 +25627,12 @@ class ViewPunishment(object):
         self.btnAddPunishment.raise_()
         self.navViewStatePersonnel.raise_()
         self.tblDetails.raise_()
+        self.label_11.raise_()
+        self.label_9.raise_()
+        self.lblPunishName.raise_()
+        self.lblPunishRank.raise_()
+        self.label_10.raise_()
+        self.cBoxPunishPNo.raise_()
         self.label_13 = QtWidgets.QLabel(self.centralwidget)
         self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
         self.label_13.setStyleSheet("background-color:#A0A0A0;")
@@ -25027,7 +25679,13 @@ class ViewPunishment(object):
         self.btnAddPunishment.setText(_translate("MainWindow", "Add New Punishment Entry"))
         self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.label_6.setText(_translate("MainWindow", "View Punishment Details"))
+        self.label_11.setText(_translate("MainWindow", "Rank/ Rate:"))
+        self.label_9.setText(_translate("MainWindow", "P.No/ O.No"))
+        self.lblPunishName.setText(_translate("MainWindow", "Name"))
+        self.lblPunishRank.setText(_translate("MainWindow", "Name"))
+        self.label_10.setText(_translate("MainWindow", "Name:"))
 #----------------------------------------backend for View Punishment Interface--------------------------------------------
+        resetViewPunishGUI(self)
         self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
         self.navViewImpKey.clicked.connect(self.navViewImportantKeyMethod)
         self.navViewGenKey.clicked.connect(self.navViewGeneralKeyMethod)
@@ -25045,6 +25703,14 @@ class ViewPunishment(object):
         self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
         self.navViewMOB.clicked.connect(self.navMOBMethod)
         self.btnLogout.clicked.connect(self.navLogoutMethod)
+        self.cBoxPunishPNo.activated.connect(self.setLabelText)
+        listPunishName=[]
+        listPunishRank=[]
+    def setLabelText(self,cbIndex):
+        self.lblPunishName.setText(self.listPunishName[cbIndex])
+        self.lblPunishRank.setText(self.listPunishRank[cbIndex])
+        viewQuerryString="SELECT Punishment,[From Date],[To Date],[05:00],[14:00],[16:00],[21:00],Remarks FROM PunishmentBook where [P No./ O No.]='"+self.cBoxPunishPNo.currentText()+"'"
+        loadViewTableData(self,viewQuerryString,8)
     def navViewPersonnelMethod(self):
              w.change_view(1)    
     def navViewImportantKeyMethod(self):
@@ -25120,6 +25786,7 @@ class ViewOOD(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -25162,6 +25829,7 @@ class ViewOOD(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -25204,6 +25872,7 @@ class ViewOOD(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -25247,6 +25916,7 @@ class ViewOOD(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -25290,6 +25960,7 @@ class ViewOOD(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -25332,6 +26003,7 @@ class ViewOOD(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -25374,6 +26046,7 @@ class ViewOOD(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -25416,6 +26089,7 @@ class ViewOOD(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -25463,6 +26137,7 @@ class ViewOOD(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -25505,6 +26180,7 @@ class ViewOOD(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -25547,6 +26223,7 @@ class ViewOOD(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -25589,6 +26266,7 @@ class ViewOOD(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -25631,6 +26309,7 @@ class ViewOOD(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -25677,6 +26356,7 @@ class ViewOOD(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -25719,6 +26399,7 @@ class ViewOOD(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         self.pushButton.setIcon(icon12)
         self.pushButton.setIconSize(QtCore.QSize(32, 32))
@@ -25744,6 +26425,7 @@ class ViewOOD(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -25785,8 +26467,9 @@ class ViewOOD(object):
         font.setPointSize(11)
         self.btnAddOOD.setFont(font)
         self.btnAddOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddOOD.setStyleSheet("QPushButton\n"
+        self.btnAddOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -25827,6 +26510,7 @@ class ViewOOD(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -25869,6 +26553,7 @@ class ViewOOD(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -25911,6 +26596,7 @@ class ViewOOD(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -26115,6 +26801,7 @@ class ViewNightRound(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -26157,6 +26844,7 @@ class ViewNightRound(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -26199,6 +26887,7 @@ class ViewNightRound(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -26242,6 +26931,7 @@ class ViewNightRound(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -26284,6 +26974,7 @@ class ViewNightRound(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -26326,6 +27017,7 @@ class ViewNightRound(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -26368,6 +27060,7 @@ class ViewNightRound(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -26410,6 +27103,7 @@ class ViewNightRound(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -26462,6 +27156,7 @@ class ViewNightRound(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -26504,6 +27199,7 @@ class ViewNightRound(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -26546,6 +27242,7 @@ class ViewNightRound(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -26588,6 +27285,7 @@ class ViewNightRound(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -26630,6 +27328,7 @@ class ViewNightRound(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -26672,6 +27371,7 @@ class ViewNightRound(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -26714,6 +27414,7 @@ class ViewNightRound(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         self.pushButton.setIcon(icon7)
         self.pushButton.setIconSize(QtCore.QSize(32, 32))
@@ -26739,6 +27440,7 @@ class ViewNightRound(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -26780,8 +27482,9 @@ class ViewNightRound(object):
         font.setPointSize(11)
         self.btnAddNight.setFont(font)
         self.btnAddNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddNight.setStyleSheet("QPushButton\n"
+        self.btnAddNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -26822,6 +27525,7 @@ class ViewNightRound(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -26864,6 +27568,7 @@ class ViewNightRound(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -26906,6 +27611,7 @@ class ViewNightRound(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -27110,6 +27816,7 @@ class ViewArmPPE(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -27152,6 +27859,7 @@ class ViewArmPPE(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -27194,6 +27902,7 @@ class ViewArmPPE(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -27237,6 +27946,7 @@ class ViewArmPPE(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -27279,6 +27989,7 @@ class ViewArmPPE(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -27321,6 +28032,7 @@ class ViewArmPPE(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -27363,6 +28075,7 @@ class ViewArmPPE(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -27405,6 +28118,7 @@ class ViewArmPPE(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -27452,6 +28166,7 @@ class ViewArmPPE(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -27494,6 +28209,7 @@ class ViewArmPPE(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -27536,6 +28252,7 @@ class ViewArmPPE(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -27578,6 +28295,7 @@ class ViewArmPPE(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -27624,6 +28342,7 @@ class ViewArmPPE(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -27666,6 +28385,7 @@ class ViewArmPPE(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -27708,6 +28428,7 @@ class ViewArmPPE(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         self.pushButton.setIcon(icon11)
         self.pushButton.setIconSize(QtCore.QSize(32, 32))
@@ -27733,6 +28454,7 @@ class ViewArmPPE(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -27774,8 +28496,9 @@ class ViewArmPPE(object):
         font.setPointSize(11)
         self.btnAddArmPPE.setFont(font)
         self.btnAddArmPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddArmPPE.setStyleSheet("QPushButton\n"
+        self.btnAddArmPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -27816,6 +28539,7 @@ class ViewArmPPE(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -27858,6 +28582,7 @@ class ViewArmPPE(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -27900,6 +28625,7 @@ class ViewArmPPE(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -28102,8 +28828,9 @@ class ViewState(object):
         font.setPointSize(11)
         self.navManageState.setFont(font)
         self.navManageState.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navManageState.setStyleSheet("QPushButton\n"
+        self.navManageState.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -28144,6 +28871,7 @@ class ViewState(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -28186,6 +28914,7 @@ class ViewState(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -28228,6 +28957,7 @@ class ViewState(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -28272,6 +29002,7 @@ class ViewState(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -28314,6 +29045,7 @@ class ViewState(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -28356,6 +29088,7 @@ class ViewState(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -28398,6 +29131,7 @@ class ViewState(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -28440,6 +29174,7 @@ class ViewState(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -28487,6 +29222,7 @@ class ViewState(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -28529,6 +29265,7 @@ class ViewState(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -28571,6 +29308,7 @@ class ViewState(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -28613,6 +29351,7 @@ class ViewState(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -28655,6 +29394,7 @@ class ViewState(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -28697,6 +29437,7 @@ class ViewState(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -28739,6 +29480,7 @@ class ViewState(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         icon15 = QtGui.QIcon()
         icon15.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -28766,6 +29508,7 @@ class ViewState(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -28809,6 +29552,7 @@ class ViewState(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -28849,6 +29593,7 @@ class ViewState(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -28891,6 +29636,7 @@ class ViewState(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -29588,13 +30334,13 @@ class ManageState(object):
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
         self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
-        self.label.setStyleSheet("background-image: url(null);\n"
+        self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
         self.label.setObjectName("label")
         self.label_2 = QtWidgets.QLabel(self.frame)
         self.label_2.setGeometry(QtCore.QRect(0, 0, 1366, 44))
-        self.label_2.setStyleSheet("background-image: url(null);\n"
+        self.label_2.setStyleSheet("\n"
 "background-color:#222222;")
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
@@ -29607,6 +30353,7 @@ class ManageState(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -29649,6 +30396,7 @@ class ManageState(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -29691,6 +30439,7 @@ class ManageState(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -29734,6 +30483,7 @@ class ManageState(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -29777,6 +30527,7 @@ class ManageState(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -29819,6 +30570,7 @@ class ManageState(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -29861,6 +30613,7 @@ class ManageState(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -29903,6 +30656,7 @@ class ManageState(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -29950,6 +30704,7 @@ class ManageState(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -29992,6 +30747,7 @@ class ManageState(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -30034,6 +30790,7 @@ class ManageState(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -30076,6 +30833,7 @@ class ManageState(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -30118,6 +30876,7 @@ class ManageState(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -30160,6 +30919,7 @@ class ManageState(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -30202,6 +30962,7 @@ class ManageState(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         icon14 = QtGui.QIcon()
         icon14.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -30229,6 +30990,7 @@ class ManageState(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -30270,8 +31032,9 @@ class ManageState(object):
         font.setPointSize(11)
         self.btnSaveChanges.setFont(font)
         self.btnSaveChanges.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnSaveChanges.setStyleSheet("QPushButton\n"
+        self.btnSaveChanges.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -30312,6 +31075,7 @@ class ManageState(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -30356,6 +31120,7 @@ class ManageState(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -30398,6 +31163,7 @@ class ManageState(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -30434,8 +31200,9 @@ class ManageState(object):
         font.setPointSize(11)
         self.navViewArmoryDetails.setFont(font)
         self.navViewArmoryDetails.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewArmoryDetails.setStyleSheet("QPushButton\n"
+        self.navViewArmoryDetails.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -30659,13 +31426,13 @@ class ManageCall(object):
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
         self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
-        self.label.setStyleSheet("background-image: url(null);\n"
+        self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
         self.label.setObjectName("label")
         self.label_2 = QtWidgets.QLabel(self.frame)
         self.label_2.setGeometry(QtCore.QRect(0, 0, 1366, 44))
-        self.label_2.setStyleSheet("background-image: url(null);\n"
+        self.label_2.setStyleSheet("\n"
 "background-color:#222222;")
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
@@ -30678,6 +31445,7 @@ class ManageCall(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -30720,6 +31488,7 @@ class ManageCall(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -30762,6 +31531,7 @@ class ManageCall(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -30805,6 +31575,7 @@ class ManageCall(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -30848,6 +31619,7 @@ class ManageCall(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -30890,6 +31662,7 @@ class ManageCall(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -30932,6 +31705,7 @@ class ManageCall(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -30974,6 +31748,7 @@ class ManageCall(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -31021,6 +31796,7 @@ class ManageCall(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -31063,6 +31839,7 @@ class ManageCall(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -31105,6 +31882,7 @@ class ManageCall(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -31147,6 +31925,7 @@ class ManageCall(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -31189,6 +31968,7 @@ class ManageCall(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -31231,6 +32011,7 @@ class ManageCall(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -31278,6 +32059,7 @@ class ManageCall(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         self.pushButton.setIcon(icon13)
         self.pushButton.setIconSize(QtCore.QSize(32, 32))
@@ -31303,6 +32085,7 @@ class ManageCall(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -31346,6 +32129,7 @@ class ManageCall(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -31388,6 +32172,7 @@ class ManageCall(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -31430,6 +32215,7 @@ class ManageCall(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -31611,7 +32397,7 @@ class ManageCallWidget(QtWidgets.QMainWindow,ManageCall ):
         super(ManageCallWidget, self).__init__(parent)
         self.setup_ManageCall(self)
 
-############################################################# Personnel Locaton Interface ######################################################################
+############################################################# Personnel Location Interface ######################################################################
 class PersonnelLocation(object):
     def setup_PersonnelLocation(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -31626,13 +32412,13 @@ class PersonnelLocation(object):
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
         self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
-        self.label.setStyleSheet("background-image: url(null);\n"
+        self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
         self.label.setObjectName("label")
         self.label_2 = QtWidgets.QLabel(self.frame)
         self.label_2.setGeometry(QtCore.QRect(0, 0, 1366, 44))
-        self.label_2.setStyleSheet("background-image: url(null);\n"
+        self.label_2.setStyleSheet("\n"
 "background-color:#222222;")
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
@@ -31645,6 +32431,7 @@ class PersonnelLocation(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -31687,6 +32474,7 @@ class PersonnelLocation(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -31729,6 +32517,7 @@ class PersonnelLocation(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -31772,6 +32561,7 @@ class PersonnelLocation(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -31814,6 +32604,7 @@ class PersonnelLocation(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -31856,6 +32647,7 @@ class PersonnelLocation(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -31898,6 +32690,7 @@ class PersonnelLocation(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -31940,6 +32733,7 @@ class PersonnelLocation(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -31987,6 +32781,7 @@ class PersonnelLocation(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -32029,6 +32824,7 @@ class PersonnelLocation(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -32076,6 +32872,7 @@ class PersonnelLocation(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -32118,6 +32915,7 @@ class PersonnelLocation(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -32160,6 +32958,7 @@ class PersonnelLocation(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -32202,6 +33001,7 @@ class PersonnelLocation(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -32244,6 +33044,7 @@ class PersonnelLocation(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         self.pushButton.setIcon(icon9)
         self.pushButton.setIconSize(QtCore.QSize(32, 32))
@@ -32269,6 +33070,7 @@ class PersonnelLocation(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -32312,6 +33114,7 @@ class PersonnelLocation(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -32354,6 +33157,7 @@ class PersonnelLocation(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -32396,6 +33200,7 @@ class PersonnelLocation(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -32452,8 +33257,9 @@ class PersonnelLocation(object):
         font.setPointSize(11)
         self.btnZoomIn.setFont(font)
         self.btnZoomIn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnZoomIn.setStyleSheet("QPushButton\n"
+        self.btnZoomIn.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #000000;\n"
 "    background-color:#ffffff;\n"
 "    border-width: 1px;\n"
@@ -32492,8 +33298,9 @@ class PersonnelLocation(object):
         font.setPointSize(11)
         self.btnZoomOut.setFont(font)
         self.btnZoomOut.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnZoomOut.setStyleSheet("QPushButton\n"
+        self.btnZoomOut.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #000000;\n"
 "    background-color:#ffffff;\n"
 "    border-width: 1px;\n"
@@ -32532,8 +33339,9 @@ class PersonnelLocation(object):
         font.setPointSize(11)
         self.btnMoveRight.setFont(font)
         self.btnMoveRight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMoveRight.setStyleSheet("QPushButton\n"
+        self.btnMoveRight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #000000;\n"
 "    background-color:#ffffff;\n"
 "    border-width: 1px;\n"
@@ -32572,8 +33380,9 @@ class PersonnelLocation(object):
         font.setPointSize(11)
         self.btnMoveLeft.setFont(font)
         self.btnMoveLeft.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMoveLeft.setStyleSheet("QPushButton\n"
+        self.btnMoveLeft.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #000000;\n"
 "    background-color:#ffffff;\n"
 "    border-width: 1px;\n"
@@ -32612,8 +33421,9 @@ class PersonnelLocation(object):
         font.setPointSize(11)
         self.btnMarker2Room2.setFont(font)
         self.btnMarker2Room2.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker2Room2.setStyleSheet("QPushButton\n"
+        self.btnMarker2Room2.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -32631,8 +33441,9 @@ class PersonnelLocation(object):
         font.setPointSize(11)
         self.btnMarker1Room2.setFont(font)
         self.btnMarker1Room2.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker1Room2.setStyleSheet("QPushButton\n"
+        self.btnMarker1Room2.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -32648,8 +33459,9 @@ class PersonnelLocation(object):
         font.setPointSize(11)
         self.btnMarker3Room1.setFont(font)
         self.btnMarker3Room1.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker3Room1.setStyleSheet("QPushButton\n"
+        self.btnMarker3Room1.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -32667,8 +33479,9 @@ class PersonnelLocation(object):
         font.setPointSize(11)
         self.btnMarker2Room1.setFont(font)
         self.btnMarker2Room1.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker2Room1.setStyleSheet("QPushButton\n"
+        self.btnMarker2Room1.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -32686,8 +33499,9 @@ class PersonnelLocation(object):
         font.setPointSize(11)
         self.btnMarker1Room3.setFont(font)
         self.btnMarker1Room3.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker1Room3.setStyleSheet("QPushButton\n"
+        self.btnMarker1Room3.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -32706,8 +33520,9 @@ class PersonnelLocation(object):
         self.btnMarker2Room3.setFont(font)
         self.btnMarker2Room3.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnMarker2Room3.setLayoutDirection(QtCore.Qt.RightToLeft)
-        self.btnMarker2Room3.setStyleSheet("QPushButton\n"
+        self.btnMarker2Room3.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -32723,8 +33538,9 @@ class PersonnelLocation(object):
         font.setPointSize(11)
         self.btnMarker1Room1.setFont(font)
         self.btnMarker1Room1.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker1Room1.setStyleSheet("QPushButton\n"
+        self.btnMarker1Room1.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -32742,8 +33558,9 @@ class PersonnelLocation(object):
         font.setPointSize(11)
         self.btnMarker3Room3.setFont(font)
         self.btnMarker3Room3.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker3Room3.setStyleSheet("QPushButton\n"
+        self.btnMarker3Room3.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -32761,8 +33578,9 @@ class PersonnelLocation(object):
         font.setPointSize(11)
         self.btnMarker3Room2.setFont(font)
         self.btnMarker3Room2.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker3Room2.setStyleSheet("QPushButton\n"
+        self.btnMarker3Room2.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -32949,13 +33767,13 @@ class PersonnelManagement(object):
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
         self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
-        self.label.setStyleSheet("background-image: url(null);\n"
+        self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
         self.label.setObjectName("label")
         self.label_2 = QtWidgets.QLabel(self.frame)
         self.label_2.setGeometry(QtCore.QRect(0, 0, 1366, 44))
-        self.label_2.setStyleSheet("background-image: url(null);\n"
+        self.label_2.setStyleSheet("\n"
 "background-color:#222222;")
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
@@ -32968,6 +33786,7 @@ class PersonnelManagement(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -33010,6 +33829,7 @@ class PersonnelManagement(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -33052,6 +33872,7 @@ class PersonnelManagement(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -33095,6 +33916,7 @@ class PersonnelManagement(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -33137,6 +33959,7 @@ class PersonnelManagement(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -33179,6 +34002,7 @@ class PersonnelManagement(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -33221,6 +34045,7 @@ class PersonnelManagement(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -33263,6 +34088,7 @@ class PersonnelManagement(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -33310,6 +34136,7 @@ class PersonnelManagement(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -33352,6 +34179,7 @@ class PersonnelManagement(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -33395,6 +34223,7 @@ class PersonnelManagement(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -33442,6 +34271,7 @@ class PersonnelManagement(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -33484,6 +34314,7 @@ class PersonnelManagement(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -33526,6 +34357,7 @@ class PersonnelManagement(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -33568,6 +34400,7 @@ class PersonnelManagement(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         self.pushButton.setIcon(icon10)
         self.pushButton.setIconSize(QtCore.QSize(32, 32))
@@ -33593,6 +34426,7 @@ class PersonnelManagement(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -33636,6 +34470,7 @@ class PersonnelManagement(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -33678,6 +34513,7 @@ class PersonnelManagement(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -33720,6 +34556,7 @@ class PersonnelManagement(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -33776,8 +34613,9 @@ class PersonnelManagement(object):
         font.setPointSize(11)
         self.btnZoomIn.setFont(font)
         self.btnZoomIn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnZoomIn.setStyleSheet("QPushButton\n"
+        self.btnZoomIn.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #000000;\n"
 "    background-color:#ffffff;\n"
 "    border-width: 1px;\n"
@@ -33816,8 +34654,9 @@ class PersonnelManagement(object):
         font.setPointSize(11)
         self.btnZoomOut.setFont(font)
         self.btnZoomOut.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnZoomOut.setStyleSheet("QPushButton\n"
+        self.btnZoomOut.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #000000;\n"
 "    background-color:#ffffff;\n"
 "    border-width: 1px;\n"
@@ -33856,8 +34695,9 @@ class PersonnelManagement(object):
         font.setPointSize(11)
         self.btnMoveRight.setFont(font)
         self.btnMoveRight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMoveRight.setStyleSheet("QPushButton\n"
+        self.btnMoveRight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #000000;\n"
 "    background-color:#ffffff;\n"
 "    border-width: 1px;\n"
@@ -33896,8 +34736,9 @@ class PersonnelManagement(object):
         font.setPointSize(11)
         self.btnMoveLeft.setFont(font)
         self.btnMoveLeft.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMoveLeft.setStyleSheet("QPushButton\n"
+        self.btnMoveLeft.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #000000;\n"
 "    background-color:#ffffff;\n"
 "    border-width: 1px;\n"
@@ -33936,8 +34777,9 @@ class PersonnelManagement(object):
         font.setPointSize(11)
         self.btnMarker2Room2.setFont(font)
         self.btnMarker2Room2.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker2Room2.setStyleSheet("QPushButton\n"
+        self.btnMarker2Room2.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -33955,8 +34797,9 @@ class PersonnelManagement(object):
         font.setPointSize(11)
         self.btnMarker1Room2.setFont(font)
         self.btnMarker1Room2.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker1Room2.setStyleSheet("QPushButton\n"
+        self.btnMarker1Room2.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -33972,8 +34815,9 @@ class PersonnelManagement(object):
         font.setPointSize(11)
         self.btnMarker3Room1.setFont(font)
         self.btnMarker3Room1.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker3Room1.setStyleSheet("QPushButton\n"
+        self.btnMarker3Room1.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -33991,8 +34835,9 @@ class PersonnelManagement(object):
         font.setPointSize(11)
         self.btnMarker2Room1.setFont(font)
         self.btnMarker2Room1.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker2Room1.setStyleSheet("QPushButton\n"
+        self.btnMarker2Room1.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -34010,8 +34855,9 @@ class PersonnelManagement(object):
         font.setPointSize(11)
         self.btnMarker1Room3.setFont(font)
         self.btnMarker1Room3.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker1Room3.setStyleSheet("QPushButton\n"
+        self.btnMarker1Room3.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -34030,8 +34876,9 @@ class PersonnelManagement(object):
         self.btnMarker2Room3.setFont(font)
         self.btnMarker2Room3.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnMarker2Room3.setLayoutDirection(QtCore.Qt.RightToLeft)
-        self.btnMarker2Room3.setStyleSheet("QPushButton\n"
+        self.btnMarker2Room3.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -34047,8 +34894,9 @@ class PersonnelManagement(object):
         font.setPointSize(11)
         self.btnMarker1Room1.setFont(font)
         self.btnMarker1Room1.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker1Room1.setStyleSheet("QPushButton\n"
+        self.btnMarker1Room1.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -34066,8 +34914,9 @@ class PersonnelManagement(object):
         font.setPointSize(11)
         self.btnMarker3Room3.setFont(font)
         self.btnMarker3Room3.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker3Room3.setStyleSheet("QPushButton\n"
+        self.btnMarker3Room3.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -34085,8 +34934,9 @@ class PersonnelManagement(object):
         font.setPointSize(11)
         self.btnMarker3Room2.setFont(font)
         self.btnMarker3Room2.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker3Room2.setStyleSheet("QPushButton\n"
+        self.btnMarker3Room2.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -34136,8 +34986,9 @@ class PersonnelManagement(object):
         font.setPointSize(11)
         self.btnCallAll.setFont(font)
         self.btnCallAll.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnCallAll.setStyleSheet("QPushButton\n"
+        self.btnCallAll.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -34194,11 +35045,11 @@ class PersonnelManagement(object):
 "}\n"
 "QComboBox:hover{\n"
 "     border:1px solid #000;    \n"
-"     transition:.3s;\n"
+
 "}\n"
 "  QComboBox:focus{\n"
 "    border-color:dodgerBlue;\n"
-"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+
 "  }\n"
 "")
         self.cBoxAction.setEditable(False)
@@ -34231,11 +35082,11 @@ class PersonnelManagement(object):
 "}\n"
 "QComboBox:hover{\n"
 "     border:1px solid #000;    \n"
-"     transition:.3s;\n"
+
 "}\n"
 "  QComboBox:focus{\n"
 "    border-color:dodgerBlue;\n"
-"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+
 "  }\n"
 "")
         self.cBoxRoom.setEditable(False)
@@ -34395,13 +35246,13 @@ class MOb(object):
         self.frame.setObjectName("frame")
         self.label = QtWidgets.QLabel(self.frame)
         self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
-        self.label.setStyleSheet("background-image: url(null);\n"
+        self.label.setStyleSheet("\n"
 "background-color:#2F3C71;")
         self.label.setText("")
         self.label.setObjectName("label")
         self.label_2 = QtWidgets.QLabel(self.frame)
         self.label_2.setGeometry(QtCore.QRect(0, 0, 1366, 44))
-        self.label_2.setStyleSheet("background-image: url(null);\n"
+        self.label_2.setStyleSheet("\n"
 "background-color:#222222;")
         self.label_2.setText("")
         self.label_2.setObjectName("label_2")
@@ -34414,6 +35265,7 @@ class MOb(object):
         self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPunishment.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -34456,6 +35308,7 @@ class MOb(object):
         self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewImpKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -34498,6 +35351,7 @@ class MOb(object):
         self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGenKey.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -34541,6 +35395,7 @@ class MOb(object):
         self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewVisitor.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -34583,6 +35438,7 @@ class MOb(object):
         self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewTransport.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -34625,6 +35481,7 @@ class MOb(object):
         self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewGangway.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -34667,6 +35524,7 @@ class MOb(object):
         self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewDuty.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -34709,6 +35567,7 @@ class MOb(object):
         self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewNight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -34756,6 +35615,7 @@ class MOb(object):
         self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -34802,6 +35662,7 @@ class MOb(object):
         self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewLocation.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -34845,6 +35706,7 @@ class MOb(object):
         self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewManagement.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -34887,6 +35749,7 @@ class MOb(object):
         self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPPE.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -34929,6 +35792,7 @@ class MOb(object):
         self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewOOD.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -34971,6 +35835,7 @@ class MOb(object):
         self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewCMS.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -35013,6 +35878,7 @@ class MOb(object):
         self.pushButton.setFont(font)
         self.pushButton.setStyleSheet(" text-align: right;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#222222;")
         self.pushButton.setIcon(icon8)
         self.pushButton.setIconSize(QtCore.QSize(32, 32))
@@ -35038,6 +35904,7 @@ class MOb(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -35081,6 +35948,7 @@ class MOb(object):
         self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -35123,6 +35991,7 @@ class MOb(object):
         self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewStateArmory.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
 "    background-color:#2F3C71;\n"
@@ -35165,6 +36034,7 @@ class MOb(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -35221,8 +36091,9 @@ class MOb(object):
         font.setPointSize(11)
         self.btnZoomIn.setFont(font)
         self.btnZoomIn.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnZoomIn.setStyleSheet("QPushButton\n"
+        self.btnZoomIn.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #000000;\n"
 "    background-color:#ffffff;\n"
 "    border-width: 1px;\n"
@@ -35261,8 +36132,9 @@ class MOb(object):
         font.setPointSize(11)
         self.btnZoomOut.setFont(font)
         self.btnZoomOut.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnZoomOut.setStyleSheet("QPushButton\n"
+        self.btnZoomOut.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #000000;\n"
 "    background-color:#ffffff;\n"
 "    border-width: 1px;\n"
@@ -35301,8 +36173,9 @@ class MOb(object):
         font.setPointSize(11)
         self.btnMoveRight.setFont(font)
         self.btnMoveRight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMoveRight.setStyleSheet("QPushButton\n"
+        self.btnMoveRight.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #000000;\n"
 "    background-color:#ffffff;\n"
 "    border-width: 1px;\n"
@@ -35341,8 +36214,9 @@ class MOb(object):
         font.setPointSize(11)
         self.btnMoveLeft.setFont(font)
         self.btnMoveLeft.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMoveLeft.setStyleSheet("QPushButton\n"
+        self.btnMoveLeft.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #000000;\n"
 "    background-color:#ffffff;\n"
 "    border-width: 1px;\n"
@@ -35381,8 +36255,9 @@ class MOb(object):
         font.setPointSize(11)
         self.btnMarker2Room2.setFont(font)
         self.btnMarker2Room2.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker2Room2.setStyleSheet("QPushButton\n"
+        self.btnMarker2Room2.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -35400,8 +36275,9 @@ class MOb(object):
         font.setPointSize(11)
         self.btnMarker1Room2.setFont(font)
         self.btnMarker1Room2.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker1Room2.setStyleSheet("QPushButton\n"
+        self.btnMarker1Room2.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -35417,8 +36293,9 @@ class MOb(object):
         font.setPointSize(11)
         self.btnMarker3Room1.setFont(font)
         self.btnMarker3Room1.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker3Room1.setStyleSheet("QPushButton\n"
+        self.btnMarker3Room1.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -35436,8 +36313,9 @@ class MOb(object):
         font.setPointSize(11)
         self.btnMarker2Room1.setFont(font)
         self.btnMarker2Room1.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker2Room1.setStyleSheet("QPushButton\n"
+        self.btnMarker2Room1.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -35455,8 +36333,9 @@ class MOb(object):
         font.setPointSize(11)
         self.btnMarker1Room3.setFont(font)
         self.btnMarker1Room3.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker1Room3.setStyleSheet("QPushButton\n"
+        self.btnMarker1Room3.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -35475,8 +36354,9 @@ class MOb(object):
         self.btnMarker2Room3.setFont(font)
         self.btnMarker2Room3.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnMarker2Room3.setLayoutDirection(QtCore.Qt.RightToLeft)
-        self.btnMarker2Room3.setStyleSheet("QPushButton\n"
+        self.btnMarker2Room3.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -35492,8 +36372,9 @@ class MOb(object):
         font.setPointSize(11)
         self.btnMarker1Room1.setFont(font)
         self.btnMarker1Room1.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker1Room1.setStyleSheet("QPushButton\n"
+        self.btnMarker1Room1.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -35511,8 +36392,9 @@ class MOb(object):
         font.setPointSize(11)
         self.btnMarker3Room3.setFont(font)
         self.btnMarker3Room3.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker3Room3.setStyleSheet("QPushButton\n"
+        self.btnMarker3Room3.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -35530,8 +36412,9 @@ class MOb(object):
         font.setPointSize(11)
         self.btnMarker3Room2.setFont(font)
         self.btnMarker3Room2.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnMarker3Room2.setStyleSheet("QPushButton\n"
+        self.btnMarker3Room2.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "   \n"
 "    background-color:transparent;\n"
 "\n"
@@ -35564,8 +36447,9 @@ class MOb(object):
         font.setPointSize(11)
         self.btnSearchMOB.setFont(font)
         self.btnSearchMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnSearchMOB.setStyleSheet("QPushButton\n"
+        self.btnSearchMOB.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
@@ -35762,16 +36646,16 @@ class Login(object):
 "    border-radius:4px;\n"
 "    outline:none;\n"
 "    padding:6px;\n"
-"    box-sizing:border-box;\n"
-"    transition:.3s;\n"
+
+
 "  }\n"
 "  QLineEdit:hover{\n"
 "     border:1px solid #000;    \n"
-"     transition:.3s;\n"
+
 "}\n"
 "  QLineEdit:focus{\n"
 "    border-color:dodgerBlue;\n"
-"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+
 "  }")
         self.edtUsername.setObjectName("edtUsername")
         self.label_8 = QtWidgets.QLabel(self.frame)
@@ -35797,16 +36681,16 @@ class Login(object):
 "    border-radius:4px;\n"
 "    outline:none;\n"
 "    padding:6px;\n"
-"    box-sizing:border-box;\n"
-"    transition:.3s;\n"
+
+
 "  }\n"
 "  QLineEdit:hover{\n"
 "     border:1px solid #000;    \n"
-"     transition:.3s;\n"
+
 "}\n"
 "  QLineEdit:focus{\n"
 "    border-color:dodgerBlue;\n"
-"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+
 "  }")
         self.edtPassword.setEchoMode(QtWidgets.QLineEdit.Password)
         self.edtPassword.setObjectName("edtPassword")
@@ -35872,16 +36756,17 @@ class Login(object):
 "}\n"
 "QComboBox:hover{\n"
 "     border:1px solid #000;    \n"
-"     transition:.3s;\n"
+
 "}\n"
 "  QComboBox:focus{\n"
 "    border-color:dodgerBlue;\n"
-"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+
 "  }\n"
 "")
         self.cBoxLoginAs.setEditable(False)
         self.cBoxLoginAs.setFrame(True)
         self.cBoxLoginAs.setObjectName("cBoxLoginAs")
+        self.cBoxLoginAs.addItem("")
         self.cBoxLoginAs.addItem("")
         self.cBoxLoginAs.addItem("")
         self.cBoxLoginAs.addItem("")
@@ -35898,8 +36783,9 @@ class Login(object):
         font.setPointSize(11)
         self.btnLogin.setFont(font)
         self.btnLogin.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnLogin.setStyleSheet("QPushButton\n"
+        self.btnLogin.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#00B355;\n"
 "    border-width: 1px;\n"
@@ -35961,8 +36847,9 @@ class Login(object):
         self.btnShutdown.setEnabled(True)
         self.btnShutdown.setGeometry(QtCore.QRect(1310, 707, 50, 51))
         self.btnShutdown.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnShutdown.setStyleSheet("QPushButton\n"
+        self.btnShutdown.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#E3322C;\n"
 "    border-width: 1px;\n"
@@ -36027,7 +36914,7 @@ class Login(object):
         self.cBoxLoginAs.setItemText(6, _translate("MainWindow", "Principal Warfare Officer"))
         self.cBoxLoginAs.setItemText(7, _translate("MainWindow", "Officer of the Day"))
         self.cBoxLoginAs.setItemText(8, _translate("MainWindow", "Officer on Watch"))
-        self.cBoxLoginAs.setItemText(8, _translate("MainWindow", "Administrator"))
+        self.cBoxLoginAs.setItemText(9, _translate("MainWindow", "Administrator"))
         self.btnLogin.setText(_translate("MainWindow", "Login"))
 
 #----------------------------------------backend for Login Interface----------------------------------------------
@@ -36079,9 +36966,9 @@ class LoginWidget(QtWidgets.QMainWindow,Login ):
     def __init__(self, parent=None):
         super(LoginWidget, self).__init__(parent)
         self.setup_Login(self)
-############################################################# Admin Settings Interface ######################################################################
-class AdminSettings(object):
-    def setup_AdminSettings(self, MainWindow):
+############################################################# Add Login Interface ######################################################################
+class AddLogin(object):
+    def setup_AddLogin(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1366, 765)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -36092,92 +36979,55 @@ class AdminSettings(object):
         self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame.setObjectName("frame")
-        self.label_7 = QtWidgets.QLabel(self.frame)
-        self.label_7.setGeometry(QtCore.QRect(498, 349, 121, 44))
+        self.label_2 = QtWidgets.QLabel(self.frame)
+        self.label_2.setGeometry(QtCore.QRect(0, 0, 1366, 44))
+        self.label_2.setStyleSheet("background-color:#222222;")
+        self.label_2.setText("")
+        self.label_2.setObjectName("label_2")
+        self.btnEditLogin = QtWidgets.QPushButton(self.frame)
+        self.btnEditLogin.setGeometry(QtCore.QRect(1065, 120, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.label_7.setFont(font)
-        self.label_7.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.label_7.setStyleSheet("color: #000000;\n"
-"background-color:#ffffff;\n"
-"font-size: 11pt")
-        self.label_7.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.label_7.setObjectName("label_7")
-        self.edtUsername = QtWidgets.QLineEdit(self.frame)
-        self.edtUsername.setGeometry(QtCore.QRect(619, 351, 251, 38))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.edtUsername.setFont(font)
-        self.edtUsername.setStyleSheet("QLineEdit{\n"
-"    border:1px solid #aaa;\n"
-"    border-radius:4px;\n"
+        self.btnEditLogin.setFont(font)
+        self.btnEditLogin.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnEditLogin.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
 "    outline:none;\n"
-"    padding:6px;\n"
-"    box-sizing:border-box;\n"
-"    transition:.3s;\n"
-"  }\n"
-"  QLineEdit:hover{\n"
-"     border:1px solid #000;    \n"
-"     transition:.3s;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
 "}\n"
-"  QLineEdit:focus{\n"
-"    border-color:dodgerBlue;\n"
-"    box-shadow:0 0 8px 0 dodgerBlue;\n"
-"  }")
-        self.edtUsername.setObjectName("edtUsername")
-        self.label_8 = QtWidgets.QLabel(self.frame)
-        self.label_8.setGeometry(QtCore.QRect(498, 393, 121, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.label_8.setFont(font)
-        self.label_8.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.label_8.setStyleSheet("color: #000000;\n"
-"background-color:#ffffff;\n"
-"font-size: 11pt")
-        self.label_8.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.label_8.setObjectName("label_8")
-        self.edtPassword = QtWidgets.QLineEdit(self.frame)
-        self.edtPassword.setGeometry(QtCore.QRect(619, 395, 251, 38))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.edtPassword.setFont(font)
-        self.edtPassword.setStyleSheet("QLineEdit{\n"
-"    border:1px solid #aaa;\n"
-"    border-radius:4px;\n"
-"    outline:none;\n"
-"    padding:6px;\n"
-"    box-sizing:border-box;\n"
-"    transition:.3s;\n"
-"  }\n"
-"  QLineEdit:hover{\n"
-"     border:1px solid #000;    \n"
-"     transition:.3s;\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
 "}\n"
-"  QLineEdit:focus{\n"
-"    border-color:dodgerBlue;\n"
-"    box-shadow:0 0 8px 0 dodgerBlue;\n"
-"  }")
-        self.edtPassword.setEchoMode(QtWidgets.QLineEdit.Password)
-        self.edtPassword.setObjectName("edtPassword")
-        self.label_9 = QtWidgets.QLabel(self.frame)
-        self.label_9.setGeometry(QtCore.QRect(498, 437, 121, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.label_9.setFont(font)
-        self.label_9.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.label_9.setStyleSheet("color: #000000;\n"
-"background-color:#ffffff;\n"
-"font-size: 11pt")
-        self.label_9.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.label_9.setObjectName("label_9")
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/images/edit.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnEditLogin.setIcon(icon)
+        self.btnEditLogin.setIconSize(QtCore.QSize(25, 25))
+        self.btnEditLogin.setObjectName("btnEditLogin")
         self.lblDataEntrySuccessful = QtWidgets.QLabel(self.frame)
         self.lblDataEntrySuccessful.setEnabled(True)
-        self.lblDataEntrySuccessful.setGeometry(QtCore.QRect(498, 493, 291, 44))
+        self.lblDataEntrySuccessful.setGeometry(QtCore.QRect(331, 269, 361, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -36188,20 +37038,136 @@ class AdminSettings(object):
 "font-size: 11pt")
         self.lblDataEntrySuccessful.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.lblDataEntrySuccessful.setObjectName("lblDataEntrySuccessful")
+        self.pushButton = QtWidgets.QPushButton(self.frame)
+        self.pushButton.setEnabled(True)
+        self.pushButton.setGeometry(QtCore.QRect(1080, 5, 260, 35))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.pushButton.setFont(font)
+        self.pushButton.setStyleSheet(" text-align: right;\n"
+"    outline:none;\n"
+"    color: #ffffff;\n"
+"    background-color:#222222;")
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/images/login.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton.setIcon(icon1)
+        self.pushButton.setIconSize(QtCore.QSize(32, 32))
+        self.pushButton.setObjectName("pushButton")
         self.pushButton_2 = QtWidgets.QPushButton(self.frame)
         self.pushButton_2.setEnabled(True)
-        self.pushButton_2.setGeometry(QtCore.QRect(608, 194, 150, 120))
+        self.pushButton_2.setGeometry(QtCore.QRect(331, 680, 100, 80))
         self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
 "    border-radius:4px;\n"
 "    outline:none;")
         self.pushButton_2.setText("")
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap(":/images/logoMTIPLarge2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.pushButton_2.setIcon(icon)
-        self.pushButton_2.setIconSize(QtCore.QSize(200, 100))
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(":/images/logoMTIP.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_2.setIcon(icon2)
+        self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
         self.pushButton_2.setObjectName("pushButton_2")
+        self.edtUsername = QtWidgets.QLineEdit(self.frame)
+        self.edtUsername.setGeometry(QtCore.QRect(490, 140, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.edtUsername.setFont(font)
+        self.edtUsername.setStyleSheet("QLineEdit{\n"
+"    border:1px solid #aaa;\n"
+"    border-radius:4px;\n"
+"    outline:none;\n"
+"    padding:6px;\n"
+
+
+"  }\n"
+"  QLineEdit:hover{\n"
+"     border:1px solid #000;    \n"
+
+"}\n"
+"  QLineEdit:focus{\n"
+"    border-color:dodgerBlue;\n"
+
+"  }")
+        self.edtUsername.setObjectName("edtUsername")
+        self.btnAddLogin = QtWidgets.QPushButton(self.frame)
+        self.btnAddLogin.setGeometry(QtCore.QRect(564, 290, 271, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnAddLogin.setFont(font)
+        self.btnAddLogin.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnAddLogin.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(":/images/add.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnAddLogin.setIcon(icon3)
+        self.btnAddLogin.setIconSize(QtCore.QSize(25, 25))
+        self.btnAddLogin.setObjectName("btnAddLogin")
+        self.label_11 = QtWidgets.QLabel(self.frame)
+        self.label_11.setGeometry(QtCore.QRect(331, 226, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_11.setFont(font)
+        self.label_11.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_11.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_11.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_11.setObjectName("label_11")
+        self.label_10 = QtWidgets.QLabel(self.frame)
+        self.label_10.setGeometry(QtCore.QRect(331, 182, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_10.setFont(font)
+        self.label_10.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_10.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_10.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_10.setObjectName("label_10")
+        self.label_9 = QtWidgets.QLabel(self.frame)
+        self.label_9.setGeometry(QtCore.QRect(331, 138, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_9.setFont(font)
+        self.label_9.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_9.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_9.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_9.setObjectName("label_9")
         self.cBoxLoginAs = QtWidgets.QComboBox(self.frame)
-        self.cBoxLoginAs.setGeometry(QtCore.QRect(619, 439, 251, 38))
+        self.cBoxLoginAs.setGeometry(QtCore.QRect(490, 228, 345, 38))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -36225,11 +37191,11 @@ class AdminSettings(object):
 "}\n"
 "QComboBox:hover{\n"
 "     border:1px solid #000;    \n"
-"     transition:.3s;\n"
+
 "}\n"
 "  QComboBox:focus{\n"
 "    border-color:dodgerBlue;\n"
-"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+
 "  }\n"
 "")
         self.cBoxLoginAs.setEditable(False)
@@ -36244,107 +37210,27 @@ class AdminSettings(object):
         self.cBoxLoginAs.addItem("")
         self.cBoxLoginAs.addItem("")
         self.cBoxLoginAs.addItem("")
-        self.btnAddLogin = QtWidgets.QPushButton(self.frame)
-        self.btnAddLogin.setGeometry(QtCore.QRect(679, 514, 191, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.btnAddLogin.setFont(font)
-        self.btnAddLogin.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btnAddLogin.setStyleSheet("QPushButton\n"
-"{\n"
-"    color: #ffffff;\n"
-"    background-color:#4154A0;\n"
-"    border-width: 1px;\n"
-"    border-color: #4154A0;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"    padding: 3px;\n"
-"    font-size: 11pt;\n"
-"    padding-left: 5px;\n"
-"    padding-right: 5px;\n"
-"    min-width: 40px;\n"
-"}\n"
-"\n"
-"QPushButton:hover\n"
-"{\n"
-"    background-color:#384889\n"
-"}\n"
-"QPushButton:pressed\n"
-"{\n"
-"    background-color: #384889;\n"
-"     border-width: 3px;\n"
-"    border-color: #5C70BC;\n"
-"    border-style: solid;\n"
-"    border-radius: 6;\n"
-"\n"
-"}")
-        icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap(":/images/add.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.btnAddLogin.setIcon(icon1)
-        self.btnAddLogin.setIconSize(QtCore.QSize(25, 25))
-        self.btnAddLogin.setObjectName("btnAddLogin")
-        self.pushButton = QtWidgets.QPushButton(self.frame)
-        self.pushButton.setEnabled(True)
-        self.pushButton.setGeometry(QtCore.QRect(1080, 5, 260, 35))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.pushButton.setFont(font)
-        self.pushButton.setStyleSheet(" text-align: right;\n"
-"    color: #ffffff;\n"
-"    background-color:#222222;")
-        icon5 = QtGui.QIcon()
-        icon5.addPixmap(QtGui.QPixmap(":/images/settings.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.pushButton.setIcon(icon5)
-        self.pushButton.setIconSize(QtCore.QSize(32, 32))
-        self.pushButton.setObjectName("pushButton")
         self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(448, 174, 471, 421))
-        self.label.setStyleSheet("   border:1px solid #aaa;\n"
-"    border-radius:4px;\n"
-"    outline:none;\n"
-"    padding:6px;")
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
+        self.label.setStyleSheet(
+"background-color:#2F3C71;")
         self.label.setText("")
         self.label.setObjectName("label")
-        self.pushButton_3 = QtWidgets.QPushButton(self.frame)
-        self.pushButton_3.setEnabled(True)
-        self.pushButton_3.setGeometry(QtCore.QRect(0, 0, 1366, 768))
-        self.pushButton_3.setStyleSheet("background-color: rgba(47, 60, 113, 0.6);")
-        self.pushButton_3.setText("")
-        self.pushButton_3.setIconSize(QtCore.QSize(1366, 768))
-        self.pushButton_3.setObjectName("pushButton_3")
-        self.pushButton_4 = QtWidgets.QPushButton(self.frame)
-        self.pushButton_4.setEnabled(True)
-        self.pushButton_4.setGeometry(QtCore.QRect(0, 0, 1366, 768))
-        self.pushButton_4.setStyleSheet(" border:1px solid #fff;\n"
-"    border-radius:4px;\n"
-"    outline:none;")
-        self.pushButton_4.setText("")
-        icon2 = QtGui.QIcon()
-        icon2.addPixmap(QtGui.QPixmap(":/images/shipBackground.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.pushButton_4.setIcon(icon2)
-        self.pushButton_4.setIconSize(QtCore.QSize(1366, 768))
-        self.pushButton_4.setObjectName("pushButton_4")
-        self.label_2 = QtWidgets.QLabel(self.frame)
-        self.label_2.setGeometry(QtCore.QRect(0, 0, 1366, 44))
-        self.label_2.setStyleSheet(
-"background-color:#222222;")
-        self.label_2.setText("")
-        self.label_2.setObjectName("label_2")
-        self.navViewImpKeyDetails = QtWidgets.QPushButton(self.frame)
-        self.navViewImpKeyDetails.setGeometry(QtCore.QRect(1065, 120, 271, 44))
+        self.navAddLogin = QtWidgets.QPushButton(self.frame)
+        self.navAddLogin.setGeometry(QtCore.QRect(10, 3, 290, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
-        self.navViewImpKeyDetails.setFont(font)
-        self.navViewImpKeyDetails.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.navViewImpKeyDetails.setStyleSheet("QPushButton\n"
+        self.navAddLogin.setFont(font)
+        self.navAddLogin.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navAddLogin.setStyleSheet("QPushButton \n"
 "{\n"
+"    text-align: left;\n"
 "    color: #ffffff;\n"
-"    background-color:#4154A0;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
 "    border-width: 1px;\n"
-"    border-color: #4154A0;\n"
+"    border-color: #2F3C71;\n"
 "    border-style: solid;\n"
 "    border-radius: 6;\n"
 "    padding: 3px;\n"
@@ -36356,7 +37242,11 @@ class AdminSettings(object):
 "\n"
 "QPushButton:hover\n"
 "{\n"
-"    background-color:#384889\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:active\n"
+"{\n"
+"    background-color:#4154A0;\n"
 "}\n"
 "QPushButton:pressed\n"
 "{\n"
@@ -36367,8 +37257,79 @@ class AdminSettings(object):
 "    border-radius: 6;\n"
 "\n"
 "}")
+        self.navAddLogin.setIcon(icon1)
+        self.navAddLogin.setIconSize(QtCore.QSize(25, 25))
+        self.navAddLogin.setFlat(False)
+        self.navAddLogin.setObjectName("navAddLogin")
+        self.navAddBand = QtWidgets.QPushButton(self.frame)
+        self.navAddBand.setGeometry(QtCore.QRect(10, 47, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navAddBand.setFont(font)
+        self.navAddBand.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navAddBand.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon4 = QtGui.QIcon()
+        icon4.addPixmap(QtGui.QPixmap(":/images/smartWatch.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navAddBand.setIcon(icon4)
+        self.navAddBand.setIconSize(QtCore.QSize(32, 32))
+        self.navAddBand.setFlat(False)
+        self.navAddBand.setObjectName("navAddBand")
+        self.edtPassword = QtWidgets.QLineEdit(self.frame)
+        self.edtPassword.setGeometry(QtCore.QRect(490, 184, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.edtPassword.setFont(font)
+        self.edtPassword.setStyleSheet("QLineEdit{\n"
+"    border:1px solid #aaa;\n"
+"    border-radius:4px;\n"
+"    outline:none;\n"
+"    padding:6px;\n"
+
+
+"  }\n"
+"  QLineEdit:hover{\n"
+"     border:1px solid #000;    \n"
+
+"}\n"
+"  QLineEdit:focus{\n"
+"    border-color:dodgerBlue;\n"
+
+"  }")
+        self.edtPassword.setEchoMode(QtWidgets.QLineEdit.Password)
+        self.edtPassword.setObjectName("edtPassword")
         self.btnLogout = QtWidgets.QPushButton(self.frame)
-        self.btnLogout.setGeometry(QtCore.QRect(30, 0, 111, 44))
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -36376,6 +37337,7 @@ class AdminSettings(object):
         self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnLogout.setStyleSheet("QPushButton \n"
 "{\n"
+"    outline:none;\n"
 "    color: #ffffff;\n"
 "    background-color:#EF7901;\n"
 "    border-width: 1px;\n"
@@ -36405,32 +37367,98 @@ class AdminSettings(object):
         self.btnLogout.setIconSize(QtCore.QSize(32, 32))
         self.btnLogout.setFlat(False)
         self.btnLogout.setObjectName("btnLogout")
-        self.pushButton_4.raise_()
-        self.pushButton_3.raise_()
-        self.label.raise_()
-        self.edtUsername.raise_()
-        self.label_7.raise_()
+        self.navArmPPESettings = QtWidgets.QPushButton(self.frame)
+        self.navArmPPESettings.setGeometry(QtCore.QRect(10, 91, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navArmPPESettings.setFont(font)
+        self.navArmPPESettings.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navArmPPESettings.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        
+        icon36 = QtGui.QIcon()
+        icon36.addPixmap(QtGui.QPixmap(":/images/armPPE.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navArmPPESettings.setIcon(icon36)
+        self.navArmPPESettings.setIconSize(QtCore.QSize(32, 32))
+        self.navArmPPESettings.setFlat(False)
+        self.navArmPPESettings.setObjectName("navArmPPESettings")
         self.label_2.raise_()
-        self.edtPassword.raise_()
-        self.label_8.raise_()
-        self.cBoxLoginAs.raise_()
-        self.btnLogout.raise_()
-        self.label_9.raise_()
         self.lblDataEntrySuccessful.raise_()
-        self.btnAddLogin.raise_()
-        self.pushButton_2.raise_()
         self.pushButton.raise_()
+        self.pushButton_2.raise_()
+        self.edtUsername.raise_()
+        self.btnAddLogin.raise_()
+        self.btnLogout.raise_()
+        self.label_11.raise_()
+        self.label_10.raise_()
+        self.label_9.raise_()
+        self.cBoxLoginAs.raise_()
+        self.label.raise_()
+        self.btnEditLogin.raise_()
+        self.navArmPPESettings.raise_()
+        self.navAddBand.raise_()
+        self.navAddLogin.raise_()
+        self.edtPassword.raise_()
+        self.label_13 = QtWidgets.QLabel(self.centralwidget)
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
+        self.label_13.setStyleSheet("background-color:#A0A0A0;")
+        self.label_13.setText("")
+        self.label_13.setObjectName("label_13")
+        self.label_6 = QtWidgets.QLabel(self.centralwidget)
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_6.setFont(font)
+        self.label_6.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_6.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_6.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_6.setObjectName("label_6")
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.label_7.setText(_translate("MainWindow", "Usename"))
-        self.label_8.setText(_translate("MainWindow", "Password"))
-        self.label_9.setText(_translate("MainWindow", "Login as"))
+        self.btnEditLogin.setText(_translate("MainWindow", "Edit User Login"))
         self.lblDataEntrySuccessful.setText(_translate("MainWindow", "Details Saved Successfully!"))
+        self.pushButton.setText(_translate("MainWindow", "Login Settings"))
+        self.btnAddLogin.setText(_translate("MainWindow", "Add New User Login"))
+        self.label_11.setText(_translate("MainWindow", "Login As"))
+        self.label_10.setText(_translate("MainWindow", "Password"))
+        self.label_9.setText(_translate("MainWindow", "Username"))
         self.cBoxLoginAs.setItemText(0, _translate("MainWindow", "Commanding Officer Secretary"))
         self.cBoxLoginAs.setItemText(1, _translate("MainWindow", "Commanding Officer"))
         self.cBoxLoginAs.setItemText(2, _translate("MainWindow", "Executive Officer"))
@@ -36440,16 +37468,21 @@ class AdminSettings(object):
         self.cBoxLoginAs.setItemText(6, _translate("MainWindow", "Principal Warfare Officer"))
         self.cBoxLoginAs.setItemText(7, _translate("MainWindow", "Officer of the Day"))
         self.cBoxLoginAs.setItemText(8, _translate("MainWindow", "Officer on Watch"))
-        self.btnAddLogin.setText(_translate("MainWindow", "Add New User Login"))
+        self.navAddLogin.setText(_translate("MainWindow", "Login Settings"))
+        self.navAddBand.setText(_translate("MainWindow", "Band Settings"))
         self.btnLogout.setText(_translate("MainWindow", "Logout"))
-        self.pushButton.setText(_translate("MainWindow", "Admin Settings"))
-
-#----------------------------------------backend for AdminSettings Interface----------------------------------------------
+        self.label_6.setText(_translate("MainWindow", "Enter New Login Credentials"))
+        self.navArmPPESettings.setText(_translate("MainWindow", "Small Arm and PPE Settings"))
+#----------------------------------------backend for Add Login Interface----------------------------------------------
         resetLoginGUI(self)
         self.btnAddLogin.clicked.connect(self.addLogin)
         self.edtPassword.textEdited.connect(self.resetSuccess)
         self.edtUsername.textEdited.connect(self.resetSuccess)
         self.cBoxLoginAs.activated.connect(self.resetSuccess)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
+        self.btnEditLogin.clicked.connect(self.navEditLoginMethod)
+        self.navAddBand.clicked.connect(self.navAddBandMethod)
+        self.navArmPPESettings.clicked.connect(self.navArmPPESettingsMethod)
     def addLogin(self):
         userName=self.edtUsername.text()
         password=self.edtPassword.text()
@@ -36458,7 +37491,7 @@ class AdminSettings(object):
                 queryString="INSERT INTO Login VALUES('"+userName+"',"+"'"+password+"',"+"'"+loginAs+"')"
                 insertData(self,queryString)
                 if(self.lblDataEntrySuccessful.text()!="Details could not be saved!"):
-                        resetKeysGUI(self)    
+                        resetLoginGUI(self)
 
         else:
                 self.lblDataEntrySuccessful.setText("One or more fields are empty!")
@@ -36469,10 +37502,2565 @@ class AdminSettings(object):
         
     def navLogoutMethod(self):
              w.change_view(29)  
-class AdminSettingsWidget(QtWidgets.QMainWindow,AdminSettings ):
+    def navEditLoginMethod(self):
+             w.change_view(31)  
+    def navAddBandMethod(self):
+             w.change_view(32)  
+    def navArmPPESettingsMethod(self):
+             w.change_view(33)  
+class AddLoginWidget(QtWidgets.QMainWindow,AddLogin ):
     def __init__(self, parent=None):
-        super(AdminSettingsWidget, self).__init__(parent)
-        self.setup_AdminSettings(self)
+        super(AddLoginWidget, self).__init__(parent)
+        self.setup_AddLogin(self)
+############################################################# Edit Login Interface ######################################################################
+class EditLogin(object):
+    def setup_EditLogin(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(1366, 765)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.frame = QtWidgets.QFrame(self.centralwidget)
+        self.frame.setGeometry(QtCore.QRect(0, 0, 1366, 768))
+        self.frame.setStyleSheet("background-color: #ffffff")
+        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame.setObjectName("frame")
+        self.label_2 = QtWidgets.QLabel(self.frame)
+        self.label_2.setGeometry(QtCore.QRect(0, 0, 1366, 44))
+        self.label_2.setStyleSheet("background-color:#222222;")
+        self.label_2.setText("")
+        self.label_2.setObjectName("label_2")
+        self.btnEditLogin = QtWidgets.QPushButton(self.frame)
+        self.btnEditLogin.setGeometry(QtCore.QRect(564, 386, 271, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnEditLogin.setFont(font)
+        self.btnEditLogin.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnEditLogin.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/images/edit.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnEditLogin.setIcon(icon)
+        self.btnEditLogin.setIconSize(QtCore.QSize(25, 25))
+        self.btnEditLogin.setObjectName("btnEditLogin")
+        self.lblDataEntrySuccessful = QtWidgets.QLabel(self.frame)
+        self.lblDataEntrySuccessful.setEnabled(True)
+        self.lblDataEntrySuccessful.setGeometry(QtCore.QRect(331, 365, 361, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblDataEntrySuccessful.setFont(font)
+        self.lblDataEntrySuccessful.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblDataEntrySuccessful.setStyleSheet("color: green;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblDataEntrySuccessful.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblDataEntrySuccessful.setObjectName("lblDataEntrySuccessful")
+        self.pushButton = QtWidgets.QPushButton(self.frame)
+        self.pushButton.setEnabled(True)
+        self.pushButton.setGeometry(QtCore.QRect(1080, 5, 260, 35))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.pushButton.setFont(font)
+        self.pushButton.setStyleSheet(" text-align: right;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#222222;")
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/images/login.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton.setIcon(icon1)
+        self.pushButton.setIconSize(QtCore.QSize(32, 32))
+        self.pushButton.setObjectName("pushButton")
+        self.pushButton_2 = QtWidgets.QPushButton(self.frame)
+        self.pushButton_2.setEnabled(True)
+        self.pushButton_2.setGeometry(QtCore.QRect(331, 680, 100, 80))
+        self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
+"    border-radius:4px;\n"
+"    outline:none;")
+        self.pushButton_2.setText("")
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(":/images/logoMTIP.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_2.setIcon(icon2)
+        self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
+        self.pushButton_2.setObjectName("pushButton_2")
+        self.edtOldUsername = QtWidgets.QLineEdit(self.frame)
+        self.edtOldUsername.setGeometry(QtCore.QRect(490, 140, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.edtOldUsername.setFont(font)
+        self.edtOldUsername.setStyleSheet("QLineEdit{\n"
+"    border:1px solid #aaa;\n"
+"    border-radius:4px;\n"
+"    outline:none;\n"
+"    padding:6px;\n"
+
+
+"  }\n"
+"  QLineEdit:hover{\n"
+"     border:1px solid #000;    \n"
+
+"}\n"
+"  QLineEdit:focus{\n"
+"    border-color:dodgerBlue;\n"
+
+"  }")
+        self.edtOldUsername.setObjectName("edtOldUsername")
+        self.btnAddLogin = QtWidgets.QPushButton(self.frame)
+        self.btnAddLogin.setGeometry(QtCore.QRect(1065, 120, 271, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnAddLogin.setFont(font)
+        self.btnAddLogin.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnAddLogin.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(":/images/add.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnAddLogin.setIcon(icon3)
+        self.btnAddLogin.setIconSize(QtCore.QSize(25, 25))
+        self.btnAddLogin.setObjectName("btnAddLogin")
+        self.label_11 = QtWidgets.QLabel(self.frame)
+        self.label_11.setGeometry(QtCore.QRect(331, 314, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_11.setFont(font)
+        self.label_11.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_11.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_11.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_11.setObjectName("label_11")
+        self.label_10 = QtWidgets.QLabel(self.frame)
+        self.label_10.setGeometry(QtCore.QRect(331, 270, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_10.setFont(font)
+        self.label_10.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_10.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_10.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_10.setObjectName("label_10")
+        self.label_9 = QtWidgets.QLabel(self.frame)
+        self.label_9.setGeometry(QtCore.QRect(331, 138, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_9.setFont(font)
+        self.label_9.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_9.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_9.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_9.setObjectName("label_9")
+        self.cBoxLoginAs = QtWidgets.QComboBox(self.frame)
+        self.cBoxLoginAs.setGeometry(QtCore.QRect(490, 316, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        font.setKerning(True)
+        self.cBoxLoginAs.setFont(font)
+        self.cBoxLoginAs.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.cBoxLoginAs.setStyleSheet("QComboBox{ border-width: 1px;\n"
+" border-color: #aaa;\n"
+" border-style: solid;\n"
+"border-radius:6; \n"
+"}\n"
+"\n"
+"QComboBox::drop-down:button{\n"
+"background-color:transparent;\n"
+"}\n"
+"QComboBox::down-arrow {\n"
+" \n"
+"    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);\n"
+"    width: 25px;\n"
+"    height: 9px;\n"
+"}\n"
+"QComboBox:hover{\n"
+"     border:1px solid #000;    \n"
+
+"}\n"
+"  QComboBox:focus{\n"
+"    border-color:dodgerBlue;\n"
+
+"  }\n"
+"")
+        self.cBoxLoginAs.setEditable(False)
+        self.cBoxLoginAs.setFrame(True)
+        self.cBoxLoginAs.setObjectName("cBoxLoginAs")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.cBoxLoginAs.addItem("")
+        self.label = QtWidgets.QLabel(self.frame)
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
+        self.label.setStyleSheet(
+"background-color:#2F3C71;")
+        self.label.setText("")
+        self.label.setObjectName("label")
+        self.navAddLogin = QtWidgets.QPushButton(self.frame)
+        self.navAddLogin.setGeometry(QtCore.QRect(10, 3, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navAddLogin.setFont(font)
+        self.navAddLogin.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navAddLogin.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:active\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.navAddLogin.setIcon(icon1)
+        self.navAddLogin.setIconSize(QtCore.QSize(25, 25))
+        self.navAddLogin.setFlat(False)
+        self.navAddLogin.setObjectName("navAddLogin")
+        self.navAddBand = QtWidgets.QPushButton(self.frame)
+        self.navAddBand.setGeometry(QtCore.QRect(10, 47, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navAddBand.setFont(font)
+        self.navAddBand.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navAddBand.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon4 = QtGui.QIcon()
+        icon4.addPixmap(QtGui.QPixmap(":/images/smartWatch.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navAddBand.setIcon(icon4)
+        self.navAddBand.setIconSize(QtCore.QSize(32, 32))
+        self.navAddBand.setFlat(False)
+        self.navAddBand.setObjectName("navAddBand")
+        self.edtNewPassword = QtWidgets.QLineEdit(self.frame)
+        self.edtNewPassword.setGeometry(QtCore.QRect(490, 272, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.edtNewPassword.setFont(font)
+        self.edtNewPassword.setStyleSheet("QLineEdit{\n"
+"    border:1px solid #aaa;\n"
+"    border-radius:4px;\n"
+"    outline:none;\n"
+"    padding:6px;\n"
+
+
+"  }\n"
+"  QLineEdit:hover{\n"
+"     border:1px solid #000;    \n"
+
+"}\n"
+"  QLineEdit:focus{\n"
+"    border-color:dodgerBlue;\n"
+
+"  }")
+        self.edtNewPassword.setEchoMode(QtWidgets.QLineEdit.Password)
+        self.edtNewPassword.setObjectName("edtNewPassword")
+        self.edtNewUsername = QtWidgets.QLineEdit(self.frame)
+        self.edtNewUsername.setGeometry(QtCore.QRect(490, 184, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.edtNewUsername.setFont(font)
+        self.edtNewUsername.setStyleSheet("QLineEdit{\n"
+"    border:1px solid #aaa;\n"
+"    border-radius:4px;\n"
+"    outline:none;\n"
+"    padding:6px;\n"
+
+
+"  }\n"
+"  QLineEdit:hover{\n"
+"     border:1px solid #000;    \n"
+
+"}\n"
+"  QLineEdit:focus{\n"
+"    border-color:dodgerBlue;\n"
+
+"  }")
+        self.edtNewUsername.setObjectName("edtNewUsername")
+        self.label_16 = QtWidgets.QLabel(self.frame)
+        self.label_16.setGeometry(QtCore.QRect(331, 182, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_16.setFont(font)
+        self.label_16.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_16.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_16.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_16.setObjectName("label_16")
+        self.edtOldPassword = QtWidgets.QLineEdit(self.frame)
+        self.edtOldPassword.setGeometry(QtCore.QRect(490, 228, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.edtOldPassword.setFont(font)
+        self.edtOldPassword.setStyleSheet("QLineEdit{\n"
+"    border:1px solid #aaa;\n"
+"    border-radius:4px;\n"
+"    outline:none;\n"
+"    padding:6px;\n"
+
+
+"  }\n"
+"  QLineEdit:hover{\n"
+"     border:1px solid #000;    \n"
+
+"}\n"
+"  QLineEdit:focus{\n"
+"    border-color:dodgerBlue;\n"
+
+"  }")
+        self.edtOldPassword.setEchoMode(QtWidgets.QLineEdit.Password)
+        self.edtOldPassword.setObjectName("edtOldPassword")
+        self.label_21 = QtWidgets.QLabel(self.frame)
+        self.label_21.setGeometry(QtCore.QRect(331, 226, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_21.setFont(font)
+        self.label_21.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_21.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_21.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_21.setObjectName("label_21")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    outline:none;\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
+        self.navArmPPESettings = QtWidgets.QPushButton(self.frame)
+        self.navArmPPESettings.setGeometry(QtCore.QRect(10, 91, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navArmPPESettings.setFont(font)
+        self.navArmPPESettings.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navArmPPESettings.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon36 = QtGui.QIcon()
+        icon36.addPixmap(QtGui.QPixmap(":/images/armPPE.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navArmPPESettings.setIcon(icon36)
+        self.navArmPPESettings.setIconSize(QtCore.QSize(32, 32))
+        self.navArmPPESettings.setFlat(False)
+        self.navArmPPESettings.setObjectName("navArmPPESettings")
+        self.label_2.raise_()
+        self.lblDataEntrySuccessful.raise_()
+        self.pushButton.raise_()
+        self.pushButton_2.raise_()
+        self.edtOldUsername.raise_()
+        self.btnAddLogin.raise_()
+        self.label_11.raise_()
+        self.label_10.raise_()
+        self.label_9.raise_()
+        self.cBoxLoginAs.raise_()
+        self.label.raise_()
+        self.btnEditLogin.raise_()
+        self.btnLogout.raise_()
+        self.navAddBand.raise_()
+        self.navAddLogin.raise_()
+        self.navArmPPESettings.raise_()
+        self.edtNewPassword.raise_()
+        self.edtNewUsername.raise_()
+        self.label_16.raise_()
+        self.edtOldPassword.raise_()
+        self.label_21.raise_()
+        self.label_13 = QtWidgets.QLabel(self.centralwidget)
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
+        self.label_13.setStyleSheet("background-color:#A0A0A0;")
+        self.label_13.setText("")
+        self.label_13.setObjectName("label_13")
+        self.label_6 = QtWidgets.QLabel(self.centralwidget)
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_6.setFont(font)
+        self.label_6.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_6.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_6.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_6.setObjectName("label_6")
+        MainWindow.setCentralWidget(self.centralwidget)
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.btnEditLogin.setText(_translate("MainWindow", "Edit User Login"))
+        self.lblDataEntrySuccessful.setText(_translate("MainWindow", "Details Saved Successfully!"))
+        self.pushButton.setText(_translate("MainWindow", "Login Settings"))
+        self.btnAddLogin.setText(_translate("MainWindow", "Add New User Login"))
+        self.label_11.setText(_translate("MainWindow", "Login As"))
+        self.label_10.setText(_translate("MainWindow", "New Password"))
+        self.label_9.setText(_translate("MainWindow", "Old Username"))
+        self.cBoxLoginAs.setItemText(0, _translate("MainWindow", "Commanding Officer Secretary"))
+        self.cBoxLoginAs.setItemText(1, _translate("MainWindow", "Commanding Officer"))
+        self.cBoxLoginAs.setItemText(2, _translate("MainWindow", "Executive Officer"))
+        self.cBoxLoginAs.setItemText(3, _translate("MainWindow", "Weapon Engineering Officer"))
+        self.cBoxLoginAs.setItemText(4, _translate("MainWindow", "Marine Engineering Officer"))
+        self.cBoxLoginAs.setItemText(5, _translate("MainWindow", "Supply Officer"))
+        self.cBoxLoginAs.setItemText(6, _translate("MainWindow", "Principal Warfare Officer"))
+        self.cBoxLoginAs.setItemText(7, _translate("MainWindow", "Officer of the Day"))
+        self.cBoxLoginAs.setItemText(8, _translate("MainWindow", "Officer on Watch"))
+        self.navAddLogin.setText(_translate("MainWindow", "Login Settings"))
+        self.navAddBand.setText(_translate("MainWindow", "Band Settings"))
+        self.label_16.setText(_translate("MainWindow", "New Username"))
+        self.label_21.setText(_translate("MainWindow", "Old Password"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
+        self.label_6.setText(_translate("MainWindow", "Change Login Credentials"))
+        self.navArmPPESettings.setText(_translate("MainWindow", "Small Arm and PPE Settings"))
+#----------------------------------------backend for Edit Login Interface----------------------------------------------
+        resetEditLoginGUI(self)
+        self.btnEditLogin.clicked.connect(self.editLogin)
+        self.edtOldPassword.textEdited.connect(self.resetSuccess)
+        self.edtNewPassword.textEdited.connect(self.resetSuccess)
+        self.edtOldUsername.textEdited.connect(self.resetSuccess)
+        self.edtNewUsername.textEdited.connect(self.resetSuccess)
+        self.cBoxLoginAs.activated.connect(self.resetSuccess)
+        self.btnAddLogin.clicked.connect(self.navAddLoginMethod)
+        self.navArmPPESettings.clicked.connect(self.navArmPPESettingsMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
+        self.navAddBand.clicked.connect(self.navAddBandMethod)
+
+    def editLogin(self):
+        oldUserName=self.edtOldUsername.text()
+        newUserName=self.edtNewUsername.text()
+        oldPassword=self.edtOldPassword.text()
+        newPassword=self.edtNewPassword.text()
+        loginAs=self.cBoxLoginAs.currentText()
+        if(oldUserName!="" and newUserName!="" and oldPassword!="" and newPassword!=""):
+                updateQuery="UPDATE Login SET userName='"+newUserName+"'"+", password='"+newPassword+"'"+"WHERE userName='"+oldUserName+"'"+" AND password='"+oldPassword+"'"+" AND loginAs='"+loginAs+"'"
+                updateData(self,updateQuery)
+                if(self.lblDataEntrySuccessful.text()!="Changes could not be saved!"):
+                        resetEditLoginGUI(self)
+
+        else:
+                self.lblDataEntrySuccessful.setStyleSheet("color: red;\n""background-color:#ffffff;\n""font-size: 11pt")
+                self.lblDataEntrySuccessful.setText("One or more fields are empty!")
+                self.lblDataEntrySuccessful.show()
+    def resetSuccess(self):
+                self.lblDataEntrySuccessful.hide()
+                self.lblDataEntrySuccessful.setStyleSheet("color: green;\n""background-color:#ffffff;\n""font-size: 11pt")
+        
+    def navLogoutMethod(self):
+             w.change_view(29)  
+    def navAddLoginMethod(self):
+             w.change_view(30)  
+    def navAddBandMethod(self):
+             w.change_view(32)  
+    def navArmPPESettingsMethod(self):
+             w.change_view(33)  
+class EditLoginWidget(QtWidgets.QMainWindow,EditLogin ):
+    def __init__(self, parent=None):
+        super(EditLoginWidget, self).__init__(parent)
+        self.setup_EditLogin(self)
+############################################################# Add Band Interface ######################################################################
+class AddBand(object):
+    def setup_AddBand(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(1366, 765)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.frame = QtWidgets.QFrame(self.centralwidget)
+        self.frame.setGeometry(QtCore.QRect(0, 0, 1366, 768))
+        self.frame.setStyleSheet("background-color: #ffffff")
+        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame.setObjectName("frame")
+        self.label_2 = QtWidgets.QLabel(self.frame)
+        self.label_2.setGeometry(QtCore.QRect(0, 0, 1366, 44))
+        self.label_2.setStyleSheet("background-color:#222222;")
+        self.label_2.setText("")
+        self.label_2.setObjectName("label_2")
+        self.btnAddBand = QtWidgets.QPushButton(self.frame)
+        self.btnAddBand.setGeometry(QtCore.QRect(564, 210, 271, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnAddBand.setFont(font)
+        self.btnAddBand.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnAddBand.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/images/add.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnAddBand.setIcon(icon)
+        self.btnAddBand.setIconSize(QtCore.QSize(25, 25))
+        self.btnAddBand.setObjectName("btnAddBand")
+        self.lblDataEntrySuccessful = QtWidgets.QLabel(self.frame)
+        self.lblDataEntrySuccessful.setEnabled(True)
+        self.lblDataEntrySuccessful.setGeometry(QtCore.QRect(331, 189, 361, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblDataEntrySuccessful.setFont(font)
+        self.lblDataEntrySuccessful.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblDataEntrySuccessful.setStyleSheet("color: green;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblDataEntrySuccessful.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblDataEntrySuccessful.setObjectName("lblDataEntrySuccessful")
+        self.pushButton = QtWidgets.QPushButton(self.frame)
+        self.pushButton.setEnabled(True)
+        self.pushButton.setGeometry(QtCore.QRect(1080, 5, 260, 35))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.pushButton.setFont(font)
+        self.pushButton.setStyleSheet(" text-align: right;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#222222;")
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/images/smartWatch.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton.setIcon(icon1)
+        self.pushButton.setIconSize(QtCore.QSize(32, 32))
+        self.pushButton.setObjectName("pushButton")
+        self.pushButton_2 = QtWidgets.QPushButton(self.frame)
+        self.pushButton_2.setEnabled(True)
+        self.pushButton_2.setGeometry(QtCore.QRect(331, 680, 100, 80))
+        self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
+"    border-radius:4px;\n"
+"    outline:none;")
+        self.pushButton_2.setText("")
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(":/images/logoMTIP.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_2.setIcon(icon2)
+        self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
+        self.pushButton_2.setObjectName("pushButton_2")
+        self.edtBandNo = QtWidgets.QLineEdit(self.frame)
+        self.edtBandNo.setGeometry(QtCore.QRect(490, 140, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.edtBandNo.setFont(font)
+        self.edtBandNo.setStyleSheet("QLineEdit{\n"
+"    border:1px solid #aaa;\n"
+"    border-radius:4px;\n"
+"    outline:none;\n"
+"    padding:6px;\n"
+"    box-sizing:border-box;\n"
+"    transition:.3s;\n"
+"  }\n"
+"  QLineEdit:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QLineEdit:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"  }")
+        self.edtBandNo.setObjectName("edtBandNo")
+        self.label_9 = QtWidgets.QLabel(self.frame)
+        self.label_9.setGeometry(QtCore.QRect(331, 138, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_9.setFont(font)
+        self.label_9.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_9.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_9.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_9.setObjectName("label_9")
+        self.label = QtWidgets.QLabel(self.frame)
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
+        self.label.setStyleSheet("background-image: url(null);\n"
+"background-color:#2F3C71;")
+        self.label.setText("")
+        self.label.setObjectName("label")
+        self.navAddLogin = QtWidgets.QPushButton(self.frame)
+        self.navAddLogin.setGeometry(QtCore.QRect(10, 3, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navAddLogin.setFont(font)
+        self.navAddLogin.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navAddLogin.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(":/images/login.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navAddLogin.setIcon(icon3)
+        self.navAddLogin.setIconSize(QtCore.QSize(25, 25))
+        self.navAddLogin.setFlat(False)
+        self.navAddLogin.setObjectName("navAddLogin")
+        self.navAddBand = QtWidgets.QPushButton(self.frame)
+        self.navAddBand.setGeometry(QtCore.QRect(10, 47, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navAddBand.setFont(font)
+        self.navAddBand.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navAddBand.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"QPushButton:active\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.navAddBand.setIcon(icon1)
+        self.navAddBand.setIconSize(QtCore.QSize(32, 32))
+        self.navAddBand.setFlat(False)
+        self.navAddBand.setObjectName("navAddBand")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    outline:none;\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
+        self.navArmPPESettings = QtWidgets.QPushButton(self.frame)
+        self.navArmPPESettings.setGeometry(QtCore.QRect(10, 91, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navArmPPESettings.setFont(font)
+        self.navArmPPESettings.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navArmPPESettings.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon36 = QtGui.QIcon()
+        icon36.addPixmap(QtGui.QPixmap(":/images/armPPE.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navArmPPESettings.setIcon(icon36)
+        self.navArmPPESettings.setIconSize(QtCore.QSize(32, 32))
+        self.navArmPPESettings.setFlat(False)
+        self.navArmPPESettings.setObjectName("navArmPPESettings")
+        self.label_2.raise_()
+        self.lblDataEntrySuccessful.raise_()
+        self.pushButton.raise_()
+        self.pushButton_2.raise_()
+        self.edtBandNo.raise_()
+        self.label_9.raise_()
+        self.label.raise_()
+        self.btnAddBand.raise_()
+        self.navAddBand.raise_()
+        self.navArmPPESettings.raise_()
+        self.btnLogout.raise_()
+        self.navAddLogin.raise_()
+        self.label_13 = QtWidgets.QLabel(self.centralwidget)
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
+        self.label_13.setStyleSheet("background-color:#A0A0A0;")
+        self.label_13.setText("")
+        self.label_13.setObjectName("label_13")
+        self.label_6 = QtWidgets.QLabel(self.centralwidget)
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_6.setFont(font)
+        self.label_6.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_6.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_6.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_6.setObjectName("label_6")
+        MainWindow.setCentralWidget(self.centralwidget)
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.btnAddBand.setText(_translate("MainWindow", "Add New Band"))
+        self.lblDataEntrySuccessful.setText(_translate("MainWindow", "Details Saved Successfully!"))
+        self.pushButton.setText(_translate("MainWindow", "Band Settings"))
+        self.label_9.setText(_translate("MainWindow", "Band No."))
+        self.navAddLogin.setText(_translate("MainWindow", "Login Settings"))
+        self.navAddBand.setText(_translate("MainWindow", "Band Settings"))
+        self.label_6.setText(_translate("MainWindow", "Enter Band Details"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
+        self.navArmPPESettings.setText(_translate("MainWindow", "Small Arm and PPE Settings"))
+#----------------------------------------backend for Add Band Interface----------------------------------------------    
+        resetBandGUI(self)
+        self.edtBandNo.textEdited.connect(self.resetSuccess)
+        self.navAddLogin.clicked.connect(self.navAddLoginMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
+        self.btnAddBand.clicked.connect(self.addBand)
+        self.navArmPPESettings.clicked.connect(self.navArmPPESettingsMethod)
+    def addBand(self):
+        bandNo=self.edtBandNo.text()
+        if(bandNo!=""):
+                queryString="INSERT INTO Bands VALUES('"+bandNo+"')"
+                insertData(self,queryString)
+                if(self.lblDataEntrySuccessful.text()!="Details could not be saved!"):
+                        resetBandGUI(self)
+
+        else:
+                self.lblDataEntrySuccessful.setStyleSheet("color: red;\n""background-color:#ffffff;\n""font-size: 11pt")
+                self.lblDataEntrySuccessful.setText("One or more fields are empty!")
+                self.lblDataEntrySuccessful.show()
+    def resetSuccess(self):
+                self.lblDataEntrySuccessful.hide()
+                self.lblDataEntrySuccessful.setStyleSheet("color: green;\n""background-color:#ffffff;\n""font-size: 11pt")
+        
+    def navLogoutMethod(self):
+             w.change_view(29)  
+    def navAddLoginMethod(self):
+             w.change_view(30)  
+    def navArmPPESettingsMethod(self):
+             w.change_view(33)  
+class AddBandWidget(QtWidgets.QMainWindow,AddBand ):
+    def __init__(self, parent=None):
+        super(AddBandWidget, self).__init__(parent)
+        self.setup_AddBand(self)
+############################################################# Add WeaponType Interface ######################################################################
+class AddWeaponType(object):
+    def setup_AddWeaponType(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(1366, 765)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.frame = QtWidgets.QFrame(self.centralwidget)
+        self.frame.setGeometry(QtCore.QRect(0, 0, 1366, 768))
+        self.frame.setStyleSheet("background-color: #ffffff")
+        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame.setObjectName("frame")
+        self.label_2 = QtWidgets.QLabel(self.frame)
+        self.label_2.setGeometry(QtCore.QRect(0, 0, 1366, 44))
+        self.label_2.setStyleSheet("background-color:#222222;")
+        self.label_2.setText("")
+        self.label_2.setObjectName("label_2")
+        self.btnAddWeaponType = QtWidgets.QPushButton(self.frame)
+        self.btnAddWeaponType.setGeometry(QtCore.QRect(564, 210, 271, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnAddWeaponType.setFont(font)
+        self.btnAddWeaponType.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnAddWeaponType.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/images/add.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnAddWeaponType.setIcon(icon)
+        self.btnAddWeaponType.setIconSize(QtCore.QSize(25, 25))
+        self.btnAddWeaponType.setObjectName("btnAddWeaponType")
+        self.lblDataEntrySuccessful = QtWidgets.QLabel(self.frame)
+        self.lblDataEntrySuccessful.setEnabled(True)
+        self.lblDataEntrySuccessful.setGeometry(QtCore.QRect(331, 189, 361, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblDataEntrySuccessful.setFont(font)
+        self.lblDataEntrySuccessful.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblDataEntrySuccessful.setStyleSheet("color: green;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblDataEntrySuccessful.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblDataEntrySuccessful.setObjectName("lblDataEntrySuccessful")
+        self.pushButton = QtWidgets.QPushButton(self.frame)
+        self.pushButton.setEnabled(True)
+        self.pushButton.setGeometry(QtCore.QRect(1080, 5, 260, 35))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.pushButton.setFont(font)
+        self.pushButton.setStyleSheet(" text-align: right;\n"
+"    color: #ffffff;\n"
+"    background-color:#222222;")
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/images/armPPE.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton.setIcon(icon1)
+        self.pushButton.setIconSize(QtCore.QSize(32, 32))
+        self.pushButton.setObjectName("pushButton")
+        self.pushButton_2 = QtWidgets.QPushButton(self.frame)
+        self.pushButton_2.setEnabled(True)
+        self.pushButton_2.setGeometry(QtCore.QRect(331, 680, 100, 80))
+        self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
+"    border-radius:4px;\n"
+"    outline:none;")
+        self.pushButton_2.setText("")
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(":/images/logoMTIP.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_2.setIcon(icon2)
+        self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
+        self.pushButton_2.setObjectName("pushButton_2")
+        self.edtWeaponType = QtWidgets.QLineEdit(self.frame)
+        self.edtWeaponType.setGeometry(QtCore.QRect(490, 140, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.edtWeaponType.setFont(font)
+        self.edtWeaponType.setStyleSheet("QLineEdit{\n"
+"    border:1px solid #aaa;\n"
+"    border-radius:4px;\n"
+"    outline:none;\n"
+"    padding:6px;\n"
+"    box-sizing:border-box;\n"
+"    transition:.3s;\n"
+"  }\n"
+"  QLineEdit:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QLineEdit:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"  }")
+        self.edtWeaponType.setObjectName("edtWeaponType")
+        self.label_9 = QtWidgets.QLabel(self.frame)
+        self.label_9.setGeometry(QtCore.QRect(331, 138, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_9.setFont(font)
+        self.label_9.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_9.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_9.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_9.setObjectName("label_9")
+        self.label = QtWidgets.QLabel(self.frame)
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
+        self.label.setStyleSheet("background-image: url(null);\n"
+"background-color:#2F3C71;")
+        self.label.setText("")
+        self.label.setObjectName("label")
+        self.navAddLogin = QtWidgets.QPushButton(self.frame)
+        self.navAddLogin.setGeometry(QtCore.QRect(10, 3, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navAddLogin.setFont(font)
+        self.navAddLogin.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navAddLogin.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(":/images/login.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navAddLogin.setIcon(icon3)
+        self.navAddLogin.setIconSize(QtCore.QSize(25, 25))
+        self.navAddLogin.setFlat(False)
+        self.navAddLogin.setObjectName("navAddLogin")
+        self.navAddBand = QtWidgets.QPushButton(self.frame)
+        self.navAddBand.setGeometry(QtCore.QRect(10, 47, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navAddBand.setFont(font)
+        self.navAddBand.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navAddBand.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon4 = QtGui.QIcon()
+        icon4.addPixmap(QtGui.QPixmap(":/images/smartWatch.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navAddBand.setIcon(icon4)
+        self.navAddBand.setIconSize(QtCore.QSize(32, 32))
+        self.navAddBand.setFlat(False)
+        self.navAddBand.setObjectName("navAddBand")
+        self.navArmPPESettings = QtWidgets.QPushButton(self.frame)
+        self.navArmPPESettings.setGeometry(QtCore.QRect(10, 91, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navArmPPESettings.setFont(font)
+        self.navArmPPESettings.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navArmPPESettings.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"QPushButton:active\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.navArmPPESettings.setIcon(icon1)
+        self.navArmPPESettings.setIconSize(QtCore.QSize(32, 32))
+        self.navArmPPESettings.setFlat(False)
+        self.navArmPPESettings.setObjectName("navArmPPESettings")
+        self.navAddRegistrationNo = QtWidgets.QPushButton(self.frame)
+        self.navAddRegistrationNo.setGeometry(QtCore.QRect(1065, 120, 271, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navAddRegistrationNo.setFont(font)
+        self.navAddRegistrationNo.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navAddRegistrationNo.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.navAddRegistrationNo.setIcon(icon)
+        self.navAddRegistrationNo.setIconSize(QtCore.QSize(25, 25))
+        self.navAddRegistrationNo.setObjectName("navAddRegistrationNo")
+        self.navAddAmmoType = QtWidgets.QPushButton(self.frame)
+        self.navAddAmmoType.setGeometry(QtCore.QRect(1065, 170, 271, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navAddAmmoType.setFont(font)
+        self.navAddAmmoType.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navAddAmmoType.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.navAddAmmoType.setIcon(icon)
+        self.navAddAmmoType.setIconSize(QtCore.QSize(25, 25))
+        self.navAddAmmoType.setObjectName("navAddAmmoType")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    outline:none;\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
+        
+        self.label_2.raise_()
+        self.lblDataEntrySuccessful.raise_()
+        self.pushButton.raise_()
+        self.pushButton_2.raise_()
+        self.edtWeaponType.raise_()
+        self.label_9.raise_()
+        self.label.raise_()
+        self.btnAddWeaponType.raise_()
+        self.navAddBand.raise_()
+        self.navAddLogin.raise_()
+        self.navArmPPESettings.raise_()
+        self.navAddRegistrationNo.raise_()
+        self.btnLogout.raise_()
+        self.navAddAmmoType.raise_()
+        self.label_13 = QtWidgets.QLabel(self.centralwidget)
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
+        self.label_13.setStyleSheet("background-color:#A0A0A0;")
+        self.label_13.setText("")
+        self.label_13.setObjectName("label_13")
+        self.label_6 = QtWidgets.QLabel(self.centralwidget)
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_6.setFont(font)
+        self.label_6.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_6.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_6.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_6.setObjectName("label_6")
+        MainWindow.setCentralWidget(self.centralwidget)
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.btnAddWeaponType.setText(_translate("MainWindow", "Add New Weapon Type"))
+        self.lblDataEntrySuccessful.setText(_translate("MainWindow", "Details Saved Successfully!"))
+        self.pushButton.setText(_translate("MainWindow", "Small Arm and PPE Settings"))
+        self.label_9.setText(_translate("MainWindow", "Weapon Type"))
+        self.navAddLogin.setText(_translate("MainWindow", "Login Settings"))
+        self.navAddBand.setText(_translate("MainWindow", "Band Settings"))
+        self.navArmPPESettings.setText(_translate("MainWindow", "Small Arm and PPE Settings"))
+        self.navAddRegistrationNo.setText(_translate("MainWindow", "Add Registration No."))
+        self.navAddAmmoType.setText(_translate("MainWindow", "Add Ammo Type       "))
+        self.label_6.setText(_translate("MainWindow", "Enter Weapon Details"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
+#----------------------------------------backend for Add WeaponType Interface----------------------------------------------    
+        resetWeaponTypeGUI(self)
+        self.edtWeaponType.textEdited.connect(self.resetSuccess)
+        self.navAddLogin.clicked.connect(self.navAddLoginMethod)
+        self.navAddBand.clicked.connect(self.navAddBandMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
+        self.btnAddWeaponType.clicked.connect(self.addWeaponType)
+        self.navAddAmmoType.clicked.connect(self.navAddAmmoTypeMethod)
+        self.navAddRegistrationNo.clicked.connect(self.navAddRegNoMethod)
+    def addWeaponType(self):
+        weaponType=self.edtWeaponType.text()
+        if(weaponType!=""):
+                queryString="INSERT INTO Arms VALUES('"+weaponType+"')"
+                insertData(self,queryString)
+                if(self.lblDataEntrySuccessful.text()!="Details could not be saved!"):
+                        resetWeaponTypeGUI(self)
+
+        else:
+                self.lblDataEntrySuccessful.setStyleSheet("color: red;\n""background-color:#ffffff;\n""font-size: 11pt")
+                self.lblDataEntrySuccessful.setText("One or more fields are empty!")
+                self.lblDataEntrySuccessful.show()
+    def resetSuccess(self):
+                self.lblDataEntrySuccessful.hide()
+                self.lblDataEntrySuccessful.setStyleSheet("color: green;\n""background-color:#ffffff;\n""font-size: 11pt")
+        
+    def navLogoutMethod(self):
+             w.change_view(29)  
+    def navAddLoginMethod(self):
+             w.change_view(30)  
+    def navAddBandMethod(self):
+             w.change_view(32) 
+    def navAddAmmoTypeMethod(self):
+             w.change_view(34) 
+    def navAddRegNoMethod(self):
+             w.change_view(35) 
+class AddWeaponTypeWidget(QtWidgets.QMainWindow,AddWeaponType ):
+    def __init__(self, parent=None):
+        super(AddWeaponTypeWidget, self).__init__(parent)
+        self.setup_AddWeaponType(self)
+############################################################# Add AmmoType Interface ######################################################################
+class AddAmmoType(object):
+    def setup_AddAmmoType(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(1366, 765)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.frame = QtWidgets.QFrame(self.centralwidget)
+        self.frame.setGeometry(QtCore.QRect(0, 0, 1366, 768))
+        self.frame.setStyleSheet("background-color: #ffffff")
+        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame.setObjectName("frame")
+        self.label_2 = QtWidgets.QLabel(self.frame)
+        self.label_2.setGeometry(QtCore.QRect(0, 0, 1366, 44))
+        self.label_2.setStyleSheet("background-color:#222222;")
+        self.label_2.setText("")
+        self.label_2.setObjectName("label_2")
+        self.btnAddAmmoType = QtWidgets.QPushButton(self.frame)
+        self.btnAddAmmoType.setGeometry(QtCore.QRect(564, 250, 271, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnAddAmmoType.setFont(font)
+        self.btnAddAmmoType.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnAddAmmoType.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/images/add.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnAddAmmoType.setIcon(icon)
+        self.btnAddAmmoType.setIconSize(QtCore.QSize(25, 25))
+        self.btnAddAmmoType.setObjectName("btnAddAmmoType")
+        self.lblDataEntrySuccessful = QtWidgets.QLabel(self.frame)
+        self.lblDataEntrySuccessful.setEnabled(True)
+        self.lblDataEntrySuccessful.setGeometry(QtCore.QRect(331, 229, 361, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblDataEntrySuccessful.setFont(font)
+        self.lblDataEntrySuccessful.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblDataEntrySuccessful.setStyleSheet("color: green;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblDataEntrySuccessful.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblDataEntrySuccessful.setObjectName("lblDataEntrySuccessful")
+        self.pushButton = QtWidgets.QPushButton(self.frame)
+        self.pushButton.setEnabled(True)
+        self.pushButton.setGeometry(QtCore.QRect(1080, 5, 260, 35))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.pushButton.setFont(font)
+        self.pushButton.setStyleSheet(" text-align: right;\n"
+"    color: #ffffff;\n"
+"    background-color:#222222;")
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/images/armPPE.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton.setIcon(icon1)
+        self.pushButton.setIconSize(QtCore.QSize(32, 32))
+        self.pushButton.setObjectName("pushButton")
+        self.pushButton_2 = QtWidgets.QPushButton(self.frame)
+        self.pushButton_2.setEnabled(True)
+        self.pushButton_2.setGeometry(QtCore.QRect(331, 680, 100, 80))
+        self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
+"    border-radius:4px;\n"
+"    outline:none;")
+        self.pushButton_2.setText("")
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(":/images/logoMTIP.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_2.setIcon(icon2)
+        self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
+        self.pushButton_2.setObjectName("pushButton_2")
+        self.edtAmmoType = QtWidgets.QLineEdit(self.frame)
+        self.edtAmmoType.setGeometry(QtCore.QRect(490, 184, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.edtAmmoType.setFont(font)
+        self.edtAmmoType.setStyleSheet("QLineEdit{\n"
+"    border:1px solid #aaa;\n"
+"    border-radius:4px;\n"
+"    outline:none;\n"
+"    padding:6px;\n"
+"    box-sizing:border-box;\n"
+"    transition:.3s;\n"
+"  }\n"
+"  QLineEdit:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QLineEdit:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"  }")
+        self.edtAmmoType.setObjectName("edtAmmoType")
+        self.label_9 = QtWidgets.QLabel(self.frame)
+        self.label_9.setGeometry(QtCore.QRect(331, 138, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_9.setFont(font)
+        self.label_9.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_9.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_9.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_9.setObjectName("label_9")
+        self.label = QtWidgets.QLabel(self.frame)
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
+        self.label.setStyleSheet("background-image: url(null);\n"
+"background-color:#2F3C71;")
+        self.label.setText("")
+        self.label.setObjectName("label")
+        self.navAddLogin = QtWidgets.QPushButton(self.frame)
+        self.navAddLogin.setGeometry(QtCore.QRect(10, 3, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navAddLogin.setFont(font)
+        self.navAddLogin.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navAddLogin.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(":/images/login.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navAddLogin.setIcon(icon3)
+        self.navAddLogin.setIconSize(QtCore.QSize(25, 25))
+        self.navAddLogin.setFlat(False)
+        self.navAddLogin.setObjectName("navAddLogin")
+        self.navAddBand = QtWidgets.QPushButton(self.frame)
+        self.navAddBand.setGeometry(QtCore.QRect(10, 47, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navAddBand.setFont(font)
+        self.navAddBand.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navAddBand.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon4 = QtGui.QIcon()
+        icon4.addPixmap(QtGui.QPixmap(":/images/smartWatch.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navAddBand.setIcon(icon4)
+        self.navAddBand.setIconSize(QtCore.QSize(32, 32))
+        self.navAddBand.setFlat(False)
+        self.navAddBand.setObjectName("navAddBand")
+        self.navArmPPESettings = QtWidgets.QPushButton(self.frame)
+        self.navArmPPESettings.setGeometry(QtCore.QRect(10, 91, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navArmPPESettings.setFont(font)
+        self.navArmPPESettings.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navArmPPESettings.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"QPushButton:active\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.navArmPPESettings.setIcon(icon1)
+        self.navArmPPESettings.setIconSize(QtCore.QSize(32, 32))
+        self.navArmPPESettings.setFlat(False)
+        self.navArmPPESettings.setObjectName("navArmPPESettings")
+        self.navAddRegistrationNo = QtWidgets.QPushButton(self.frame)
+        self.navAddRegistrationNo.setGeometry(QtCore.QRect(1065, 120, 271, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navAddRegistrationNo.setFont(font)
+        self.navAddRegistrationNo.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navAddRegistrationNo.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.navAddRegistrationNo.setIcon(icon)
+        self.navAddRegistrationNo.setIconSize(QtCore.QSize(25, 25))
+        self.navAddRegistrationNo.setObjectName("navAddRegistrationNo")
+        self.navAddWeaponType = QtWidgets.QPushButton(self.frame)
+        self.navAddWeaponType.setGeometry(QtCore.QRect(1065, 170, 271, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navAddWeaponType.setFont(font)
+        self.navAddWeaponType.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navAddWeaponType.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.navAddWeaponType.setIcon(icon)
+        self.navAddWeaponType.setIconSize(QtCore.QSize(25, 25))
+        self.navAddWeaponType.setObjectName("navAddWeaponType")
+        self.label_10 = QtWidgets.QLabel(self.frame)
+        self.label_10.setGeometry(QtCore.QRect(331, 182, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_10.setFont(font)
+        self.label_10.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_10.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_10.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_10.setObjectName("label_10")
+        self.cBoxWeaponType = QtWidgets.QComboBox(self.frame)
+        self.cBoxWeaponType.setGeometry(QtCore.QRect(490, 140, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        font.setKerning(True)
+        self.cBoxWeaponType.setFont(font)
+        self.cBoxWeaponType.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.cBoxWeaponType.setStyleSheet("QComboBox{ border-width: 1px;\n"
+" border-color: #aaa;\n"
+" border-style: solid;\n"
+"border-radius:6; \n"
+"}\n"
+"\n"
+"QComboBox::drop-down:button{\n"
+"background-color:transparent;\n"
+"}\n"
+"QComboBox::down-arrow {\n"
+" \n"
+"    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);\n"
+"    width: 25px;\n"
+"    height: 9px;\n"
+"}\n"
+"QComboBox:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QComboBox:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"  }\n"
+"")
+        self.cBoxWeaponType.setEditable(False)
+        self.cBoxWeaponType.setFrame(True)
+        self.cBoxWeaponType.setObjectName("cBoxWeaponType")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    outline:none;\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
+        self.label_2.raise_()
+        self.lblDataEntrySuccessful.raise_()
+        self.pushButton.raise_()
+        self.pushButton_2.raise_()
+        self.edtAmmoType.raise_()
+        self.label_9.raise_()
+        self.label.raise_()
+        self.btnAddAmmoType.raise_()
+        self.navAddBand.raise_()
+        self.navAddLogin.raise_()
+        self.navArmPPESettings.raise_()
+        self.navAddRegistrationNo.raise_()
+        self.navAddWeaponType.raise_()
+        self.btnLogout.raise_()
+        self.label_10.raise_()
+        self.cBoxWeaponType.raise_()
+        self.label_13 = QtWidgets.QLabel(self.centralwidget)
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
+        self.label_13.setStyleSheet("background-color:#A0A0A0;")
+        self.label_13.setText("")
+        self.label_13.setObjectName("label_13")
+        self.label_6 = QtWidgets.QLabel(self.centralwidget)
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_6.setFont(font)
+        self.label_6.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_6.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_6.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_6.setObjectName("label_6")
+        MainWindow.setCentralWidget(self.centralwidget)
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.btnAddAmmoType.setText(_translate("MainWindow", "Add Ammo Type"))
+        self.lblDataEntrySuccessful.setText(_translate("MainWindow", "Details Saved Successfully!"))
+        self.pushButton.setText(_translate("MainWindow", "Small Arm and PPE Settings"))
+        self.label_9.setText(_translate("MainWindow", "Weapon Type"))
+        self.navAddLogin.setText(_translate("MainWindow", "Login Settings"))
+        self.navAddBand.setText(_translate("MainWindow", "Band Settings"))
+        self.navArmPPESettings.setText(_translate("MainWindow", "Small Arm and PPE Settings"))
+        self.navAddRegistrationNo.setText(_translate("MainWindow", "Add Registration No.    "))
+        self.navAddWeaponType.setText(_translate("MainWindow", "Add New Weapon Type"))
+        self.label_10.setText(_translate("MainWindow", "Ammo Type"))
+        self.label_6.setText(_translate("MainWindow", "Enter Weapon Ammo Details"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
+#----------------------------------------backend for Add Ammotype Interface----------------------------------------------    
+        resetAmmoTypeGUI(self)
+        self.cBoxWeaponType.activated.connect(self.resetSuccess)
+        self.edtAmmoType.textEdited.connect(self.resetSuccess)
+        self.navAddLogin.clicked.connect(self.navAddLoginMethod)
+        self.navAddBand.clicked.connect(self.navAddBandMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
+        self.btnAddAmmoType.clicked.connect(self.addAmmoType)
+        self.navAddWeaponType.clicked.connect(self.navAddWeaponTypeMethod)
+        self.navAddRegistrationNo.clicked.connect(self.navAddRegNoMethod)
+    def addAmmoType(self):
+        weaponType=self.cBoxWeaponType.currentText()
+        ammoType=self.edtAmmoType.text()
+        if(ammoType!=""):
+                queryString="INSERT INTO AmmoTypes VALUES('"+weaponType+"',"+"'"+ammoType+ "')"
+                insertData(self,queryString)
+                if(self.lblDataEntrySuccessful.text()!="Details could not be saved!"):
+                        resetAmmoTypeGUI(self)
+
+        else:
+                self.lblDataEntrySuccessful.setStyleSheet("color: red;\n""background-color:#ffffff;\n""font-size: 11pt")
+                self.lblDataEntrySuccessful.setText("One or more fields are empty!")
+                self.lblDataEntrySuccessful.show()
+    def resetSuccess(self):
+                self.lblDataEntrySuccessful.hide()
+                self.lblDataEntrySuccessful.setStyleSheet("color: green;\n""background-color:#ffffff;\n""font-size: 11pt")
+        
+    def navLogoutMethod(self):
+             w.change_view(29)  
+    def navAddLoginMethod(self):
+             w.change_view(30)  
+    def navAddBandMethod(self):
+             w.change_view(32) 
+    def navAddWeaponTypeMethod(self):
+             w.change_view(33)
+    def navAddRegNoMethod(self):
+             w.change_view(35) 
+class AddAmmoTypeWidget(QtWidgets.QMainWindow,AddAmmoType ):
+    def __init__(self, parent=None):
+        super(AddAmmoTypeWidget, self).__init__(parent)
+        self.setup_AddAmmoType(self)
+############################################################# Add RegNo Interface######################################################################
+class AddRegNo(object):
+    def setup_AddRegNo(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(1366, 765)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.frame = QtWidgets.QFrame(self.centralwidget)
+        self.frame.setGeometry(QtCore.QRect(0, 0, 1366, 768))
+        self.frame.setStyleSheet("background-color: #ffffff")
+        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame.setObjectName("frame")
+        self.label_2 = QtWidgets.QLabel(self.frame)
+        self.label_2.setGeometry(QtCore.QRect(0, 0, 1366, 44))
+        self.label_2.setStyleSheet("background-color:#222222;")
+        self.label_2.setText("")
+        self.label_2.setObjectName("label_2")
+        self.btnAddRegNo = QtWidgets.QPushButton(self.frame)
+        self.btnAddRegNo.setGeometry(QtCore.QRect(564, 250, 271, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnAddRegNo.setFont(font)
+        self.btnAddRegNo.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnAddRegNo.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/images/add.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnAddRegNo.setIcon(icon)
+        self.btnAddRegNo.setIconSize(QtCore.QSize(25, 25))
+        self.btnAddRegNo.setObjectName("btnAddRegNo")
+        self.lblDataEntrySuccessful = QtWidgets.QLabel(self.frame)
+        self.lblDataEntrySuccessful.setEnabled(True)
+        self.lblDataEntrySuccessful.setGeometry(QtCore.QRect(331, 229, 361, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblDataEntrySuccessful.setFont(font)
+        self.lblDataEntrySuccessful.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblDataEntrySuccessful.setStyleSheet("color: green;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblDataEntrySuccessful.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblDataEntrySuccessful.setObjectName("lblDataEntrySuccessful")
+        self.pushButton = QtWidgets.QPushButton(self.frame)
+        self.pushButton.setEnabled(True)
+        self.pushButton.setGeometry(QtCore.QRect(1080, 5, 260, 35))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.pushButton.setFont(font)
+        self.pushButton.setStyleSheet(" text-align: right;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#222222;")
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/images/armPPE.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton.setIcon(icon1)
+        self.pushButton.setIconSize(QtCore.QSize(32, 32))
+        self.pushButton.setObjectName("pushButton")
+        self.pushButton_2 = QtWidgets.QPushButton(self.frame)
+        self.pushButton_2.setEnabled(True)
+        self.pushButton_2.setGeometry(QtCore.QRect(331, 680, 100, 80))
+        self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
+"    border-radius:4px;\n"
+"    outline:none;")
+        self.pushButton_2.setText("")
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(":/images/logoMTIP.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_2.setIcon(icon2)
+        self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
+        self.pushButton_2.setObjectName("pushButton_2")
+        self.edtRegNo = QtWidgets.QLineEdit(self.frame)
+        self.edtRegNo.setGeometry(QtCore.QRect(490, 184, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.edtRegNo.setFont(font)
+        self.edtRegNo.setStyleSheet("QLineEdit{\n"
+"    border:1px solid #aaa;\n"
+"    border-radius:4px;\n"
+"    outline:none;\n"
+"    padding:6px;\n"
+"    box-sizing:border-box;\n"
+"    transition:.3s;\n"
+"  }\n"
+"  QLineEdit:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QLineEdit:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"  }")
+        self.edtRegNo.setObjectName("edtRegNo")
+        self.label_9 = QtWidgets.QLabel(self.frame)
+        self.label_9.setGeometry(QtCore.QRect(331, 138, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_9.setFont(font)
+        self.label_9.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_9.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_9.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_9.setObjectName("label_9")
+        self.label = QtWidgets.QLabel(self.frame)
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
+        self.label.setStyleSheet("background-image: url(null);\n"
+"background-color:#2F3C71;")
+        self.label.setText("")
+        self.label.setObjectName("label")
+        self.navAddLogin = QtWidgets.QPushButton(self.frame)
+        self.navAddLogin.setGeometry(QtCore.QRect(10, 3, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navAddLogin.setFont(font)
+        self.navAddLogin.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navAddLogin.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(":/images/login.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navAddLogin.setIcon(icon3)
+        self.navAddLogin.setIconSize(QtCore.QSize(25, 25))
+        self.navAddLogin.setFlat(False)
+        self.navAddLogin.setObjectName("navAddLogin")
+        self.navAddBand = QtWidgets.QPushButton(self.frame)
+        self.navAddBand.setGeometry(QtCore.QRect(10, 47, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navAddBand.setFont(font)
+        self.navAddBand.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navAddBand.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon4 = QtGui.QIcon()
+        icon4.addPixmap(QtGui.QPixmap(":/images/smartWatch.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navAddBand.setIcon(icon4)
+        self.navAddBand.setIconSize(QtCore.QSize(32, 32))
+        self.navAddBand.setFlat(False)
+        self.navAddBand.setObjectName("navAddBand")
+        self.navArmPPESettings = QtWidgets.QPushButton(self.frame)
+        self.navArmPPESettings.setGeometry(QtCore.QRect(10, 91, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navArmPPESettings.setFont(font)
+        self.navArmPPESettings.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navArmPPESettings.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"QPushButton:active\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.navArmPPESettings.setIcon(icon1)
+        self.navArmPPESettings.setIconSize(QtCore.QSize(32, 32))
+        self.navArmPPESettings.setFlat(False)
+        self.navArmPPESettings.setObjectName("navArmPPESettings")
+        self.navAddAmmoType = QtWidgets.QPushButton(self.frame)
+        self.navAddAmmoType.setGeometry(QtCore.QRect(1065, 170, 271, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navAddAmmoType.setFont(font)
+        self.navAddAmmoType.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navAddAmmoType.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.navAddAmmoType.setIcon(icon)
+        self.navAddAmmoType.setIconSize(QtCore.QSize(25, 25))
+        self.navAddAmmoType.setObjectName("navAddAmmoType")
+        self.navAddWeaponType = QtWidgets.QPushButton(self.frame)
+        self.navAddWeaponType.setGeometry(QtCore.QRect(1065, 120, 271, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navAddWeaponType.setFont(font)
+        self.navAddWeaponType.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navAddWeaponType.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        self.navAddWeaponType.setIcon(icon)
+        self.navAddWeaponType.setIconSize(QtCore.QSize(25, 25))
+        self.navAddWeaponType.setObjectName("navAddWeaponType")
+        self.label_10 = QtWidgets.QLabel(self.frame)
+        self.label_10.setGeometry(QtCore.QRect(331, 182, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_10.setFont(font)
+        self.label_10.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_10.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_10.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_10.setObjectName("label_10")
+        self.cBoxWeaponType = QtWidgets.QComboBox(self.frame)
+        self.cBoxWeaponType.setGeometry(QtCore.QRect(490, 140, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        font.setKerning(True)
+        self.cBoxWeaponType.setFont(font)
+        self.cBoxWeaponType.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.cBoxWeaponType.setStyleSheet("QComboBox{ border-width: 1px;\n"
+" border-color: #aaa;\n"
+" border-style: solid;\n"
+"border-radius:6; \n"
+"}\n"
+"\n"
+"QComboBox::drop-down:button{\n"
+"background-color:transparent;\n"
+"}\n"
+"QComboBox::down-arrow {\n"
+" \n"
+"    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);\n"
+"    width: 25px;\n"
+"    height: 9px;\n"
+"}\n"
+"QComboBox:hover{\n"
+"     border:1px solid #000;    \n"
+"     transition:.3s;\n"
+"}\n"
+"  QComboBox:focus{\n"
+"    border-color:dodgerBlue;\n"
+"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+"  }\n"
+"")
+        self.cBoxWeaponType.setEditable(False)
+        self.cBoxWeaponType.setFrame(True)
+        self.cBoxWeaponType.setObjectName("cBoxWeaponType")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    outline:none;\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
+        self.label_2.raise_()
+        self.lblDataEntrySuccessful.raise_()
+        self.pushButton.raise_()
+        self.pushButton_2.raise_()
+        self.edtRegNo.raise_()
+        self.label_9.raise_()
+        self.label.raise_()
+        self.btnAddRegNo.raise_()
+        self.navAddBand.raise_()
+        self.navAddLogin.raise_()
+        self.navArmPPESettings.raise_()
+        self.navAddAmmoType.raise_()
+        self.navAddWeaponType.raise_()
+        self.btnLogout.raise_()
+        self.label_10.raise_()
+        self.cBoxWeaponType.raise_()
+        self.label_13 = QtWidgets.QLabel(self.centralwidget)
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
+        self.label_13.setStyleSheet("background-color:#A0A0A0;")
+        self.label_13.setText("")
+        self.label_13.setObjectName("label_13")
+        self.label_6 = QtWidgets.QLabel(self.centralwidget)
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_6.setFont(font)
+        self.label_6.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_6.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_6.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_6.setObjectName("label_6")
+        MainWindow.setCentralWidget(self.centralwidget)
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.btnAddRegNo.setText(_translate("MainWindow", "Add Registration No."))
+        self.lblDataEntrySuccessful.setText(_translate("MainWindow", "Details Saved Successfully!"))
+        self.pushButton.setText(_translate("MainWindow", "Small Arm and PPE Settings"))
+        self.label_9.setText(_translate("MainWindow", "Weapon Type"))
+        self.navAddLogin.setText(_translate("MainWindow", "Login Settings"))
+        self.navAddBand.setText(_translate("MainWindow", "Band Settings"))
+        self.navArmPPESettings.setText(_translate("MainWindow", "Small Arm and PPE Settings"))
+        self.navAddAmmoType.setText(_translate("MainWindow", "Add Ammo Type           "))
+        self.navAddWeaponType.setText(_translate("MainWindow", "Add New Weapon Type"))
+        self.label_10.setText(_translate("MainWindow", "Registration No."))
+        self.label_6.setText(_translate("MainWindow", "Enter Weapon Registration Details"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
+#----------------------------------------backend for Add RegNo Interface----------------------------------------------    
+        resetRegNoGUI(self)
+        self.cBoxWeaponType.activated.connect(self.resetSuccess)
+        self.edtRegNo.textEdited.connect(self.resetSuccess)
+        self.navAddLogin.clicked.connect(self.navAddLoginMethod)
+        self.navAddBand.clicked.connect(self.navAddBandMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
+        self.btnAddRegNo.clicked.connect(self.addRegNo)
+        self.navAddWeaponType.clicked.connect(self.navAddWeaponTypeMethod)
+        self.navAddAmmoType.clicked.connect(self.navAddAmmoTypeMethod)
+    def addRegNo(self):
+        weaponType=self.cBoxWeaponType.currentText()
+        regNo=self.edtRegNo.text()
+        if(regNo!=""):
+                queryString="INSERT INTO Registrations VALUES('"+weaponType+"',"+"'"+regNo+ "')"
+                insertData(self,queryString)
+                if(self.lblDataEntrySuccessful.text()!="Details could not be saved!"):
+                        resetRegNoGUI(self)
+
+        else:
+                self.lblDataEntrySuccessful.setStyleSheet("color: red;\n""background-color:#ffffff;\n""font-size: 11pt")
+                self.lblDataEntrySuccessful.setText("One or more fields are empty!")
+                self.lblDataEntrySuccessful.show()
+    def resetSuccess(self):
+                self.lblDataEntrySuccessful.hide()
+                self.lblDataEntrySuccessful.setStyleSheet("color: green;\n""background-color:#ffffff;\n""font-size: 11pt")
+        
+    def navLogoutMethod(self):
+             w.change_view(29)  
+    def navAddLoginMethod(self):
+             w.change_view(30)  
+    def navAddBandMethod(self):
+             w.change_view(32) 
+    def navAddWeaponTypeMethod(self):
+             w.change_view(33)
+    def navAddAmmoTypeMethod(self):
+             w.change_view(34)
+class AddRegNoWidget(QtWidgets.QMainWindow,AddRegNo ):
+    def __init__(self, parent=None):
+        super(AddRegNoWidget, self).__init__(parent)
+        self.setup_AddRegNo(self)
 ############################################################# Main ######################################################################
 import IconResource_rc
 
@@ -36482,7 +40070,9 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     w = App()
     w.resize(1366,768)
+    w.setWindowFlags(w.windowFlags() | QtCore.Qt.WindowStaysOnTopHint); 
     w.setWindowState(QtCore.Qt.WindowMaximized)
+    w.showFullScreen()
     w.show()
-    w.change_view(29)
+    w.change_view(19)
     sys.exit(app.exec_())

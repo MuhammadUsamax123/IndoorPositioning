@@ -8,8 +8,9 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-
-
+from IconResource_rc import * 
+import threading
+import time
 class PersonnelLocation(object):
     def setup_PersonnelLocation(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -1228,7 +1229,7 @@ class PersonnelLocation(object):
         self.navViewStatePersonnel.raise_()
         self.scrollArea.raise_()
         MainWindow.setCentralWidget(self.centralwidget)
-
+       
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
@@ -1258,8 +1259,21 @@ class PersonnelLocation(object):
 
 
 #----------------------------------------backend for Personnel Location Interface----------------------------------------------
-      
+        thread=threading.Thread(target=self.toggleMarker, args=())
+        thread.daemon = True                           # Daemonize thread
+        thread.start()
+
         disableHideMarkers(self)
+    check_flag=True
+    def toggleMarker(self):
+        while(self.check_flag):
+            disableHideMarkers(self)
+            time.sleep(5)
+            enableShowMarkers(self)
+            time.sleep(5)
+        
+        
+
 
 
 def disableHideMarkers(self):
