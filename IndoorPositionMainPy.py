@@ -3,10 +3,11 @@
 from scapy.all import ARP, Ether, srp
 import threading
 import time
-from datetime import date
+from datetime import date, datetime, timedelta
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sqlite3
 from PyQt5.QtSql import QSqlQueryModel,QSqlDatabase,QSqlQuery
+
 db = QSqlDatabase.addDatabase("QSQLITE")
 db.setDatabaseName("IndoorPositionDatabase.DB")
 
@@ -25,7 +26,7 @@ def createTable():
         c.execute("CREATE TABLE IF NOT EXISTS TransportBook('Car No.' TEXT, 'Car Name' TEXT,'Driver Name' TEXT,'Slip No.' TEXT,'Meter Reading' TEXT,'Area to Visit' TEXT,'Time in' TEXT,'Time out' TEXT)")
         c.execute("CREATE TABLE IF NOT EXISTS GangwayBook(Date TEXT, Place TEXT, 'Name of Article' TEXT, 'Quantity' TEXT, 'Time of Receiving' TEXT, 'Issued Person Name' TEXT, Remarks Text)")
         c.execute("CREATE TABLE IF NOT EXISTS DutyBook('P No./ O No.' TEXT, Name TEXT, 'Rank/ Rate' TEXT, Place TEXT, 'Time out' TEXT, 'Time in' TEXT)")
-        c.execute("CREATE TABLE IF NOT EXISTS PunishmentBook('P No./ O No.' TEXT, Name TEXT, 'Rank/ Rate' TEXT, Punishment TEXT, 'From Date' TEXT, 'To Date' TEXT,'05:00' TEXT,'14:00' TEXT,'16:00' TEXT, '21:00' TEXT, Remarks TEXT)")
+        c.execute("CREATE TABLE IF NOT EXISTS PunishmentBook('P No./ O No.' TEXT, Name TEXT, 'Rank/ Rate' TEXT, Punishment TEXT, 'Punishment Date' TEXT,'05:00' TEXT,'14:00' TEXT,'16:00' TEXT, '21:00' TEXT, Remarks TEXT)")
         c.execute("CREATE TABLE IF NOT EXISTS OODObservationBook('OOD Name' TEXT,'OOD Rank/ Rate' TEXT,Date TEXT,Observation TEXT) ")
         c.execute("CREATE TABLE IF NOT EXISTS NightRoundBook(Time TEXT, 'Cells Visited in Water' TEXT, 'Temperature of Cells' TEXT, Report TEXT, 'Petty Officer Name' TEXT, 'Officer on Watch Name' TEXT, 'Officer on Round Name' TEXT)")
         c.execute("CREATE TABLE IF NOT EXISTS ArmPPEBook('P No./ O No.' TEXT, Name TEXT, 'Rank/ Rate' TEXT, 'Weapon Type' TEXT, 'Registration No.' TEXT, 'Spare Magazine' TEXT,'Ammo Type' TEXT,'Quantity' TEXT,'SL Pouch' TEXT, 'Ammo Consumed' TEXT,'Extra Equiplment' TEXT)")
@@ -116,11 +117,11 @@ def resetOODGUI(self):
         self.lblOODRank.clear()
         self.dtObservationDate.setDate(QtCore.QDate.currentDate())
         self.txtObservation.clear()
-        cbOODName=fillComboBoxData("SELECT Name FROM PersonnelDataBook Where [Rank/ Rate]='Commodore' OR [Rank/ Rate]='Captain'")
+        cbOODName=fillComboBoxData("SELECT Name FROM PersonnelDataBook Where [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer' OR [Rank/ Rate]='Acting S/Lieutenant' OR [Rank/ Rate]='Sub/Lieutenant' OR [Rank/ Rate]='Lieutenant' OR [Rank/ Rate]='Lieutenant Cdr' OR [Rank/ Rate]='Commander'")
         if(len(cbOODName)!=0):
                 self.cBoxSelectOOD.addItems(cbOODName)
 
-        cbOODRank=fillComboBoxData("Select [Rank/ Rate] FROM PersonnelDataBook Where [Rank/ Rate]='Commodore' OR [Rank/ Rate]='Captain'")
+        cbOODRank=fillComboBoxData("SELECT [Rank/ Rate] FROM PersonnelDataBook Where [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer' OR [Rank/ Rate]='Acting S/Lieutenant' OR [Rank/ Rate]='Sub/Lieutenant' OR [Rank/ Rate]='Lieutenant' OR [Rank/ Rate]='Lieutenant Cdr' OR [Rank/ Rate]='Commander'")
         if(len(cbOODRank)!=0):
                 self.listOODRank=cbOODRank.copy()
                 self.lblOODRank.setText(self.listOODRank[0])
@@ -207,20 +208,20 @@ def resetDutyGUI(self):
         self.lblDutyName.clear()
         self.lblDutyRank.clear()
         self.edtDutyPlace.clear()
-        cbDutyPNo=fillComboBoxData("SELECT [P No./ O No.] FROM PersonnelDataBook WHERE [Rank/ Rate]='II Rank' OR[Rank/ Rate]='I Rank' OR[Rank/ Rate]='Ldg' OR[Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer'")
+        cbDutyPNo=fillComboBoxData("SELECT [P No./ O No.] FROM PersonnelDataBook")
         if(len(cbDutyPNo)!=0):
                 self.cBoxDutyPNo.addItems(cbDutyPNo)
         
                
 
-        cbDutyName=fillComboBoxData("SELECT Name FROM PersonnelDataBook WHERE [Rank/ Rate]='II Rank' OR[Rank/ Rate]='I Rank' OR[Rank/ Rate]='Ldg' OR[Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer'")
+        cbDutyName=fillComboBoxData("SELECT Name FROM PersonnelDataBook")
         if(len(cbDutyName)!=0):
                 self.listDutyName=cbDutyName.copy()
                 self.lblDutyName.setText(self.listDutyName[0])
         
                 
 
-        cbDutyRank=fillComboBoxData("SELECT [Rank/ Rate] FROM PersonnelDataBook WHERE [Rank/ Rate]='II Rank' OR[Rank/ Rate]='I Rank' OR[Rank/ Rate]='Ldg' OR[Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer'")
+        cbDutyRank=fillComboBoxData("SELECT [Rank/ Rate] FROM PersonnelDataBook ")
         if(len(cbDutyRank)!=0):
                 self.listDutyRank= cbDutyRank.copy()
                 self.lblDutyRank.setText(self.listDutyRank[0])
@@ -233,21 +234,20 @@ def resetPunishGUI(self):
         self.txtPunishment.clear()
         self.dtPunishStartDate.setDate(QtCore.QDate.currentDate())
         self.dtPunishFinishDate.setDate(QtCore.QDate.currentDate())
-        self.txtRemark.clear()
-        cbPunishPNo=fillComboBoxData("SELECT [P No./ O No.] FROM PersonnelDataBook")
+        cbPunishPNo=fillComboBoxData("SELECT [P No./ O No.] FROM PersonnelDataBook Where [Rank/ Rate]='II Rate' OR [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg'")
         if(len(cbPunishPNo)!=0):
                 self.cBoxPunishPNo.addItems(cbPunishPNo)
         
                
 
-        cbPunishName=fillComboBoxData("SELECT Name FROM PersonnelDataBook")
+        cbPunishName=fillComboBoxData("SELECT Name FROM PersonnelDataBook Where [Rank/ Rate]='II Rate' OR [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg'")
         if(len(cbPunishName)!=0):
                 self.listPunishName=cbPunishName.copy()
                 self.lblPunishName.setText(self.listPunishName[0])
         
                 
 
-        cbPunishRank=fillComboBoxData("Select [Rank/ Rate] FROM PersonnelDataBook")
+        cbPunishRank=fillComboBoxData("Select [Rank/ Rate] FROM PersonnelDataBook Where [Rank/ Rate]='II Rate' OR [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg'")
         if(len(cbPunishRank)!=0):
                 self.listPunishRank= cbPunishRank.copy()
                 self.lblPunishRank.setText(self.listPunishRank[0])
@@ -289,13 +289,13 @@ def resetNightRoundGUI(self):
         self.cBoxWOName.clear()
         self.lblWORank.clear()
 
-        cbROName=fillComboBoxData("SELECT Name FROM PersonnelDataBook WHERE NOT [Rank/ Rate]='IIRank' And NOT [Rank/ Rate]='IRank' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer'")
+        cbROName=fillComboBoxData("SELECT Name FROM PersonnelDataBook Where [Rank/ Rate]='Sub/Lieutenant' OR [Rank/ Rate]='Lieutenant' OR [Rank/ Rate]='Lieutenant Cdr'")
         if(len(cbROName)!=0):
                 self.cBoxROName.addItems(cbROName)
         
                 
 
-        cbRORank=fillComboBoxData("SELECT [Rank/ Rate] FROM PersonnelDataBook WHERE NOT [Rank/ Rate]='IIRank' And NOT [Rank/ Rate]='IRank' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer'")
+        cbRORank=fillComboBoxData("SELECT [Rank/ Rate] FROM PersonnelDataBook Where [Rank/ Rate]='Sub/Lieutenant' OR [Rank/ Rate]='Lieutenant' OR [Rank/ Rate]='Lieutenant Cdr'")
         if(len(cbRORank)!=0):
                 self.listRORank= cbRORank.copy()
                 self.lblRORank.setText(self.listRORank[0])
@@ -313,13 +313,13 @@ def resetNightRoundGUI(self):
                 self.lblPORank.setText(self.listPORank[0])
         
 
-        cbWOName=fillComboBoxData("SELECT Name FROM PersonnelDataBook WHERE NOT [Rank/ Rate]='IIRank' And NOT [Rank/ Rate]='IRank' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer'")
+        cbWOName=fillComboBoxData("SELECT Name FROM PersonnelDataBook Where [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer' OR [Rank/ Rate]='Acting S/Lieutenant' OR [Rank/ Rate]='Sub/Lieutenant' OR [Rank/ Rate]='Lieutenant' OR [Rank/ Rate]='Lieutenant Cdr' OR [Rank/ Rate]='Commander'")
         if(len(cbWOName)!=0):
                 self.cBoxWOName.addItems(cbWOName)
         
                 
 
-        cbWORank=fillComboBoxData("SELECT [Rank/ Rate] FROM PersonnelDataBook WHERE NOT [Rank/ Rate]='IIRank' And NOT [Rank/ Rate]='IRank' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer'")
+        cbWORank=fillComboBoxData("SELECT [Rank/ Rate] FROM PersonnelDataBook Where [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer' OR [Rank/ Rate]='Acting S/Lieutenant' OR [Rank/ Rate]='Sub/Lieutenant' OR [Rank/ Rate]='Lieutenant' OR [Rank/ Rate]='Lieutenant Cdr' OR [Rank/ Rate]='Commander'")
         if(len(cbWORank)!=0):
                 self.listWORank= cbWORank.copy()
                 self.lblWORank.setText(self.listWORank[0])
@@ -402,8 +402,8 @@ def resetViewPunishGUI(self):
                 if(len(cbPunishRank)!=0):
                         self.listPunishRank= cbPunishRank.copy()
                         self.lblPunishRank.setText(self.listPunishRank[0])
-                viewQuerryString="SELECT Punishment,[From Date],[To Date],[05:00],[14:00],[16:00],[21:00],Remarks FROM PunishmentBook where [P No./ O No.]='"+cbPunishPNo[0]+"'"
-                loadViewTableData(self,viewQuerryString,8)
+                viewQuerryString="SELECT Punishment,[Punishment Date],[05:00],[14:00],[16:00],[21:00],Remarks FROM PunishmentBook where [P No./ O No.]='"+cbPunishPNo[0]+"'"
+                loadViewTableData(self,viewQuerryString,7)
 
 def loadViewTableData(self,querryString,colLimit):
         self.tblDetails.reset()
@@ -446,27 +446,27 @@ def resetViewStateGUI(self):
                 sailorSkCount=0
 
                 totalCountQuery="Select Count (Name) From ArmoryState"
-                officerCountQuery="SELECT Count (Name) FROM ArmoryState WHERE NOT [Rank/ Rate]='IIRank' And NOT [Rank/ Rate]='IRank' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer'"
-                sailorCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  [Rank/ Rate]='IIRank' OR  [Rank/ Rate]='IRank' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer'"
+                officerCountQuery="SELECT Count (Name) FROM ArmoryState WHERE NOT [Rank/ Rate]='II Rate' And NOT [Rank/ Rate]='I Rate' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer'"
+                sailorCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  [Rank/ Rate]='II Rate' OR  [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer'"
                 
                 totalPCountQuery="Select Count (Name) From ArmoryState Where Status='Present'"
-                officerPCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='IIRank' And NOT [Rank/ Rate]='IRank' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Present') "
-                sailorPCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='IIRank' OR  [Rank/ Rate]='IRank' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Present')"
+                officerPCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='II Rate' And NOT [Rank/ Rate]='I Rate' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Present') "
+                sailorPCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='II Rate' OR  [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Present')"
                 
-                officerACountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='IIRank' And NOT [Rank/ Rate]='IRank' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND (NOT Status='Present') "
-                sailorACountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='IIRank' OR  [Rank/ Rate]='IRank' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (NOT Status='Present')"
+                officerACountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='II Rate' And NOT [Rank/ Rate]='I Rate' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND (NOT Status='Present') "
+                sailorACountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='II Rate' OR  [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (NOT Status='Present')"
                 
-                officerShCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='IIRank' And NOT [Rank/ Rate]='IRank' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Shifa') "
-                sailorShCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='IIRank' OR  [Rank/ Rate]='IRank' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Shifa')"
+                officerShCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='II Rate' And NOT [Rank/ Rate]='I Rate' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Shifa') "
+                sailorShCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='II Rate' OR  [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Shifa')"
                 
-                officerCasCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='IIRank' And NOT [Rank/ Rate]='IRank' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Casual Leave') "
-                sailorCasCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='IIRank' OR  [Rank/ Rate]='IRank' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Casual Leave')"
+                officerCasCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='II Rate' And NOT [Rank/ Rate]='I Rate' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Casual Leave') "
+                sailorCasCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='II Rate' OR  [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Casual Leave')"
                 
-                officerPerCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='IIRank' And NOT [Rank/ Rate]='IRank' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Personal Leave') "
-                sailorPerCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='IIRank' OR  [Rank/ Rate]='IRank' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Personal Leave')"
+                officerPerCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='II Rate' And NOT [Rank/ Rate]='I Rate' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Personal Leave') "
+                sailorPerCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='II Rate' OR  [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Personal Leave')"
                 
-                officerSKCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='IIRank' And NOT [Rank/ Rate]='IRank' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Sick Leave') "
-                sailorSKCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='IIRank' OR  [Rank/ Rate]='IRank' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Sick Leave')"
+                officerSKCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='II Rate' And NOT [Rank/ Rate]='I Rate' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Sick Leave') "
+                sailorSKCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='II Rate' OR  [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Sick Leave')"
                 
                 conn=createTable()
                 c=conn.cursor()
@@ -907,6 +907,62 @@ def disableHideMarkers(self):
             self.btnMarker2Room3.setEnabled(False)
             self.btnMarker3Room3.setEnabled(False)
             
+def resetMarkPunishGUI(self):
+        self.lblPunishDate.clear()
+        self.lblPunishTime.clear()
+        today = date.today()
+        dateToday = today.strftime("%d/%m/%Y")
+        self.lblPunishDate.setText(dateToday)
+        now = datetime.now()
+        currentTime = now.strftime("%H")
+        if (int(currentTime) >=5 and int(currentTime)< 14):
+                self.lblPunishTime.setText("05:00")
+        elif (int(currentTime) >=14 and int(currentTime)< 16):
+                self.lblPunishTime.setText("14:00")
+        elif (int(currentTime) >=16 and int(currentTime)< 21):
+                self.lblPunishTime.setText("16:00")
+        elif (int(currentTime) >=21 or int(currentTime) < 5):
+                self.lblPunishTime.setText("21:00")
+
+        self.tblDetails.setRowCount(0)
+        combinedRowItems=""
+        itemContent=[]
+        stylesheetHeader = "::section{font-size: 11pt; font-family: Segoe UI;color: #FFFFFF; background-color: #0495FF;}"
+        self.tblDetails.horizontalHeader().setStyleSheet(stylesheetHeader)
+        self.tblDetails.setAlternatingRowColors(True)
+        stylesheetRowColor="font-size: 11pt; font-family: Segoe UI; alternate-background-color: #E1ECF4; background-color: #FFFFFF;"
+        self.tblDetails.setStyleSheet(stylesheetRowColor)
+        self.tblDetails.setColumnCount(6)
+        self.tblDetails.setHorizontalHeaderLabels(['P No./ O No.','Name','Rank/ Rate','Punishment','Remarks','Action'])
+        dbPNo=fillComboBoxData("SELECT [P No./ O No.] FROM PunishmentBook Where [Punishment Date] ='"+self.lblPunishDate.text()+"' and ["+self.lblPunishTime.text()+"]=' '")
+        dbRank=fillComboBoxData("SELECT [Rank/ Rate] FROM PunishmentBook Where [Punishment Date] ='"+self.lblPunishDate.text()+"' and ["+self.lblPunishTime.text()+"]=' '")
+        dbName=fillComboBoxData("SELECT Name FROM PunishmentBook Where [Punishment Date] ='"+self.lblPunishDate.text()+"' and ["+self.lblPunishTime.text()+"]=' '")
+        dbPunishment=fillComboBoxData("SELECT Punishment FROM PunishmentBook Where [Punishment Date] ='"+self.lblPunishDate.text()+"' and ["+self.lblPunishTime.text()+"]=' '")
+        if(len(dbPNo)!=0 and len(dbName)!=0 and len(dbRank)!=0 and len(dbPunishment)!=0 ):
+                for i in range(len(dbPNo)):
+                        combinedRowItems=dbPNo[i]+","+dbName[i]+","+dbRank[i]+","+dbPunishment[i]
+                        tempBuffer=combinedRowItems.split(",")
+                        itemContent.append(tempBuffer)
+                for row in itemContent:
+                        inx = itemContent.index(row)
+                        self.tblDetails.insertRow(inx)
+                        self.tblDetails.setItem(inx,0,QtWidgets.QTableWidgetItem(str(row[0])))
+                        self.tblDetails.setItem(inx,1,QtWidgets.QTableWidgetItem(str(row[1])))
+                        self.tblDetails.setItem(inx,2,QtWidgets.QTableWidgetItem(str(row[2])))
+                        self.tblDetails.setItem(inx,3,QtWidgets.QTableWidgetItem(str(row[3])))
+                        textBox = TextRemark(self)
+                        textBox.textChanged.connect(self.resetSuccess)
+                        self.tblDetails.setCellWidget(inx,4,textBox)
+                        self.rowVal=row.copy()
+                        self.rowVal.append(self.lblPunishDate.text())
+                        self.rowVal.append(self.lblPunishTime.text())
+                        self.rowIndex=inx
+                        btn = BtnMarkPunish(self)
+                        self.tblDetails.setCellWidget(inx,5,btn)
+                        btn.punishCalled.connect(self.updatePunishment)
+        for colCount in range(6):
+                self.tblDetails.setColumnWidth(colCount, 250)
+        
 
 ################################################################### App Class ##########################################################################
 
@@ -958,6 +1014,7 @@ class App(QtWidgets.QMainWindow):
         self.addweapontype= AddWeaponTypeWidget()
         self.addammotype= AddAmmoTypeWidget()
         self.addregno= AddRegNoWidget()
+        self.markpunishment= MarkPunishmentWidget()
 
         self.stacked = QtWidgets.QStackedWidget()
         self.setCentralWidget(self.stacked)
@@ -998,6 +1055,194 @@ class App(QtWidgets.QMainWindow):
         self.stacked.addWidget(self.addweapontype)
         self.stacked.addWidget(self.addammotype)
         self.stacked.addWidget(self.addregno)
+        self.stacked.addWidget(self.markpunishment)
+
+        disableHideMarkers(self.personnellocation)
+        disableHideMarkers(self.personnelmanagement)
+        disableHideMarkers(self.mob)
+
+        thread=threading.Thread(target=self.updateShipMarkersGUI, args=())
+        thread.daemon = False                           # Daemonize thread
+        thread.start() 
+
+    def updateShipMarkersGUI(self):
+        braceletMacAddresses = ["d8:1e:dd:9c:6c:e5" , "cc:3a:61:6c:76:3e" , "6c:88:14:66:d2:5c"]
+        routerIPs = ["192.168.1.1/24"]
+        while(True):
+            routerNumber=0
+            detectionSum=0
+            print("")
+            braceletDetectionFlags = [0,0,0]
+            for i in range (len(routerIPs)):
+                targetIP = routerIPs[i]
+                arp = ARP(pdst=targetIP)
+                ether = Ether(dst="ff:ff:ff:ff:ff:ff")
+                packet = ether/arp
+                result = srp(packet, timeout=5, verbose=0)[0]
+                clientMacs = []
+                for sent, received in result:
+                    clientMacs.append(received.hwsrc)
+                for j in range(len(clientMacs)):
+                    for k in range(len(braceletMacAddresses)):
+                        if (clientMacs[j] == braceletMacAddresses[k] and braceletDetectionFlags[k] == 0):                  
+                            braceletDetectionFlags[k] = 1
+
+                for l in range(len(braceletDetectionFlags)):
+                    detectionSum = detectionSum + braceletDetectionFlags[l]
+                print(detectionSum)
+                routerNumber=i
+                if (detectionSum<len(braceletDetectionFlags)):
+                    continue
+                else:
+                    break
+            for m in range(len(braceletDetectionFlags)):
+                    detectionSum = detectionSum + braceletDetectionFlags[m]
+                    if (braceletDetectionFlags[m]==1): 
+                        if (routerNumber==0 and m==0):
+                                self.personnellocation.btnMarker1Room1.show()
+                                self.personnellocation.btnMarker1Room1.setEnabled(True)
+                                self.personnelmanagement.btnMarker1Room1.show()
+                                self.personnelmanagement.btnMarker1Room1.setEnabled(True)
+                                self.mob.btnMarker1Room1.show()
+                                self.mob.btnMarker1Room1.setEnabled(True)
+                                
+                        elif (routerNumber==0 and m==1):
+                                self.personnellocation.btnMarker2Room1.show()
+                                self.personnellocation.btnMarker2Room1.setEnabled(True)
+                                self.personnelmanagement.btnMarker2Room1.show()
+                                self.personnelmanagement.btnMarker2Room1.setEnabled(True)
+                                self.mob.btnMarker2Room1.show()
+                                self.mob.btnMarker2Room1.setEnabled(True)
+
+                        elif (routerNumber==0 and m==2):
+                                self.personnellocation.btnMarker3Room1.show()
+                                self.personnellocation.btnMarker3Room1.setEnabled(True)
+                                self.personnelmanagement.btnMarker3Room1.show()
+                                self.personnelmanagement.btnMarker3Room1.setEnabled(True)
+                                self.mob.btnMarker3Room1.show()
+                                self.mob.btnMarker3Room1.setEnabled(True)
+
+                        elif (routerNumber==1 and m==0):
+                                 self.personnellocation.btnMarker1Room2.show()
+                                 self.personnellocation.btnMarker1Room2.setEnabled(True)
+                                 self.personnelmanagement.btnMarker1Room2.show()
+                                 self.personnelmanagement.btnMarker1Room2.setEnabled(True)
+                                 self.mob.btnMarker1Room2.show()
+                                 self.mob.btnMarker1Room2.setEnabled(True)
+
+                        elif (routerNumber==1 and m==1):
+                                self.personnellocation.btnMarker2Room2.show()
+                                self.personnellocation.btnMarker2Room2.setEnabled(True)
+                                self.personnelmanagement.btnMarker2Room2.show()
+                                self.personnelmanagement.btnMarker2Room2.setEnabled(True)
+                                self.mob.btnMarker2Room2.show()
+                                self.mob.btnMarker2Room2.setEnabled(True)
+
+                        elif (routerNumber==1 and m==2):
+                                self.personnellocation.btnMarker3Room2.show()
+                                self.personnellocation.btnMarker3Room2.setEnabled(True)
+                                self.personnelmanagement.btnMarker3Room2.show()
+                                self.personnelmanagement.btnMarker3Room2.setEnabled(True)
+                                self.mob.btnMarker3Room2.show()
+                                self.mob.btnMarker3Room2.setEnabled(True)
+
+                        elif (routerNumber==2 and m==0):
+                                self.personnellocation.btnMarker1Room3.show()
+                                self.personnellocation.btnMarker1Room3.setEnabled(True)
+                                self.personnelmanagement.btnMarker1Room3.show()
+                                self.personnelmanagement.btnMarker1Room3.setEnabled(True)
+                                self.mob.btnMarker1Room3.show()
+                                self.mob.btnMarker1Room3.setEnabled(True)
+
+                        elif (routerNumber==2 and m==1):
+                                self.personnellocation.btnMarker2Room3.show()
+                                self.personnellocation.btnMarker2Room3.setEnabled(True) 
+                                self.personnelmanagement.btnMarker2Room3.show()
+                                self.personnelmanagement.btnMarker2Room3.setEnabled(True)
+                                self.mob.btnMarker2Room3.show()
+                                self.mob.btnMarker2Room3.setEnabled(True)
+
+                        elif (routerNumber==2 and m==2):
+                                self.personnellocation.btnMarker3Room3.show()
+                                self.personnellocation.btnMarker3Room3.setEnabled(True) 
+                                self.personnelmanagement.btnMarker3Room3.show()
+                                self.personnelmanagement.btnMarker3Room3.setEnabled(True) 
+                                self.mob.btnMarker3Room3.show()
+                                self.mob.btnMarker3Room3.setEnabled(True) 
+
+                    else: 
+                        if (routerNumber==0 and m==0):
+                                self.personnellocation.btnMarker1Room1.hide()
+                                self.personnellocation.btnMarker1Room1.setEnabled(False)
+                                self.personnelmanagement.btnMarker1Room1.hide()
+                                self.personnelmanagement.btnMarker1Room1.setEnabled(False)
+                                self.mob.btnMarker1Room1.hide()
+                                self.mob.btnMarker1Room1.setEnabled(False)
+
+                        elif (routerNumber==0 and m==1):
+                                self.personnellocation.btnMarker2Room1.hide()
+                                self.personnellocation.btnMarker2Room1.setEnabled(False)
+                                self.personnelmanagement.btnMarker2Room1.hide()
+                                self.personnelmanagement.btnMarker2Room1.setEnabled(False)
+                                self.mob.btnMarker2Room1.hide()
+                                self.mob.btnMarker2Room1.setEnabled(False)
+
+                        elif (routerNumber==0 and m==2):
+                                self.personnellocation.btnMarker3Room1.hide()
+                                self.personnellocation.btnMarker3Room1.setEnabled(False)
+                                self.personnelmanagement.btnMarker3Room1.hide()
+                                self.personnelmanagement.btnMarker3Room1.setEnabled(False)
+                                self.mob.btnMarker3Room1.hide()
+                                self.mob.btnMarker3Room1.setEnabled(False)
+
+                        elif (routerNumber==1 and m==0):
+                                 self.personnellocation.btnMarker1Room2.hide()
+                                 self.personnellocation.btnMarker1Room2.setEnabled(False)
+                                 self.personnelmanagement.btnMarker1Room2.hide()
+                                 self.personnelmanagement.btnMarker1Room2.setEnabled(False)
+                                 self.mob.btnMarker1Room2.hide()
+                                 self.mob.btnMarker1Room2.setEnabled(False)
+
+                        elif (routerNumber==1 and m==1):
+                                self.personnellocation.btnMarker2Room2.hide()
+                                self.personnellocation.btnMarker2Room2.setEnabled(False)
+                                self.personnelmanagement.btnMarker2Room2.hide()
+                                self.personnelmanagement.btnMarker2Room2.setEnabled(False)
+                                self.mob.btnMarker2Room2.hide()
+                                self.mob.btnMarker2Room2.setEnabled(False)
+
+                        elif (routerNumber==1 and m==2):
+                                self.personnellocation.btnMarker3Room2.hide()
+                                self.personnellocation.btnMarker3Room2.setEnabled(False)
+                                self.personnelmanagement.btnMarker3Room2.hide()
+                                self.personnelmanagement.btnMarker3Room2.setEnabled(False)
+                                self.mob.btnMarker3Room2.hide()
+                                self.mob.btnMarker3Room2.setEnabled(False)
+
+                        elif (routerNumber==2 and m==0):
+                                self.personnellocation.btnMarker1Room3.hide()
+                                self.personnellocation.btnMarker1Room3.setEnabled(False)
+                                self.personnelmanagement.btnMarker1Room3.hide()
+                                self.personnelmanagement.btnMarker1Room3.setEnabled(False)
+                                self.mob.btnMarker1Room3.hide()
+                                self.mob.btnMarker1Room3.setEnabled(False)
+
+                        elif (routerNumber==2 and m==1):
+                                self.personnellocation.btnMarker2Room3.hide()
+                                self.personnellocation.btnMarker2Room3.setEnabled(False)
+                                self.personnelmanagement.btnMarker2Room3.hide()
+                                self.personnelmanagement.btnMarker2Room3.setEnabled(False)
+                                self.mob.btnMarker2Room3.hide()
+                                self.mob.btnMarker2Room3.setEnabled(False)
+
+                        elif (routerNumber==2 and m==2):
+                                self.personnellocation.btnMarker3Room3.hide()
+                                self.personnellocation.btnMarker3Room3.setEnabled(False) 
+                                self.personnelmanagement.btnMarker3Room3.hide()
+                                self.personnelmanagement.btnMarker3Room3.setEnabled(False)
+                                self.mob.btnMarker3Room3.hide()
+                                self.mob.btnMarker3Room3.setEnabled(False) 
+            time.sleep(5)  
 
     def disableAdvancedFunctionality(self):
         self.viewpersonneldata.btnAddPersonnelData.setEnabled(False)
@@ -1029,7 +1274,7 @@ class App(QtWidgets.QMainWindow):
 
 
 
-
+    
     def change_view(self, option):
         viewQuerryString=""
         if(option==1):
@@ -1137,10 +1382,8 @@ class App(QtWidgets.QMainWindow):
             self.stacked.setCurrentWidget(self.personnellocation)
         elif(option==27):
             self.personnelmanagement.btnMobError.hide()
-            disableHideMarkers(self.personnelmanagement)
             self.stacked.setCurrentWidget(self.personnelmanagement)
         elif(option==28):
-            disableHideMarkers(self.mob)
             self.stacked.setCurrentWidget(self.mob)
         elif(option==29):
             resetLoginGUI(self.login)
@@ -1170,7 +1413,87 @@ class App(QtWidgets.QMainWindow):
             resetRegNoGUI(self.addregno)
             self.addregno.lblDataEntrySuccessful.hide()
             self.stacked.setCurrentWidget(self.addregno)
+        elif(option==36):
+            resetMarkPunishGUI(self.markpunishment)
+            self.markpunishment.lblDataEntrySuccessful.hide()
+            self.stacked.setCurrentWidget(self.markpunishment) 
+        
 ##################################################################### ComboBox and Button Widget Class########################################
+class TextRemark(QtWidgets.QPlainTextEdit):
+    def __init__(self, parent):
+        super().__init__(parent)
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.setFont(font)
+        self.setStyleSheet("QPlainTextEdit{\n"
+"border: 1px;\n"
+"padding: 3;\n"
+"border-color: darkgray;\n"
+"border-style: solid;\n"
+"background-color: palette(base);\n"
+"}\n"
+"\n"
+" QPlainTextEdit:hover{\n"
+"     border:1px solid #000;    \n"
+"}\n"
+"  QPlainTextEdit:focus{\n"
+"    border-color:dodgerBlue;\n"
+"  }")
+        
+
+class BtnMarkPunish(QtWidgets.QPushButton):
+    punishCalled = QtCore.pyqtSignal(list)
+    def __init__(self, parent):
+        super().__init__(parent)
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.setFont(font)
+        self.setEnabled(True)
+        self.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.setStyleSheet("QPushButton \n"
+"{\n"
+"    outline:none;\n"
+"    color: #000000;\n"
+"    background-color:#ffffff;\n"
+"    border-width: 1px;\n"
+" border-color: #aaa;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#DADADA\n"
+"}\n"
+"QPushButton:disabled\n"
+"{\n"
+"    color:#5D5D5D\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #BBBBBB;\n"
+"     border-width: 3px;\n"
+"    border-color: #C1C1C1;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon17 = QtGui.QIcon()
+        icon17.addPixmap(QtGui.QPixmap(":/images/markTickB.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.setIcon(icon17)
+        self.setIconSize(QtCore.QSize(25, 25))
+        self.setText("Mark")
+        self.row=parent.rowVal
+        self.rInx=parent.rowIndex
+        self.row.append(self.rInx)
+        self.clicked.connect(self.getAllCellVal)
+    def getAllCellVal(self):
+        self.punishCalled.emit(self.row)
 
 class BtnCall(QtWidgets.QPushButton):
     def __init__(self, parent):
@@ -6782,7 +7105,7 @@ class AddOOD(object):
     def addOODObservation(self):
              cbValOOD=self.cBoxSelectOOD.currentText()
              lblValOODRank=self.lblOODRank.text()
-             observationDate=self.dtObservationDate.date().toString("dd-MM-yyyy")
+             observationDate=self.dtObservationDate.date().toString("dd/MM/yyyy")
              observationText=self.txtObservation.toPlainText()
              if(cbValOOD!="" and lblValOODRank!="" and observationDate!="" and observationText!=""):
                      queryString="INSERT INTO OODObservationBook VALUES('"+cbValOOD+"',"+"'"+lblValOODRank+"',"+"'"+observationDate+"',"+"'"+observationText+"')"
@@ -12063,7 +12386,7 @@ class AddPunish(object):
         self.label_11.setObjectName("label_11")
         self.lblDataEntrySuccessful = QtWidgets.QLabel(self.frame)
         self.lblDataEntrySuccessful.setEnabled(True)
-        self.lblDataEntrySuccessful.setGeometry(QtCore.QRect(331, 550, 361, 44))
+        self.lblDataEntrySuccessful.setGeometry(QtCore.QRect(331, 462, 361, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -12204,7 +12527,7 @@ class AddPunish(object):
         self.lblPunishRank.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.lblPunishRank.setObjectName("lblPunishRank")
         self.btnAddPunish = QtWidgets.QPushButton(self.frame)
-        self.btnAddPunish.setGeometry(QtCore.QRect(560, 572, 271, 44))
+        self.btnAddPunish.setGeometry(QtCore.QRect(560, 484, 271, 44))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -12392,41 +12715,6 @@ class AddPunish(object):
 "    border-color:dodgerBlue;\n"
 "  }")
         self.txtPunishment.setObjectName("txtPunishment")
-        self.label_15 = QtWidgets.QLabel(self.frame)
-        self.label_15.setGeometry(QtCore.QRect(331, 452, 159, 44))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.label_15.setFont(font)
-        self.label_15.setLayoutDirection(QtCore.Qt.LeftToRight)
-        self.label_15.setStyleSheet("color: #000000;\n"
-"background-color:#ffffff;\n"
-"font-size: 11pt")
-        self.label_15.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        self.label_15.setObjectName("label_15")
-        self.txtRemark = QtWidgets.QPlainTextEdit(self.frame)
-        self.txtRemark.setEnabled(True)
-        self.txtRemark.setGeometry(QtCore.QRect(490, 454, 345, 86))
-        font = QtGui.QFont()
-        font.setFamily("Segoe UI")
-        font.setPointSize(11)
-        self.txtRemark.setFont(font)
-        self.txtRemark.setStyleSheet("QPlainTextEdit{\n"
-"border: 1px;\n"
-"border-radius:6;\n"
-"padding: 3;\n"
-"border-color: darkgray;\n"
-"border-style: solid;\n"
-"background-color: palette(base);\n"
-"}\n"
-"\n"
-" QPlainTextEdit:hover{\n"
-"     border:1px solid #000;    \n"
-"}\n"
-"  QPlainTextEdit:focus{\n"
-"    border-color:dodgerBlue;\n"
-"  }")
-        self.txtRemark.setObjectName("txtRemark")
         self.dtPunishStartDate = QtWidgets.QDateEdit(self.frame)
         self.dtPunishStartDate.setGeometry(QtCore.QRect(490, 364, 345, 38))
         font = QtGui.QFont()
@@ -12559,6 +12847,47 @@ class AddPunish(object):
         self.dtPunishFinishDate.setCalendarPopup(True)
         self.dtPunishFinishDate.setDate(QtCore.QDate(2020, 5, 21))
         self.dtPunishFinishDate.setObjectName("dtPunishFinishDate")
+        self.navMarkPunishment = QtWidgets.QPushButton(self.frame)
+        self.navMarkPunishment.setGeometry(QtCore.QRect(1065, 170, 271, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navMarkPunishment.setFont(font)
+        self.navMarkPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navMarkPunishment.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon36 = QtGui.QIcon()
+        icon36.addPixmap(QtGui.QPixmap(":/images/markTick.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navMarkPunishment.setIcon(icon36)
+        self.navMarkPunishment.setIconSize(QtCore.QSize(25, 25))
+        self.navMarkPunishment.setObjectName("navMarkPunishment")
+        
         self.label_2.raise_()
         self.label.raise_()
         self.navViewPunishDetails.raise_()
@@ -12591,10 +12920,9 @@ class AddPunish(object):
         self.lblPunishName.raise_()
         self.lblPunishRank.raise_()
         self.btnAddPunish.raise_()
+        self.navMarkPunishment.raise_()
         self.navViewStatePersonnel.raise_()
         self.txtPunishment.raise_()
-        self.label_15.raise_()
-        self.txtRemark.raise_()
         self.dtPunishStartDate.raise_()
         self.label_16.raise_()
         self.label_17.raise_()
@@ -12653,11 +12981,10 @@ class AddPunish(object):
         self.lblPunishRank.setText(_translate("MainWindow", "Name"))
         self.btnAddPunish.setText(_translate("MainWindow", "Add New Punishment Entry"))
         self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
-        self.label_15.setText(_translate("MainWindow", "Remarks"))
         self.label_16.setText(_translate("MainWindow", "From Date"))
         self.label_17.setText(_translate("MainWindow", "To Date"))
         self.label_6.setText(_translate("MainWindow", "Enter Punishment Details"))
-
+        self.navMarkPunishment.setText(_translate("MainWindow", "Mark Punishment"))
 
 #----------------------------------------backend for Add Punish Interface----------------------------------------------  
         resetPunishGUI(self)
@@ -12680,11 +13007,11 @@ class AddPunish(object):
         self.navViewMOB.clicked.connect(self.navMOBMethod)
         self.btnLogout.clicked.connect(self.navLogoutMethod)
         self.navViewPunishDetails.clicked.connect(self.navViewPunishMethod)
+        self.navMarkPunishment.clicked.connect(self.navMarkPunishMethod)
         self.cBoxPunishPNo.activated.connect(self.resetSuccess)
         self.cBoxPunishPNo.activated.connect(self.setLabelText)
         self.btnAddPunish.clicked.connect(self.addPunishEntry)
         self.txtPunishment.textChanged.connect(self.resetSuccess)
-        self.txtRemark.textChanged.connect(self.resetSuccess)
     
     def setLabelText(self,cbIndex):
              self.lblPunishName.setText(self.listPunishName[cbIndex])
@@ -12695,20 +13022,20 @@ class AddPunish(object):
             punishName=self.lblPunishName.text()
             punishRank=self.lblPunishRank.text()
             punishText=self.txtPunishment.toPlainText()
-            punishStartDate=self.dtPunishStartDate.date().toString("dd-MM-yyyy")
-            punishFinishDate=self.dtPunishFinishDate.date().toString("dd-MM-yyyy")
-            punishRemark=self.txtRemark.toPlainText()
-            tempVarStart=punishStartDate.split("-")
-            tempVarEnd=punishFinishDate.split("-")
+            punishStartDate=self.dtPunishStartDate.date().toString("dd/MM/yyyy")
+            punishFinishDate=self.dtPunishFinishDate.date().toString("dd/MM/yyyy")
+            tempVarStart=punishStartDate.split("/")
+            tempVarEnd=punishFinishDate.split("/")
             d0 = date(int(tempVarStart[2]), int(tempVarStart[1]), int(tempVarStart[0]))
             d1 = date(int(tempVarEnd[2]), int(tempVarEnd[1]), int(tempVarEnd[0]))
             delta = d1 - d0
             days=delta.days+1
-            print(days)
-            if(punishText!="" and punishRemark!=""):
+
+            if(punishText!=""):
                 for i in range(days):
+                    punishDate = (d0 + timedelta(days=i)).strftime("%d/%m/%Y")
                     if(self.lblDataEntrySuccessful.text()!="Details could not be saved!"):
-                        queryString="INSERT INTO PunishmentBook VALUES('"+punishPNo+"',"+"'"+punishName+"',"+"'"+punishRank+"',"+"'"+punishText+"',"+"'"+punishStartDate+"',"+"'"+punishFinishDate+"',"+"' ',"+"' ',"+"' '," +"' '," + "'"+punishRemark+"')"
+                        queryString="INSERT INTO PunishmentBook VALUES('"+punishPNo+"',"+"'"+punishName+"',"+"'"+punishRank+"',"+"'"+punishText+"',"+"'"+str(punishDate)+"',"+"' ',"+"' ',"+"' '," +"' '," +"' ')"
                         insertData(self,queryString)
                     else:
                         break
@@ -12754,6 +13081,8 @@ class AddPunish(object):
              w.change_view(28) 
     def navLogoutMethod(self):
              w.change_view(29) 
+    def navMarkPunishMethod(self):
+             w.change_view(36)   
     def resetSuccess(self):
                 self.lblDataEntrySuccessful.hide()
                 self.lblDataEntrySuccessful.setStyleSheet("color: green;\n""background-color:#ffffff;\n""font-size: 11pt") 
@@ -14181,7 +14510,7 @@ class AddGangway(object):
              self.lblIssuedRank.setText(self.listIssuedRank[cbIndex])
 
     def addGangwayEntry(self):
-            gangwayDate=self.dtGangwayDate.date().toString("dd-MM-yyyy")
+            gangwayDate=self.dtGangwayDate.date().toString("dd/MM/yyyy")
             gangwayPlace=self.edtPlace.text()
             gangwayArticle=self.edtArticle.text()
             gangwayQuality=self.edtQuality.text()
@@ -25592,11 +25921,11 @@ class ViewPunishment(object):
 "}\n"
 "QComboBox:hover{\n"
 "     border:1px solid #000;    \n"
-"     transition:.3s;\n"
+
 "}\n"
 "  QComboBox:focus{\n"
 "    border-color:dodgerBlue;\n"
-"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+
 "  }\n"
 "")
         self.cBoxPunishPNo.setEditable(False)
@@ -25709,8 +26038,8 @@ class ViewPunishment(object):
     def setLabelText(self,cbIndex):
         self.lblPunishName.setText(self.listPunishName[cbIndex])
         self.lblPunishRank.setText(self.listPunishRank[cbIndex])
-        viewQuerryString="SELECT Punishment,[From Date],[To Date],[05:00],[14:00],[16:00],[21:00],Remarks FROM PunishmentBook where [P No./ O No.]='"+self.cBoxPunishPNo.currentText()+"'"
-        loadViewTableData(self,viewQuerryString,8)
+        viewQuerryString="SELECT Punishment,[Punishment Date][05:00],[14:00],[16:00],[21:00],Remarks FROM PunishmentBook where [P No./ O No.]='"+self.cBoxPunishPNo.currentText()+"'"
+        loadViewTableData(self,viewQuerryString,7)
     def navViewPersonnelMethod(self):
              w.change_view(1)    
     def navViewImportantKeyMethod(self):
@@ -33652,6 +33981,8 @@ class PersonnelLocation(object):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+        
+
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
@@ -33679,7 +34010,8 @@ class PersonnelLocation(object):
 
 #----------------------------------------backend for Personnel Location Interface----------------------------------------------
       
-        disableHideMarkers(self)
+        
+         
         self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
         self.navViewImpKey.clicked.connect(self.navViewImportantKeyMethod)
         self.navViewGenKey.clicked.connect(self.navViewGeneralKeyMethod)
@@ -33747,7 +34079,8 @@ class PersonnelLocation(object):
     def navMOBMethod(self):
              w.change_view(28)
     def navLogoutMethod(self):
-             w.change_view(29) 
+             w.change_view(29)
+    
 class PersonnelLocationWidget(QtWidgets.QMainWindow,PersonnelLocation ):
     def __init__(self, parent=None):
         super(PersonnelLocationWidget, self).__init__(parent)
@@ -35158,7 +35491,8 @@ class PersonnelManagement(object):
         self.cBoxRoom.setItemText(2, _translate("MainWindow", "Battery Changing Room"))
 #----------------------------------------backend for Personnel Management System Interface----------------------------------------------
       
-
+        
+        
         self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
         self.navViewImpKey.clicked.connect(self.navViewImportantKeyMethod)
         self.navViewGenKey.clicked.connect(self.navViewGeneralKeyMethod)
@@ -36537,7 +36871,6 @@ class MOb(object):
 
 #----------------------------------------backend for MOB Interface----------------------------------------------
       
-
         self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
         self.navViewImpKey.clicked.connect(self.navViewImportantKeyMethod)
         self.navViewGenKey.clicked.connect(self.navViewGeneralKeyMethod)
@@ -36961,7 +37294,7 @@ class Login(object):
     def resetSuccess(self):
                 self.lblDataEntrySuccessful.hide()
     def shutdown(self):
-            sys.exit()
+            os._exit(0)
 class LoginWidget(QtWidgets.QMainWindow,Login ):
     def __init__(self, parent=None):
         super(LoginWidget, self).__init__(parent)
@@ -38251,16 +38584,16 @@ class AddBand(object):
 "    border-radius:4px;\n"
 "    outline:none;\n"
 "    padding:6px;\n"
-"    box-sizing:border-box;\n"
-"    transition:.3s;\n"
+
+
 "  }\n"
 "  QLineEdit:hover{\n"
 "     border:1px solid #000;    \n"
-"     transition:.3s;\n"
+
 "}\n"
 "  QLineEdit:focus{\n"
 "    border-color:dodgerBlue;\n"
-"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+
 "  }")
         self.edtBandNo.setObjectName("edtBandNo")
         self.label_9 = QtWidgets.QLabel(self.frame)
@@ -38277,7 +38610,7 @@ class AddBand(object):
         self.label_9.setObjectName("label_9")
         self.label = QtWidgets.QLabel(self.frame)
         self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
-        self.label.setStyleSheet("background-image: url(null);\n"
+        self.label.setStyleSheet(
 "background-color:#2F3C71;")
         self.label.setText("")
         self.label.setObjectName("label")
@@ -38639,16 +38972,16 @@ class AddWeaponType(object):
 "    border-radius:4px;\n"
 "    outline:none;\n"
 "    padding:6px;\n"
-"    box-sizing:border-box;\n"
-"    transition:.3s;\n"
+
+
 "  }\n"
 "  QLineEdit:hover{\n"
 "     border:1px solid #000;    \n"
-"     transition:.3s;\n"
+
 "}\n"
 "  QLineEdit:focus{\n"
 "    border-color:dodgerBlue;\n"
-"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+
 "  }")
         self.edtWeaponType.setObjectName("edtWeaponType")
         self.label_9 = QtWidgets.QLabel(self.frame)
@@ -38665,7 +38998,7 @@ class AddWeaponType(object):
         self.label_9.setObjectName("label_9")
         self.label = QtWidgets.QLabel(self.frame)
         self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
-        self.label.setStyleSheet("background-image: url(null);\n"
+        self.label.setStyleSheet(
 "background-color:#2F3C71;")
         self.label.setText("")
         self.label.setObjectName("label")
@@ -39116,16 +39449,16 @@ class AddAmmoType(object):
 "    border-radius:4px;\n"
 "    outline:none;\n"
 "    padding:6px;\n"
-"    box-sizing:border-box;\n"
-"    transition:.3s;\n"
+
+
 "  }\n"
 "  QLineEdit:hover{\n"
 "     border:1px solid #000;    \n"
-"     transition:.3s;\n"
+
 "}\n"
 "  QLineEdit:focus{\n"
 "    border-color:dodgerBlue;\n"
-"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+
 "  }")
         self.edtAmmoType.setObjectName("edtAmmoType")
         self.label_9 = QtWidgets.QLabel(self.frame)
@@ -39142,7 +39475,7 @@ class AddAmmoType(object):
         self.label_9.setObjectName("label_9")
         self.label = QtWidgets.QLabel(self.frame)
         self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
-        self.label.setStyleSheet("background-image: url(null);\n"
+        self.label.setStyleSheet(
 "background-color:#2F3C71;")
         self.label.setText("")
         self.label.setObjectName("label")
@@ -39390,11 +39723,11 @@ class AddAmmoType(object):
 "}\n"
 "QComboBox:hover{\n"
 "     border:1px solid #000;    \n"
-"     transition:.3s;\n"
+
 "}\n"
 "  QComboBox:focus{\n"
 "    border-color:dodgerBlue;\n"
-"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+
 "  }\n"
 "")
         self.cBoxWeaponType.setEditable(False)
@@ -39643,16 +39976,16 @@ class AddRegNo(object):
 "    border-radius:4px;\n"
 "    outline:none;\n"
 "    padding:6px;\n"
-"    box-sizing:border-box;\n"
-"    transition:.3s;\n"
+
+
 "  }\n"
 "  QLineEdit:hover{\n"
 "     border:1px solid #000;    \n"
-"     transition:.3s;\n"
+
 "}\n"
 "  QLineEdit:focus{\n"
 "    border-color:dodgerBlue;\n"
-"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+
 "  }")
         self.edtRegNo.setObjectName("edtRegNo")
         self.label_9 = QtWidgets.QLabel(self.frame)
@@ -39669,7 +40002,7 @@ class AddRegNo(object):
         self.label_9.setObjectName("label_9")
         self.label = QtWidgets.QLabel(self.frame)
         self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
-        self.label.setStyleSheet("background-image: url(null);\n"
+        self.label.setStyleSheet(
 "background-color:#2F3C71;")
         self.label.setText("")
         self.label.setObjectName("label")
@@ -39918,11 +40251,11 @@ class AddRegNo(object):
 "}\n"
 "QComboBox:hover{\n"
 "     border:1px solid #000;    \n"
-"     transition:.3s;\n"
+
 "}\n"
 "  QComboBox:focus{\n"
 "    border-color:dodgerBlue;\n"
-"    box-shadow:0 0 8px 0 dodgerBlue;\n"
+
 "  }\n"
 "")
         self.cBoxWeaponType.setEditable(False)
@@ -40061,12 +40394,1134 @@ class AddRegNoWidget(QtWidgets.QMainWindow,AddRegNo ):
     def __init__(self, parent=None):
         super(AddRegNoWidget, self).__init__(parent)
         self.setup_AddRegNo(self)
+############################################################# Mark Punishment Interface ######################################################################
+class MarkPunishment(object):
+    def setup_MarkPunishment(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(1366, 765)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.frame = QtWidgets.QFrame(self.centralwidget)
+        self.frame.setGeometry(QtCore.QRect(0, 0, 1366, 768))
+        self.frame.setStyleSheet("background-color: #ffffff")
+        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame.setObjectName("frame")
+        self.label = QtWidgets.QLabel(self.frame)
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
+        self.label.setStyleSheet(
+"background-color:#2F3C71;")
+        self.label.setText("")
+        self.label.setObjectName("label")
+        self.label_2 = QtWidgets.QLabel(self.frame)
+        self.label_2.setGeometry(QtCore.QRect(0, 0, 1366, 44))
+        self.label_2.setStyleSheet(
+"background-color:#222222;")
+        self.label_2.setText("")
+        self.label_2.setObjectName("label_2")
+        self.navViewPunishment = QtWidgets.QPushButton(self.frame)
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPunishment.setFont(font)
+        self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPunishment.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:active\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/images/punishment.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPunishment.setIcon(icon)
+        self.navViewPunishment.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPunishment.setFlat(False)
+        self.navViewPunishment.setObjectName("navViewPunishment")
+        self.navViewImpKey = QtWidgets.QPushButton(self.frame)
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewImpKey.setFont(font)
+        self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewImpKey.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/images/impKey.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewImpKey.setIcon(icon1)
+        self.navViewImpKey.setIconSize(QtCore.QSize(25, 25))
+        self.navViewImpKey.setFlat(False)
+        self.navViewImpKey.setObjectName("navViewImpKey")
+        self.navViewGenKey = QtWidgets.QPushButton(self.frame)
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewGenKey.setFont(font)
+        self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewGenKey.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(":/images/genKey.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewGenKey.setIcon(icon2)
+        self.navViewGenKey.setIconSize(QtCore.QSize(25, 25))
+        self.navViewGenKey.setFlat(False)
+        self.navViewGenKey.setObjectName("navViewGenKey")
+        self.navViewVisitor = QtWidgets.QPushButton(self.frame)
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewVisitor.setFont(font)
+        self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewVisitor.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"}")
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(":/images/visitor.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewVisitor.setIcon(icon3)
+        self.navViewVisitor.setIconSize(QtCore.QSize(25, 25))
+        self.navViewVisitor.setFlat(False)
+        self.navViewVisitor.setObjectName("navViewVisitor")
+        self.navViewTransport = QtWidgets.QPushButton(self.frame)
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewTransport.setFont(font)
+        self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewTransport.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon4 = QtGui.QIcon()
+        icon4.addPixmap(QtGui.QPixmap(":/images/transport.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewTransport.setIcon(icon4)
+        self.navViewTransport.setIconSize(QtCore.QSize(25, 25))
+        self.navViewTransport.setFlat(False)
+        self.navViewTransport.setObjectName("navViewTransport")
+        self.navViewGangway = QtWidgets.QPushButton(self.frame)
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewGangway.setFont(font)
+        self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewGangway.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon5 = QtGui.QIcon()
+        icon5.addPixmap(QtGui.QPixmap(":/images/gangway.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewGangway.setIcon(icon5)
+        self.navViewGangway.setIconSize(QtCore.QSize(25, 25))
+        self.navViewGangway.setFlat(False)
+        self.navViewGangway.setObjectName("navViewGangway")
+        self.navViewDuty = QtWidgets.QPushButton(self.frame)
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewDuty.setFont(font)
+        self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewDuty.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon6 = QtGui.QIcon()
+        icon6.addPixmap(QtGui.QPixmap(":/images/duty.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewDuty.setIcon(icon6)
+        self.navViewDuty.setIconSize(QtCore.QSize(25, 25))
+        self.navViewDuty.setFlat(False)
+        self.navViewDuty.setObjectName("navViewDuty")
+        self.navViewNight = QtWidgets.QPushButton(self.frame)
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewNight.setFont(font)
+        self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewNight.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon7 = QtGui.QIcon()
+        icon7.addPixmap(QtGui.QPixmap(":/images/night.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewNight.setIcon(icon7)
+        self.navViewNight.setIconSize(QtCore.QSize(25, 25))
+        self.navViewNight.setFlat(False)
+        self.navViewNight.setObjectName("navViewNight")
+        self.label_4 = QtWidgets.QLabel(self.frame)
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
+        self.label_4.setStyleSheet("background-color:#4154A0;")
+        self.label_4.setText("")
+        self.label_4.setObjectName("label_4")
+        self.navViewMOB = QtWidgets.QPushButton(self.frame)
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewMOB.setFont(font)
+        self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewMOB.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon8 = QtGui.QIcon()
+        icon8.addPixmap(QtGui.QPixmap(":/images/mob.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewMOB.setIcon(icon8)
+        self.navViewMOB.setIconSize(QtCore.QSize(32, 32))
+        self.navViewMOB.setFlat(False)
+        self.navViewMOB.setObjectName("navViewMOB")
+        self.navViewLocation = QtWidgets.QPushButton(self.frame)
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewLocation.setFont(font)
+        self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewLocation.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon9 = QtGui.QIcon()
+        icon9.addPixmap(QtGui.QPixmap(":/images/locate.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewLocation.setIcon(icon9)
+        self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
+        self.navViewLocation.setFlat(False)
+        self.navViewLocation.setObjectName("navViewLocation")
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon10 = QtGui.QIcon()
+        icon10.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewManagement.setIcon(icon10)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
+        self.navViewPPE = QtWidgets.QPushButton(self.frame)
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPPE.setFont(font)
+        self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPPE.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon11 = QtGui.QIcon()
+        icon11.addPixmap(QtGui.QPixmap(":/images/armPPE.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPPE.setIcon(icon11)
+        self.navViewPPE.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPPE.setFlat(False)
+        self.navViewPPE.setObjectName("navViewPPE")
+        self.navViewOOD = QtWidgets.QPushButton(self.frame)
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewOOD.setFont(font)
+        self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewOOD.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon12 = QtGui.QIcon()
+        icon12.addPixmap(QtGui.QPixmap(":/images/oodObserve.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewOOD.setIcon(icon12)
+        self.navViewOOD.setIconSize(QtCore.QSize(25, 25))
+        self.navViewOOD.setFlat(False)
+        self.navViewOOD.setObjectName("navViewOOD")
+        self.navViewCMS = QtWidgets.QPushButton(self.frame)
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewCMS.setFont(font)
+        self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewCMS.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon13 = QtGui.QIcon()
+        icon13.addPixmap(QtGui.QPixmap(":/images/sreCall.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewCMS.setIcon(icon13)
+        self.navViewCMS.setIconSize(QtCore.QSize(25, 25))
+        self.navViewCMS.setFlat(False)
+        self.navViewCMS.setObjectName("navViewCMS")
+        self.pushButton = QtWidgets.QPushButton(self.frame)
+        self.pushButton.setEnabled(True)
+        self.pushButton.setGeometry(QtCore.QRect(1080, 5, 260, 35))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.pushButton.setFont(font)
+        self.pushButton.setStyleSheet(" text-align: right;\n"
+"    color: #ffffff;\n"
+"    background-color:#222222;")
+        self.pushButton.setIcon(icon)
+        self.pushButton.setIconSize(QtCore.QSize(32, 32))
+        self.pushButton.setObjectName("pushButton")
+        self.pushButton_2 = QtWidgets.QPushButton(self.frame)
+        self.pushButton_2.setEnabled(True)
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
+        self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
+"    border-radius:4px;\n"
+"    outline:none;")
+        self.pushButton_2.setText("")
+        icon14 = QtGui.QIcon()
+        icon14.addPixmap(QtGui.QPixmap(":/images/logoMTIP.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_2.setIcon(icon14)
+        self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
+        self.pushButton_2.setObjectName("pushButton_2")
+        self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPersonnel.setFont(font)
+        self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPersonnel.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon15 = QtGui.QIcon()
+        icon15.addPixmap(QtGui.QPixmap(":/images/personnelData.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPersonnel.setIcon(icon15)
+        self.navViewPersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPersonnel.setFlat(False)
+        self.navViewPersonnel.setObjectName("navViewPersonnel")
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon16 = QtGui.QIcon()
+        icon16.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStatePersonnel.setIcon(icon16)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.label_9 = QtWidgets.QLabel(self.frame)
+        self.label_9.setGeometry(QtCore.QRect(331, 138, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_9.setFont(font)
+        self.label_9.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_9.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_9.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_9.setObjectName("label_9")
+        self.tblDetails = QtWidgets.QTableWidget(self.frame)
+        self.tblDetails.setGeometry(QtCore.QRect(326, 229, 1020, 381))
+        self.tblDetails.setAlternatingRowColors(True)
+        self.tblDetails.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
+        self.tblDetails.setObjectName("tblDetails")
+        self.tblDetails.setColumnCount(0)
+        self.tblDetails.setRowCount(0)
+        self.navAddPunishment = QtWidgets.QPushButton(self.frame)
+        self.navAddPunishment.setGeometry(QtCore.QRect(1065, 120, 271, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navAddPunishment.setFont(font)
+        self.navAddPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navAddPunishment.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon17 = QtGui.QIcon()
+        icon17.addPixmap(QtGui.QPixmap(":/images/add.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navAddPunishment.setIcon(icon17)
+        self.navAddPunishment.setIconSize(QtCore.QSize(25, 25))
+        self.navAddPunishment.setObjectName("navAddPunishment")
+        self.navViewPunishmentDetails = QtWidgets.QPushButton(self.frame)
+        self.navViewPunishmentDetails.setGeometry(QtCore.QRect(1065, 170, 271, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPunishmentDetails.setFont(font)
+        self.navViewPunishmentDetails.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPunishmentDetails.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon18 = QtGui.QIcon()
+        icon18.addPixmap(QtGui.QPixmap(":/images/viewDetails.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPunishmentDetails.setIcon(icon18)
+        self.navViewPunishmentDetails.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPunishmentDetails.setObjectName("navViewPunishmentDetails")
+        self.label_10 = QtWidgets.QLabel(self.frame)
+        self.label_10.setGeometry(QtCore.QRect(331, 182, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_10.setFont(font)
+        self.label_10.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_10.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_10.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_10.setObjectName("label_10")
+        self.lblPunishDate = QtWidgets.QLabel(self.frame)
+        self.lblPunishDate.setGeometry(QtCore.QRect(522, 138, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblPunishDate.setFont(font)
+        self.lblPunishDate.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblPunishDate.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblPunishDate.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblPunishDate.setObjectName("lblPunishDate")
+        self.lblDataEntrySuccessful = QtWidgets.QLabel(self.frame)
+        self.lblDataEntrySuccessful.setEnabled(True)
+        self.lblDataEntrySuccessful.setGeometry(QtCore.QRect(331, 610, 361, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblDataEntrySuccessful.setFont(font)
+        self.lblDataEntrySuccessful.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblDataEntrySuccessful.setStyleSheet("color: green;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblDataEntrySuccessful.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblDataEntrySuccessful.setObjectName("lblDataEntrySuccessful")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon19 = QtGui.QIcon()
+        icon19.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon19)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.lblPunishTime = QtWidgets.QLabel(self.frame)
+        self.lblPunishTime.setGeometry(QtCore.QRect(522, 182, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblPunishTime.setFont(font)
+        self.lblPunishTime.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblPunishTime.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblPunishTime.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblPunishTime.setObjectName("lblPunishTime")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    outline:none;\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
+        self.label_2.raise_()
+        self.label.raise_()
+        self.navViewPunishment.raise_()
+        self.navViewImpKey.raise_()
+        self.navViewGenKey.raise_()
+        self.navViewVisitor.raise_()
+        self.navViewTransport.raise_()
+        self.navViewGangway.raise_()
+        self.navViewDuty.raise_()
+        self.navViewNight.raise_()
+        self.label_4.raise_()
+        self.navViewMOB.raise_()
+        self.navViewLocation.raise_()
+        self.navViewManagement.raise_()
+        self.navViewPPE.raise_()
+        self.navViewOOD.raise_()
+        self.navViewCMS.raise_()
+        self.pushButton.raise_()
+        self.pushButton_2.raise_()
+        self.navViewPersonnel.raise_()
+        self.navViewStatePersonnel.raise_()
+        self.label_9.raise_()
+        self.tblDetails.raise_()
+        self.navAddPunishment.raise_()
+        self.navViewPunishmentDetails.raise_()
+        self.btnLogout.raise_()
+        self.label_10.raise_()
+        self.lblPunishDate.raise_()
+        self.lblDataEntrySuccessful.raise_()
+        self.navViewStateArmory.raise_()
+        self.lblPunishTime.raise_()
+        self.label_13 = QtWidgets.QLabel(self.centralwidget)
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
+        self.label_13.setStyleSheet("background-color:#A0A0A0;")
+        self.label_13.setText("")
+        self.label_13.setObjectName("label_13")
+        self.label_6 = QtWidgets.QLabel(self.centralwidget)
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_6.setFont(font)
+        self.label_6.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_6.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_6.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_6.setObjectName("label_6")
+        MainWindow.setCentralWidget(self.centralwidget)
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.navViewPunishment.setText(_translate("MainWindow", "Punishment Book"))
+        self.navViewImpKey.setText(_translate("MainWindow", "Important Key Book"))
+        self.navViewGenKey.setText(_translate("MainWindow", "General Key Book"))
+        self.navViewVisitor.setText(_translate("MainWindow", "Visitor Book"))
+        self.navViewTransport.setText(_translate("MainWindow", "Transport Book"))
+        self.navViewGangway.setText(_translate("MainWindow", "Gangway Book"))
+        self.navViewDuty.setText(_translate("MainWindow", "Duty Book"))
+        self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
+        self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
+        self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
+        self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
+        self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.pushButton.setText(_translate("MainWindow", "Punishment Book"))
+        self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
+        self.label_9.setText(_translate("MainWindow", "Punishment Date:"))
+        self.navAddPunishment.setText(_translate("MainWindow", "Add New Punishment Entry"))
+        self.navViewPunishmentDetails.setText(_translate("MainWindow", "View Punishment Details"))
+        self.label_10.setText(_translate("MainWindow", "Punishment Time:"))
+        self.lblPunishDate.setText(_translate("MainWindow", "Punishment Date:"))
+        self.lblDataEntrySuccessful.setText(_translate("MainWindow", "Details Saved Successfully!"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.lblPunishTime.setText(_translate("MainWindow", "Punishment Time"))
+        self.label_6.setText(_translate("MainWindow", "Mark Today\'s Punishment"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
+#----------------------------------------backend for Mark Punishment Interface----------------------------------------------
+        resetMarkPunishGUI(self)
+        rowIndex=0
+        rowVal=0
+        self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
+        self.navViewImpKey.clicked.connect(self.navViewImportantKeyMethod)
+        self.navViewGenKey.clicked.connect(self.navViewGeneralKeyMethod)
+        self.navViewOOD.clicked.connect(self.navViewOODMethod)
+        self.navViewTransport.clicked.connect(self.navViewTransportMethod)
+        self.navViewVisitor.clicked.connect(self.navViewVisitorMethod)
+        self.navViewDuty.clicked.connect(self.navViewDutyMethod)
+        self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
+        self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
+        self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
+        self.navViewPunishment.clicked.connect(self.navViewPunishMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
+        self.navViewCMS.clicked.connect(self.navManageCallMethod)
+        self.navAddPunishment.clicked.connect(self.navAddPunishmentMethod)
+        self.navViewPunishmentDetails.clicked.connect(self.navViewPunishMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
+    
+    def updatePunishment(self,val):
+            updateQuery="UPDATE PunishmentBook SET ["+val[5]+"]='✓', Remarks='"+val[6]+"' WHERE [P No./ O No.]='"+val[0]+"' and  Name='"+val[1]+"' and [Rank/ Rate]='"+val[2]+"' and  Punishment='"+val[3]+"' and [Punishment Date]='"+val[4]+"' and ["+val[5]+"]=' '" 
+
+            updateData(self,updateQuery)
+    def resetSuccess(self):
+            self.lblDataEntrySuccessful.hide()
+            self.lblDataEntrySuccessful.setStyleSheet("color: green;\n""background-color:#ffffff;\n""font-size: 11pt")
+
+    def navViewPersonnelMethod(self):
+             w.change_view(1)    
+    def navViewImportantKeyMethod(self):
+             w.change_view(2)
+    def navViewGeneralKeyMethod(self):
+             w.change_view(3)  
+    def navViewVisitorMethod(self):
+             w.change_view(4)
+    def navViewTransportMethod(self):
+             w.change_view(5) 
+    def navViewGangwayMethod(self):
+             w.change_view(6)
+    def navViewDutyMethod(self):
+             w.change_view(7)
+    def navViewPunishMethod(self):
+             w.change_view(8)    
+    def navViewOODMethod(self):
+             w.change_view(9)      
+    def navViewNightRoundMethod(self):
+             w.change_view(10) 
+    def navViewArmPPEMethod(self):
+             w.change_view(11) 
+    def navAddPunishmentMethod(self):
+             w.change_view(19)   
+    def navViewStatePersonnelMethod(self):
+             w.change_view(23)
+    def navManageCallMethod(self):
+             w.change_view(25)   
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29) 
+    def resetSuccess(self):
+                self.lblDataEntrySuccessful.hide()
+                self.lblDataEntrySuccessful.setStyleSheet("color: green;\n""background-color:#ffffff;\n""font-size: 11pt") 
+class MarkPunishmentWidget(QtWidgets.QMainWindow,MarkPunishment ):
+    def __init__(self, parent=None):
+        super(MarkPunishmentWidget, self).__init__(parent)
+        self.setup_MarkPunishment(self)
 ############################################################# Main ######################################################################
 import IconResource_rc
 
 
 if __name__ == "__main__":
     import sys
+    import os
     app = QtWidgets.QApplication(sys.argv)
     w = App()
     w.resize(1366,768)

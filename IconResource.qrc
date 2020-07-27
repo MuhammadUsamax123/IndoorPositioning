@@ -51,5 +51,7 @@
     <file>images/settings.png</file>
     <file>images/smartWatch.png</file>
     <file>images/edit.png</file>
+    <file>images/markTick.png</file>
+    <file>images/markTickB.png</file>
 </qresource>
 </RCC>
