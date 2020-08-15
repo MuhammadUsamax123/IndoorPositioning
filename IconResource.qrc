@@ -53,5 +53,6 @@
     <file>images/edit.png</file>
     <file>images/markTick.png</file>
     <file>images/markTickB.png</file>
+    <file>images/back.png</file>
 </qresource>
 </RCC>

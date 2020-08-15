@@ -106,10 +106,7 @@ QPushButton:hover
     background-color:#4154A0;
 }
 
-QPushButton:active
-{
-    background-color:#4154A0;
-}
+
 QPushButton:pressed
 {
     background-color: #384889;
@@ -721,6 +718,10 @@ QPushButton:hover
 {
     background-color:#4154A0;
 }
+QPushButton:active
+{
+    background-color:#4154A0;
+}
 QPushButton:pressed
 {
     background-color: #384889;
@@ -1036,11 +1037,11 @@ QPushButton:pressed
     background-color:#222222;</string>
      </property>
      <property name="text">
-      <string>Punishment Book</string>
+      <string>Personnel Location</string>
      </property>
      <property name="icon">
       <iconset resource="../IconResource.qrc">
-       <normaloff>:/images/punishment.png</normaloff>:/images/punishment.png</iconset>
+       <normaloff>:/images/locate.png</normaloff>:/images/locate.png</iconset>
      </property>
      <property name="iconSize">
       <size>
@@ -1237,26 +1238,10 @@ background-color:#ffffff;
 font-size: 11pt</string>
      </property>
      <property name="text">
-      <string>Punishment Date:</string>
+      <string>ID No.:</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-    </widget>
-    <widget class="QTableWidget" name="tbldetails">
-     <property name="geometry">
-      <rect>
-       <x>326</x>
-       <y>229</y>
-       <width>1020</width>
-       <height>381</height>
-      </rect>
-     </property>
-     <property name="alternatingRowColors">
-      <bool>true</bool>
-     </property>
-     <property name="selectionMode">
-      <enum>QAbstractItemView::NoSelection</enum>
      </property>
     </widget>
     <widget class="QPushButton" name="navAddPunishment">
@@ -1321,68 +1306,6 @@ QPushButton:pressed
       </size>
      </property>
     </widget>
-    <widget class="QPushButton" name="navViewPunishmentDetails">
-     <property name="geometry">
-      <rect>
-       <x>1065</x>
-       <y>170</y>
-       <width>271</width>
-       <height>44</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="cursor">
-      <cursorShape>PointingHandCursor</cursorShape>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QPushButton
-{
-    color: #ffffff;
-    background-color:#4154A0;
-    border-width: 1px;
-    border-color: #4154A0;
-    border-style: solid;
-    border-radius: 6;
-    padding: 3px;
-    font-size: 11pt;
-    padding-left: 5px;
-    padding-right: 5px;
-    min-width: 40px;
-}
-
-QPushButton:hover
-{
-    background-color:#384889
-}
-QPushButton:pressed
-{
-    background-color: #384889;
- 	border-width: 3px;
-    border-color: #5C70BC;
-    border-style: solid;
-    border-radius: 6;
-
-}</string>
-     </property>
-     <property name="text">
-      <string>View Punishment Details</string>
-     </property>
-     <property name="icon">
-      <iconset resource="../IconResource.qrc">
-       <normaloff>:/images/viewDetails.png</normaloff>:/images/viewDetails.png</iconset>
-     </property>
-     <property name="iconSize">
-      <size>
-       <width>25</width>
-       <height>25</height>
-      </size>
-     </property>
-    </widget>
     <widget class="QLabel" name="label_10">
      <property name="geometry">
       <rect>
@@ -1407,13 +1330,13 @@ background-color:#ffffff;
 font-size: 11pt</string>
      </property>
      <property name="text">
-      <string>Punishment Time:</string>
+      <string>P No./ O No.:</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
      </property>
     </widget>
-    <widget class="QLabel" name="lblPunishDate">
+    <widget class="QLabel" name="lbIDNo">
      <property name="geometry">
       <rect>
        <x>522</x>
@@ -1437,40 +1360,7 @@ background-color:#ffffff;
 font-size: 11pt</string>
      </property>
      <property name="text">
-      <string>Punishment Date:</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-     </property>
-    </widget>
-    <widget class="QLabel" name="lblDataEntrySuccessful">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="geometry">
-      <rect>
-       <x>331</x>
-       <y>610</y>
-       <width>361</width>
-       <height>44</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Segoe UI</family>
-       <pointsize>11</pointsize>
-      </font>
-     </property>
-     <property name="layoutDirection">
-      <enum>Qt::LeftToRight</enum>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">color: green;
-background-color:#ffffff;
-font-size: 11pt</string>
-     </property>
-     <property name="text">
-      <string>Details Saved Successfully!</string>
+      <string>label</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -1542,7 +1432,7 @@ QPushButton:pressed
       <bool>false</bool>
      </property>
     </widget>
-    <widget class="QLabel" name="lblPunishTime">
+    <widget class="QLabel" name="lblPNo">
      <property name="geometry">
       <rect>
        <x>522</x>
@@ -1566,7 +1456,247 @@ background-color:#ffffff;
 font-size: 11pt</string>
      </property>
      <property name="text">
-      <string>Punishment Time</string>
+      <string>label</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_11">
+     <property name="geometry">
+      <rect>
+       <x>331</x>
+       <y>226</y>
+       <width>191</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>Rank/Rate:</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_12">
+     <property name="geometry">
+      <rect>
+       <x>331</x>
+       <y>270</y>
+       <width>191</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>Name:</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_14">
+     <property name="geometry">
+      <rect>
+       <x>331</x>
+       <y>314</y>
+       <width>191</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>Department:</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_15">
+     <property name="geometry">
+      <rect>
+       <x>330</x>
+       <y>358</y>
+       <width>191</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>Blood Group:</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="lblBGroup">
+     <property name="geometry">
+      <rect>
+       <x>520</x>
+       <y>358</y>
+       <width>191</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>label</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="lblRank">
+     <property name="geometry">
+      <rect>
+       <x>521</x>
+       <y>226</y>
+       <width>191</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>label</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="lblDepartment">
+     <property name="geometry">
+      <rect>
+       <x>521</x>
+       <y>314</y>
+       <width>191</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>label</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="lblName">
+     <property name="geometry">
+      <rect>
+       <x>521</x>
+       <y>270</y>
+       <width>191</width>
+       <height>44</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Segoe UI</family>
+       <pointsize>11</pointsize>
+      </font>
+     </property>
+     <property name="layoutDirection">
+      <enum>Qt::LeftToRight</enum>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: #000000;
+background-color:#ffffff;
+font-size: 11pt</string>
+     </property>
+     <property name="text">
+      <string>label</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -1594,14 +1724,19 @@ font-size: 11pt</string>
     <zorder>navViewPersonnel</zorder>
     <zorder>navViewStatePersonnel</zorder>
     <zorder>label_9</zorder>
-    <zorder>tbldetails</zorder>
     <zorder>navAddPunishment</zorder>
-    <zorder>navViewPunishmentDetails</zorder>
     <zorder>label_10</zorder>
-    <zorder>lblPunishDate</zorder>
-    <zorder>lblDataEntrySuccessful</zorder>
+    <zorder>lbIDNo</zorder>
     <zorder>navViewStateArmory</zorder>
-    <zorder>lblPunishTime</zorder>
+    <zorder>lblPNo</zorder>
+    <zorder>label_11</zorder>
+    <zorder>label_12</zorder>
+    <zorder>label_14</zorder>
+    <zorder>label_15</zorder>
+    <zorder>lblBGroup</zorder>
+    <zorder>lblRank</zorder>
+    <zorder>lblDepartment</zorder>
+    <zorder>lblName</zorder>
    </widget>
    <widget class="QLabel" name="label_13">
     <property name="geometry">
@@ -1643,7 +1778,7 @@ background-color:#ffffff;
 font-size: 11pt</string>
     </property>
     <property name="text">
-     <string>Mark Today's Punishment</string>
+     <string>Located Personnel's Details</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>

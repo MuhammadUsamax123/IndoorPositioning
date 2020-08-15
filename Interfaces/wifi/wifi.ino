@@ -6,12 +6,8 @@ int ledPinb = 16;
 int ledPinr = 5;
 int buzzPin = 0;
 WiFiServer server(80);
-IPAddress staticIP(192, 168, 1, 143); //ESP static ip
-IPAddress gateway(192, 168, 1, 1);   //IP Address of your WiFi Router (Gateway)
-IPAddress subnet(255, 255, 255, 0);  //Subnet mask
-IPAddress dns(192, 168, 1, 1);
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(65200);
   pinMode(ledPinb, OUTPUT);
   pinMode(ledPinr, OUTPUT);
   pinMode(buzzPin, OUTPUT);
@@ -22,14 +18,8 @@ void setup() {
 
   // Connect to WiFi network
       WiFi.begin(ssid, password);
-      
-      WiFi.disconnect();  //Prevent connecting to wifi based on previous configuration
-  
-       // DHCP Hostname (useful for finding device for static lease)
-      WiFi.config(staticIP, subnet, gateway, dns);
       Serial.println("Connecting to ");
       Serial.print(ssid);
-      WiFi.begin(ssid, password);
       WiFi.mode(WIFI_STA);
     while (WiFi.status() != WL_CONNECTED) {
       delay(5000);
@@ -68,15 +58,18 @@ void loop() {
   Serial.println(request);
   client.flush();
   
-  if (request.indexOf("/LED=fire") != -1)  {
+  if (request.indexOf("/LED=Fire") != -1)  {
     blinkRedLED();
     client.println("HTTP/1.1 200 OK");
   }
-  if (request.indexOf("/LED=flood") != -1)  {
+  if (request.indexOf("/LED=Flood") != -1)  {
     blinkBlueLED();
     client.println("HTTP/1.1 200 OK");
   }
-
+  if (request.indexOf("/LED=Call") != -1)  {
+    ringBell();
+    client.println("HTTP/1.1 200 OK");
+  }
   delay(1);
   Serial.println("Client disonnected");
   Serial.println("");
@@ -85,7 +78,7 @@ void loop() {
 
   void blinkBlueLED(){
   int i;
-  for (i = 1; i < 11; i++){     
+  for (i = 1; i < 6; i++){     
   digitalWrite(ledPinb, LOW);
   delay(1000);
   digitalWrite(ledPinb, HIGH);
@@ -95,7 +88,7 @@ void loop() {
 
   void blinkRedLED(){
   int i;
-  for (i = 1; i < 11; i++){
+  for (i = 1; i < 6; i++){
   digitalWrite(ledPinr, LOW);
   delay(1000);
   digitalWrite(ledPinr, HIGH);
@@ -105,7 +98,7 @@ void loop() {
 
   void ringBell(){
   int i;
-  for (i = 1; i < 11; i++){
+  for (i = 1; i < 6; i++){
   digitalWrite(buzzPin, LOW);
   delay(1000);
   digitalWrite(buzzPin, HIGH);

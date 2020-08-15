@@ -7,6 +7,7 @@ from datetime import date, datetime, timedelta
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sqlite3
 from PyQt5.QtSql import QSqlQueryModel,QSqlDatabase,QSqlQuery
+import urllib.request
 
 db = QSqlDatabase.addDatabase("QSQLITE")
 db.setDatabaseName("IndoorPositionDatabase.DB")
@@ -19,7 +20,7 @@ def createTable():
         conn=connectDB()
         c=conn.cursor()
         c.execute("CREATE TABLE IF NOT EXISTS PersonnelDataBook('ID No.' TEXT, 'P No./ O No.' TEXT,'Rank/ Rate' TEXT,Name TEXT, Department TEXT, 'Blood Group' TEXT)")
-        c.execute("CREATE TABLE IF NOT EXISTS ArmoryState('ID No.' TEXT, 'P No./ O No.' TEXT,'Rank/ Rate' TEXT,Name TEXT, Department TEXT, 'Blood Group' TEXT,Status Text)")
+        c.execute("CREATE TABLE IF NOT EXISTS PersonnelState('ID No.' TEXT, 'P No./ O No.' TEXT,'Rank/ Rate' TEXT,Name TEXT, Department TEXT, 'Blood Group' TEXT,Status Text)")
         c.execute("CREATE TABLE IF NOT EXISTS ImportantKeyBook('Key Number' TEXT, 'Key Name' TEXT, 'Issuing Person P No./ O No.' TEXT, Name TEXT, 'Rank/ Rate' TEXT, 'Time out' TEXT, 'Time in' TEXT)")
         c.execute("CREATE TABLE IF NOT EXISTS GeneralKeyBook('Key Number' TEXT, 'Key Name' TEXT, 'Issuing Person P No./ O No.' TEXT, Name TEXT, 'Rank/ Rate' TEXT, 'Time out' TEXT, 'Time in' TEXT)")
         c.execute("CREATE TABLE IF NOT EXISTS VisitorBook(Name TEXT, 'CNIC No.' TEXT,'Contact No.' TEXT,'Bike/ Car No.' TEXT,'Person to Meet/ Office' TEXT,Purpose TEXT,'Time in' TEXT,'Time Duration' TEXT,'Visitor Card No.' TEXT)")
@@ -31,10 +32,11 @@ def createTable():
         c.execute("CREATE TABLE IF NOT EXISTS NightRoundBook(Time TEXT, 'Cells Visited in Water' TEXT, 'Temperature of Cells' TEXT, Report TEXT, 'Petty Officer Name' TEXT, 'Officer on Watch Name' TEXT, 'Officer on Round Name' TEXT)")
         c.execute("CREATE TABLE IF NOT EXISTS ArmPPEBook('P No./ O No.' TEXT, Name TEXT, 'Rank/ Rate' TEXT, 'Weapon Type' TEXT, 'Registration No.' TEXT, 'Spare Magazine' TEXT,'Ammo Type' TEXT,'Quantity' TEXT,'SL Pouch' TEXT, 'Ammo Consumed' TEXT,'Extra Equiplment' TEXT)")
         c.execute("CREATE TABLE IF NOT EXISTS Login(userName TEXT, password TEXT, loginAs TEXT)")
-        c.execute("CREATE TABLE IF NOT EXISTS Bands(bandNo TEXT)")
+        c.execute("CREATE TABLE IF NOT EXISTS Bands(BandNo TEXT,Available Text)")
         c.execute("CREATE TABLE IF NOT EXISTS Arms(gunName TEXT)")
         c.execute("CREATE TABLE IF NOT EXISTS Registrations(gunName TEXT,registrationNo Text)")
         c.execute("CREATE TABLE IF NOT EXISTS AmmoTypes(gunName TEXT,ammoType Text)")
+        c.execute("CREATE TABLE IF NOT EXISTS MOB(BandNo Text,DateTime Text,Detected Text)")
         return conn
 def insertData(self,query):
         try:
@@ -52,6 +54,17 @@ def insertData(self,query):
                 self.lblDataEntrySuccessful.setStyleSheet("color: red;\n""background-color:#ffffff;\n""font-size: 11pt")
                 self.lblDataEntrySuccessful.setText("Details could not be saved!")
                 self.lblDataEntrySuccessful.show()
+def updateMOBData(self,query):
+        try:
+                conn=createTable()
+                c=conn.cursor()
+                c.execute(query)
+                conn.commit()
+                c.close()
+                conn.close()
+        except Exception as e:
+                print(e)
+
 def updateData(self,query):
         try:
                 conn=createTable()
@@ -86,6 +99,112 @@ def defaultDB():
         conn=createTable()
         conn.close()
 defaultDB()
+
+def scanNetwork(braceletMacAddress):
+        routerIPs = ["192.168.1.1/24"]
+        braceletDetectionFlags = [0,0,0]
+        finalClientIP=[]
+        detectionSum=0
+        for i in range (len(routerIPs)):
+            targetIP = routerIPs[i]
+            arp = ARP(pdst=targetIP)
+            ether = Ether(dst="ff:ff:ff:ff:ff:ff")
+            packet = ether/arp
+            result = srp(packet, timeout=2, verbose=0)[0]
+            clientIPs= []
+            clientMacs = []
+            for sent, received in result:
+                clientMacs.append(received.hwsrc)
+                clientIPs.append(received.psrc)
+            for j in range(len(clientMacs)):
+                for k in range(len(braceletMacAddress)):
+                    if (clientMacs[j] == braceletMacAddress[k] and braceletDetectionFlags[k] == 0):                  
+                        braceletDetectionFlags[k] = 1
+                        finalClientIP.append(clientIPs[j])
+            for l in range(len(braceletDetectionFlags)):
+                detectionSum = detectionSum + braceletDetectionFlags[l]
+            if (detectionSum<len(braceletDetectionFlags)):
+                continue
+            else:
+                break
+        if (len(finalClientIP)>0):
+            return finalClientIP
+        else:
+            return []
+
+def sendRequest(url):
+        try:
+                n = urllib.request.urlopen(url)
+        except Exception as e: 
+                print(e)
+        
+def resetMOBDetailsGUI(self):
+        self.cBoxIDNo.clear()
+        cbIDNo=fillComboBoxData("SELECT BandNo FROM MOB Where Detected= 'Yes'")
+        if(len(cbIDNo)!=0):
+                self.listIDNo=cbIDNo.copy()
+                self.cBoxIDNo.addItems(self.listIDNo)
+                cbPNo=fillComboBoxData("SELECT [P No./ O No.] FROM PersonnelDataBook Where [ID No.] = '"+cbIDNo[0]+"'")
+                cbRank=fillComboBoxData("SELECT [Rank/ Rate] from PersonnelDataBook Where [ID No.] = '"+cbIDNo[0]+"'")
+                cbName=fillComboBoxData("SELECT Name FROM PersonnelDataBook Where [ID No.] = '"+cbIDNo[0]+"'")
+                cbDepartment=fillComboBoxData("SELECT Department FROM PersonnelDataBook Where [ID No.] = '"+cbIDNo[0]+"'")
+                cbBloodGroup=fillComboBoxData("SELECT [Blood Group] FROM PersonnelDataBook Where [ID No.] = '"+cbIDNo[0]+"'")
+                if(len(cbPNo)!=0):
+                        self.lblPNo.setText(cbPNo[0])
+                        self.lblRank.setText(cbRank[0])
+                        self.lblName.setText(cbName[0])
+                        self.lblDepartment.setText(cbDepartment[0])
+                        self.lblBGroup.setText(cbBloodGroup[0])
+        cbDateTime=fillComboBoxData("SELECT DateTime FROM MOB Where Detected= 'Yes'")
+        if(len(cbDateTime)!=0):
+                self.lblLastDetectedOn.setText(cbDateTime[len(cbDateTime)-1])
+        
+def resetLocationDetailsGUI(self):
+        cbIDNo=fillComboBoxData("SELECT BandNo FROM MOB Where Detected= 'No'")
+        if(len(cbIDNo)!=0):
+                if (self.markerOption==1):
+                        cbPNo=fillComboBoxData("SELECT [P No./ O No.] FROM PersonnelDataBook Where [ID No.] = '"+cbIDNo[0]+"'")
+                        cbRank=fillComboBoxData("SELECT [Rank/ Rate] from PersonnelDataBook Where [ID No.] = '"+cbIDNo[0]+"'")
+                        cbName=fillComboBoxData("SELECT Name FROM PersonnelDataBook Where [ID No.] = '"+cbIDNo[0]+"'")
+                        cbDepartment=fillComboBoxData("SELECT Department FROM PersonnelDataBook Where [ID No.] = '"+cbIDNo[0]+"'")
+                        cbBloodGroup=fillComboBoxData("SELECT [Blood Group] FROM PersonnelDataBook Where [ID No.] = '"+cbIDNo[0]+"'")
+                        if(len(cbPNo)!=0):
+                                self.lbIDNo.setText(cbIDNo[0])
+                                self.lblPNo.setText(cbPNo[0])
+                                self.lblRank.setText(cbRank[0])
+                                self.lblName.setText(cbName[0])
+                                self.lblDepartment.setText(cbDepartment[0])
+                                self.lblBGroup.setText(cbBloodGroup[0])
+                elif (self.markerOption==2):
+                        cbPNo=fillComboBoxData("SELECT [P No./ O No.] FROM PersonnelDataBook Where [ID No.] = '"+cbIDNo[1]+"'")
+                        cbRank=fillComboBoxData("SELECT [Rank/ Rate] from PersonnelDataBook Where [ID No.] = '"+cbIDNo[1]+"'")
+                        cbName=fillComboBoxData("SELECT Name FROM PersonnelDataBook Where [ID No.] = '"+cbIDNo[1]+"'")
+                        cbDepartment=fillComboBoxData("SELECT Department FROM PersonnelDataBook Where [ID No.] = '"+cbIDNo[1]+"'")
+                        cbBloodGroup=fillComboBoxData("SELECT [Blood Group] FROM PersonnelDataBook Where [ID No.] = '"+cbIDNo[1]+"'")
+                        if(len(cbPNo)!=0):
+                                self.lbIDNo.setText(cbIDNo[0])
+                                self.lblPNo.setText(cbPNo[0])
+                                self.lblRank.setText(cbRank[0])
+                                self.lblName.setText(cbName[0])
+                                self.lblDepartment.setText(cbDepartment[0])
+                                self.lblBGroup.setText(cbBloodGroup[0])
+                elif (self.markerOption==3):
+                        cbPNo=fillComboBoxData("SELECT [P No./ O No.] FROM PersonnelDataBook Where [ID No.] = '"+cbIDNo[2]+"'")
+                        cbRank=fillComboBoxData("SELECT [Rank/ Rate] from PersonnelDataBook Where [ID No.] = '"+cbIDNo[2]+"'")
+                        cbName=fillComboBoxData("SELECT Name FROM PersonnelDataBook Where [ID No.] = '"+cbIDNo[2]+"'")
+                        cbDepartment=fillComboBoxData("SELECT Department FROM PersonnelDataBook Where [ID No.] = '"+cbIDNo[2]+"'")
+                        cbBloodGroup=fillComboBoxData("SELECT [Blood Group] FROM PersonnelDataBook Where [ID No.] = '"+cbIDNo[2]+"'")
+                        if(len(cbPNo)!=0):
+                                self.lbIDNo.setText(cbIDNo[0])
+                                self.lblPNo.setText(cbPNo[0])
+                                self.lblRank.setText(cbRank[0])
+                                self.lblName.setText(cbName[0])
+                                self.lblDepartment.setText(cbDepartment[0])
+                                self.lblBGroup.setText(cbBloodGroup[0])
+        cbDateTime=fillComboBoxData("SELECT DateTime FROM MOB Where Detected= 'No'")
+        if(len(cbDateTime)!=0):
+                self.lblLastLocatedOn.setText(cbDateTime[len(cbDateTime)-1])            
+
 def resetKeysGUI(self):
         self.edtKeyNumber.clear()
         self.edtKeyName.clear()
@@ -158,8 +277,8 @@ def resetPersonnelDataGUI(self):
         self.cBoxDepartment.setCurrentIndex(0)
         self.cBoxBloodGroup.setCurrentIndex(0)
         self.edtName.clear()
-        cbIdNo=fillComboBoxData("SELECT bandNo FROM Bands")
-        if(len(cbIdNo)!=0):
+        cbIdNo=fillComboBoxData("SELECT bandNo FROM Bands Where Available='Yes'")
+        if(cbIdNo!=None):
                 self.cBoxID.addItems(cbIdNo)
 def resetTransportGUI(self):
         self.edtCarNo.clear()
@@ -445,28 +564,28 @@ def resetViewStateGUI(self):
                 officerSkCount=0
                 sailorSkCount=0
 
-                totalCountQuery="Select Count (Name) From ArmoryState"
-                officerCountQuery="SELECT Count (Name) FROM ArmoryState WHERE NOT [Rank/ Rate]='II Rate' And NOT [Rank/ Rate]='I Rate' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer'"
-                sailorCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  [Rank/ Rate]='II Rate' OR  [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer'"
+                totalCountQuery="Select Count (Name) From PersonnelState"
+                officerCountQuery="SELECT Count (Name) From PersonnelState WHERE NOT [Rank/ Rate]='II Rate' And NOT [Rank/ Rate]='I Rate' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer'"
+                sailorCountQuery="SELECT Count (Name) From PersonnelState WHERE  [Rank/ Rate]='II Rate' OR  [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer'"
                 
-                totalPCountQuery="Select Count (Name) From ArmoryState Where Status='Present'"
-                officerPCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='II Rate' And NOT [Rank/ Rate]='I Rate' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Present') "
-                sailorPCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='II Rate' OR  [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Present')"
+                totalPCountQuery="Select Count (Name) From PersonnelState Where Status='Present'"
+                officerPCountQuery="SELECT Count (Name) From PersonnelState WHERE (NOT [Rank/ Rate]='II Rate' And NOT [Rank/ Rate]='I Rate' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Present') "
+                sailorPCountQuery="SELECT Count (Name) From PersonnelState WHERE  ([Rank/ Rate]='II Rate' OR  [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Present')"
                 
-                officerACountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='II Rate' And NOT [Rank/ Rate]='I Rate' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND (NOT Status='Present') "
-                sailorACountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='II Rate' OR  [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (NOT Status='Present')"
+                officerACountQuery="SELECT Count (Name) From PersonnelState WHERE (NOT [Rank/ Rate]='II Rate' And NOT [Rank/ Rate]='I Rate' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND (NOT Status='Present') "
+                sailorACountQuery="SELECT Count (Name) From PersonnelState WHERE  ([Rank/ Rate]='II Rate' OR  [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (NOT Status='Present')"
                 
-                officerShCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='II Rate' And NOT [Rank/ Rate]='I Rate' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Shifa') "
-                sailorShCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='II Rate' OR  [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Shifa')"
+                officerShCountQuery="SELECT Count (Name) From PersonnelState WHERE (NOT [Rank/ Rate]='II Rate' And NOT [Rank/ Rate]='I Rate' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Shifa') "
+                sailorShCountQuery="SELECT Count (Name) From PersonnelState WHERE  ([Rank/ Rate]='II Rate' OR  [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Shifa')"
                 
-                officerCasCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='II Rate' And NOT [Rank/ Rate]='I Rate' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Casual Leave') "
-                sailorCasCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='II Rate' OR  [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Casual Leave')"
+                officerCasCountQuery="SELECT Count (Name) From PersonnelState WHERE (NOT [Rank/ Rate]='II Rate' And NOT [Rank/ Rate]='I Rate' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Casual Leave') "
+                sailorCasCountQuery="SELECT Count (Name) From PersonnelState WHERE  ([Rank/ Rate]='II Rate' OR  [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Casual Leave')"
                 
-                officerPerCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='II Rate' And NOT [Rank/ Rate]='I Rate' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Personal Leave') "
-                sailorPerCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='II Rate' OR  [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Personal Leave')"
+                officerPerCountQuery="SELECT Count (Name) From PersonnelState WHERE (NOT [Rank/ Rate]='II Rate' And NOT [Rank/ Rate]='I Rate' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Personal Leave') "
+                sailorPerCountQuery="SELECT Count (Name) From PersonnelState WHERE  ([Rank/ Rate]='II Rate' OR  [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Personal Leave')"
                 
-                officerSKCountQuery="SELECT Count (Name) FROM ArmoryState WHERE (NOT [Rank/ Rate]='II Rate' And NOT [Rank/ Rate]='I Rate' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Sick Leave') "
-                sailorSKCountQuery="SELECT Count (Name) FROM ArmoryState WHERE  ([Rank/ Rate]='II Rate' OR  [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Sick Leave')"
+                officerSKCountQuery="SELECT Count (Name) From PersonnelState WHERE (NOT [Rank/ Rate]='II Rate' And NOT [Rank/ Rate]='I Rate' And NOT [Rank/ Rate]='Ldg' And NOT [Rank/ Rate]='Petty Officer' And NOT [Rank/ Rate]='Chief Petty Officer' And NOT [Rank/ Rate]='Fleet Chief Petty Officer' And NOT [Rank/ Rate]='Master Chief Petty Officer') AND  (Status='Sick Leave') "
+                sailorSKCountQuery="SELECT Count (Name) From PersonnelState WHERE  ([Rank/ Rate]='II Rate' OR  [Rank/ Rate]='I Rate' OR [Rank/ Rate]='Ldg' OR [Rank/ Rate]='Petty Officer' OR [Rank/ Rate]='Chief Petty Officer' OR [Rank/ Rate]='Fleet Chief Petty Officer' OR [Rank/ Rate]='Master Chief Petty Officer') AND (Status='Sick Leave')"
                 
                 conn=createTable()
                 c=conn.cursor()
@@ -552,13 +671,13 @@ def resetManageStateGUI(self):
         self.tblDetails.setHorizontalHeaderLabels(['ID No.','P No./ O No.','Rank/ Rate','Name','Department','Blood Group','Status','Change Status'])
 
 
-        dbIDNo=fillComboBoxData("SELECT [ID No.] FROM ArmoryState")
-        dbPNo=fillComboBoxData("SELECT [P No./ O No.] FROM ArmoryState")
-        dbRank=fillComboBoxData("SELECT [Rank/ Rate] FROM ArmoryState")
-        dbName=fillComboBoxData("SELECT Name FROM ArmoryState")
-        dbDepart=fillComboBoxData("SELECT Department FROM ArmoryState")
-        dbBGroup=fillComboBoxData("SELECT [Blood Group] FROM ArmoryState")
-        dbStatus=fillComboBoxData("SELECT Status FROM ArmoryState")
+        dbIDNo=fillComboBoxData("SELECT [ID No.] FROM PersonnelState")
+        dbPNo=fillComboBoxData("SELECT [P No./ O No.] FROM PersonnelState")
+        dbRank=fillComboBoxData("SELECT [Rank/ Rate] FROM PersonnelState")
+        dbName=fillComboBoxData("SELECT Name FROM PersonnelState")
+        dbDepart=fillComboBoxData("SELECT Department FROM PersonnelState")
+        dbBGroup=fillComboBoxData("SELECT [Blood Group] FROM PersonnelState")
+        dbStatus=fillComboBoxData("SELECT Status FROM PersonnelState")
 
         if(len(dbIDNo)!=0 and len(dbPNo)!=0 and len(dbRank)!=0 and len(dbName)!=0 and len(dbDepart)!=0 and len(dbBGroup)!=0):
                 for i in range(len(dbName)):
@@ -594,13 +713,13 @@ def resetManageCallGUI(self):
         self.tblDetails.setHorizontalHeaderLabels(['ID No.','P No./ O No.','Rank/ Rate','Name','Department','Blood Group','Status','Action'])
 
 
-        dbIDNo=fillComboBoxData("SELECT [ID No.] FROM ArmoryState")
-        dbPNo=fillComboBoxData("SELECT [P No./ O No.] FROM ArmoryState")
-        dbRank=fillComboBoxData("SELECT [Rank/ Rate] FROM ArmoryState")
-        dbName=fillComboBoxData("SELECT Name FROM ArmoryState")
-        dbDepart=fillComboBoxData("SELECT Department FROM ArmoryState")
-        dbBGroup=fillComboBoxData("SELECT [Blood Group] FROM ArmoryState")
-        dbStatus=fillComboBoxData("SELECT Status FROM ArmoryState")
+        dbIDNo=fillComboBoxData("SELECT [ID No.] FROM PersonnelState")
+        dbPNo=fillComboBoxData("SELECT [P No./ O No.] FROM PersonnelState")
+        dbRank=fillComboBoxData("SELECT [Rank/ Rate] FROM PersonnelState")
+        dbName=fillComboBoxData("SELECT Name FROM PersonnelState")
+        dbDepart=fillComboBoxData("SELECT Department FROM PersonnelState")
+        dbBGroup=fillComboBoxData("SELECT [Blood Group] FROM PersonnelState")
+        dbStatus=fillComboBoxData("SELECT Status FROM PersonnelState")
 
         if(len(dbIDNo)!=0 and len(dbPNo)!=0 and len(dbRank)!=0 and len(dbName)!=0 and len(dbDepart)!=0 and len(dbBGroup)!=0):
                 for i in range(len(dbName)):
@@ -617,11 +736,14 @@ def resetManageCallGUI(self):
                         self.tblDetails.setItem(inx,4,QtWidgets.QTableWidgetItem(str(row[4])))
                         self.tblDetails.setItem(inx,5,QtWidgets.QTableWidgetItem(str(row[5])))
                         self.tblDetails.setItem(inx,6,QtWidgets.QTableWidgetItem(str(row[6])))
-
+                        self.rowIndex=inx
+                        self.rowVal=row[0]
+                        self.rowVal=self.rowVal.split()
                         if(row[6]=="Present"):
                                 self.val=True
                                 btn = BtnCall(self)
                                 self.tblDetails.setCellWidget(inx,7,btn)
+                                btn.singlePersonCalled.connect(self.callSinglePerson)
                                 
                         else:
                                 self.val=False
@@ -633,15 +755,15 @@ def resetManageCallGUI(self):
                 self.tblDetails.setColumnWidth(colCount, 250)
 def zoomIn(self):
             if(self.zoomLimit==0):
-                    self.btnMarker1Room1.setGeometry(QtCore.QRect(472, 258, 51, 101))
-                    self.btnMarker2Room1.setGeometry(QtCore.QRect(409, 240, 101, 51))
-                    self.btnMarker3Room1.setGeometry(QtCore.QRect(472, 157, 51, 101))
-                    self.btnMarker1Room2.setGeometry(QtCore.QRect(541, 157, 51, 101))
-                    self.btnMarker2Room2.setGeometry(QtCore.QRect(592, 157, 51, 101))
-                    self.btnMarker3Room2.setGeometry(QtCore.QRect(604, 240, 101, 51))
-                    self.btnMarker1Room3.setGeometry(QtCore.QRect(526, 307, 51, 101))
-                    self.btnMarker2Room3.setGeometry(QtCore.QRect(575, 307, 51, 101))
-                    self.btnMarker3Room3.setGeometry(QtCore.QRect(604, 295, 101, 51))
+                    self.btnMarker1Room1.setGeometry(QtCore.QRect(479, 258, 36, 101))
+                    self.btnMarker2Room1.setGeometry(QtCore.QRect(412, 240, 101, 36))
+                    self.btnMarker3Room1.setGeometry(QtCore.QRect(479, 159, 36, 101))
+                    self.btnMarker1Room2.setGeometry(QtCore.QRect(547, 159, 36, 101))
+                    self.btnMarker2Room2.setGeometry(QtCore.QRect(600, 159, 36, 101))
+                    self.btnMarker3Room2.setGeometry(QtCore.QRect(602, 240, 101, 36))
+                    self.btnMarker1Room3.setGeometry(QtCore.QRect(533, 306, 36, 101))
+                    self.btnMarker2Room3.setGeometry(QtCore.QRect(586, 306, 36, 101))
+                    self.btnMarker3Room3.setGeometry(QtCore.QRect(602, 303, 101, 36))
                     self.btnshipImage.setText("")
                     self.btnshipImage.setIconSize(QtCore.QSize(1280, 650))
                     self.btnMoveLeft.setEnabled(True)
@@ -649,30 +771,30 @@ def zoomIn(self):
                     self.btnZoomOut.setEnabled(True)
                     self.zoomLimit+=1
             elif(self.zoomLimit==1):
-                    self.btnMarker1Room1.setGeometry(QtCore.QRect(469, 258, 51, 101))
-                    self.btnMarker2Room1.setGeometry(QtCore.QRect(406, 238, 101, 51))
-                    self.btnMarker3Room1.setGeometry(QtCore.QRect(469, 150, 51, 101))
-                    self.btnMarker1Room2.setGeometry(QtCore.QRect(551, 150, 51, 101))
-                    self.btnMarker2Room2.setGeometry(QtCore.QRect(614, 150, 51, 101))
-                    self.btnMarker3Room2.setGeometry(QtCore.QRect(627, 238, 101, 51))
-                    self.btnMarker1Room3.setGeometry(QtCore.QRect(534, 315, 51, 101))
-                    self.btnMarker2Room3.setGeometry(QtCore.QRect(593, 315, 51, 101))
-                    self.btnMarker3Room3.setGeometry(QtCore.QRect(627, 303, 101, 51))
+                    self.btnMarker1Room1.setGeometry(QtCore.QRect(476, 258, 36, 101))
+                    self.btnMarker2Room1.setGeometry(QtCore.QRect(409, 238, 101, 36))
+                    self.btnMarker3Room1.setGeometry(QtCore.QRect(476, 151, 36, 101))
+                    self.btnMarker1Room2.setGeometry(QtCore.QRect(558, 151, 36, 101))
+                    self.btnMarker2Room2.setGeometry(QtCore.QRect(622, 151, 36, 101))
+                    self.btnMarker3Room2.setGeometry(QtCore.QRect(625, 238, 101, 36))
+                    self.btnMarker1Room3.setGeometry(QtCore.QRect(541, 315, 36, 101))
+                    self.btnMarker2Room3.setGeometry(QtCore.QRect(604, 315, 36, 101))
+                    self.btnMarker3Room3.setGeometry(QtCore.QRect(625, 311, 101, 36))
                     self.btnshipImage.setText("")
                     self.btnshipImage.setIconSize(QtCore.QSize(1540, 853))
                     self.btnMoveLeft.setEnabled(True)
                     self.btnMoveRight.setEnabled(True)
                     self.zoomLimit+=1
             elif(self.zoomLimit==2):
-                    self.btnMarker1Room1.setGeometry(QtCore.QRect(466, 258, 51, 101))
-                    self.btnMarker2Room1.setGeometry(QtCore.QRect(403, 235, 101, 51))
-                    self.btnMarker3Room1.setGeometry(QtCore.QRect(466, 143, 51, 101))
-                    self.btnMarker1Room2.setGeometry(QtCore.QRect(562, 143, 51, 101))
-                    self.btnMarker2Room2.setGeometry(QtCore.QRect(637, 143, 51, 101))
-                    self.btnMarker3Room2.setGeometry(QtCore.QRect(649, 235, 101, 51))
-                    self.btnMarker1Room3.setGeometry(QtCore.QRect(542, 327, 51, 101))
-                    self.btnMarker2Room3.setGeometry(QtCore.QRect(612, 327, 51, 101))
-                    self.btnMarker3Room3.setGeometry(QtCore.QRect(649, 313, 101, 51))
+                    self.btnMarker1Room1.setGeometry(QtCore.QRect(473, 258, 36, 101))
+                    self.btnMarker2Room1.setGeometry(QtCore.QRect(406, 235, 101, 36))
+                    self.btnMarker3Room1.setGeometry(QtCore.QRect(473, 144, 36, 101))
+                    self.btnMarker1Room2.setGeometry(QtCore.QRect(569, 144, 36, 101))
+                    self.btnMarker2Room2.setGeometry(QtCore.QRect(645, 144, 36, 101))
+                    self.btnMarker3Room2.setGeometry(QtCore.QRect(647, 235, 101, 36))
+                    self.btnMarker1Room3.setGeometry(QtCore.QRect(549, 327, 36, 101))
+                    self.btnMarker2Room3.setGeometry(QtCore.QRect(622, 327, 36, 101))
+                    self.btnMarker3Room3.setGeometry(QtCore.QRect(647, 320, 101, 36))
                     self.btnshipImage.setText("")
                     self.btnMoveLeft.setEnabled(True)
                     self.btnMoveRight.setEnabled(True)
@@ -681,15 +803,15 @@ def zoomIn(self):
                     self.btnZoomIn.setEnabled(False)
 def zoomOut(self):
             if(self.zoomLimit==1):
-                    self.btnMarker1Room1.setGeometry(QtCore.QRect(476, 258, 51, 101))
-                    self.btnMarker2Room1.setGeometry(QtCore.QRect(413, 240, 101, 51))
-                    self.btnMarker3Room1.setGeometry(QtCore.QRect(476, 163, 51, 101))
-                    self.btnMarker1Room2.setGeometry(QtCore.QRect(531, 163, 51, 101))
-                    self.btnMarker2Room2.setGeometry(QtCore.QRect(570, 163, 51, 101))
-                    self.btnMarker3Room2.setGeometry(QtCore.QRect(583, 240, 101, 51))
-                    self.btnMarker1Room3.setGeometry(QtCore.QRect(520, 298, 51, 101))
-                    self.btnMarker2Room3.setGeometry(QtCore.QRect(560, 298, 51, 101))
-                    self.btnMarker3Room3.setGeometry(QtCore.QRect(583, 286, 101, 51))
+                    self.btnMarker1Room1.setGeometry(QtCore.QRect(482, 257, 36, 101))
+                    self.btnMarker2Room1.setGeometry(QtCore.QRect(416, 240, 101, 36))
+                    self.btnMarker3Room1.setGeometry(QtCore.QRect(482, 165, 36, 101))
+                    self.btnMarker1Room2.setGeometry(QtCore.QRect(538, 165, 36, 101))
+                    self.btnMarker2Room2.setGeometry(QtCore.QRect(580, 165, 36, 101))
+                    self.btnMarker3Room2.setGeometry(QtCore.QRect(582, 240, 101, 36))
+                    self.btnMarker1Room3.setGeometry(QtCore.QRect(526, 297, 36, 101))
+                    self.btnMarker2Room3.setGeometry(QtCore.QRect(569, 297, 36, 101))
+                    self.btnMarker3Room3.setGeometry(QtCore.QRect(582, 294, 101, 36))
                     self.btnshipImage.setText("")
                     self.btnshipImage.setIconSize(QtCore.QSize(1040, 520))
                     self.btnZoomOut.setEnabled(False)
@@ -698,15 +820,15 @@ def zoomOut(self):
                     self.zoomLimit-=1
 
             elif(self.zoomLimit==2):
-                    self.btnMarker1Room1.setGeometry(QtCore.QRect(472, 258, 51, 101))
-                    self.btnMarker2Room1.setGeometry(QtCore.QRect(409, 240, 101, 51))
-                    self.btnMarker3Room1.setGeometry(QtCore.QRect(472, 157, 51, 101))
-                    self.btnMarker1Room2.setGeometry(QtCore.QRect(541, 157, 51, 101))
-                    self.btnMarker2Room2.setGeometry(QtCore.QRect(592, 157, 51, 101))
-                    self.btnMarker3Room2.setGeometry(QtCore.QRect(604, 240, 101, 51))
-                    self.btnMarker1Room3.setGeometry(QtCore.QRect(526, 307, 51, 101))
-                    self.btnMarker2Room3.setGeometry(QtCore.QRect(575, 307, 51, 101))
-                    self.btnMarker3Room3.setGeometry(QtCore.QRect(604, 295, 101, 51))
+                    self.btnMarker1Room1.setGeometry(QtCore.QRect(479, 258, 36, 101))
+                    self.btnMarker2Room1.setGeometry(QtCore.QRect(412, 240, 101, 36))
+                    self.btnMarker3Room1.setGeometry(QtCore.QRect(479, 159, 36, 101))
+                    self.btnMarker1Room2.setGeometry(QtCore.QRect(547, 159, 36, 101))
+                    self.btnMarker2Room2.setGeometry(QtCore.QRect(600, 159, 36, 101))
+                    self.btnMarker3Room2.setGeometry(QtCore.QRect(602, 240, 101, 36))
+                    self.btnMarker1Room3.setGeometry(QtCore.QRect(533, 306, 36, 101))
+                    self.btnMarker2Room3.setGeometry(QtCore.QRect(586, 306, 36, 101))
+                    self.btnMarker3Room3.setGeometry(QtCore.QRect(602, 303, 101, 36))
                     self.btnshipImage.setText("")
                     self.btnMoveLeft.setEnabled(True)
                     self.btnMoveRight.setEnabled(True)
@@ -714,15 +836,15 @@ def zoomOut(self):
                     self.zoomLimit-=1
 
             elif(self.zoomLimit==3):
-                    self.btnMarker1Room1.setGeometry(QtCore.QRect(469, 258, 51, 101))
-                    self.btnMarker2Room1.setGeometry(QtCore.QRect(406, 238, 101, 51))
-                    self.btnMarker3Room1.setGeometry(QtCore.QRect(469, 150, 51, 101))
-                    self.btnMarker1Room2.setGeometry(QtCore.QRect(551, 150, 51, 101))
-                    self.btnMarker2Room2.setGeometry(QtCore.QRect(614, 150, 51, 101))
-                    self.btnMarker3Room2.setGeometry(QtCore.QRect(627, 238, 101, 51))
-                    self.btnMarker1Room3.setGeometry(QtCore.QRect(534, 315, 51, 101))
-                    self.btnMarker2Room3.setGeometry(QtCore.QRect(593, 315, 51, 101))
-                    self.btnMarker3Room3.setGeometry(QtCore.QRect(627, 303, 101, 51))
+                    self.btnMarker1Room1.setGeometry(QtCore.QRect(476, 258, 36, 101))
+                    self.btnMarker2Room1.setGeometry(QtCore.QRect(409, 238, 101, 36))
+                    self.btnMarker3Room1.setGeometry(QtCore.QRect(476, 151, 36, 101))
+                    self.btnMarker1Room2.setGeometry(QtCore.QRect(558, 151, 36, 101))
+                    self.btnMarker2Room2.setGeometry(QtCore.QRect(622, 151, 36, 101))
+                    self.btnMarker3Room2.setGeometry(QtCore.QRect(625, 238, 101, 36))
+                    self.btnMarker1Room3.setGeometry(QtCore.QRect(541, 315, 36, 101))
+                    self.btnMarker2Room3.setGeometry(QtCore.QRect(604, 315, 36, 101))
+                    self.btnMarker3Room3.setGeometry(QtCore.QRect(625, 311, 101, 36))
                     self.btnshipImage.setText("")
                     self.btnMoveLeft.setEnabled(True)
                     self.btnMoveRight.setEnabled(True)
@@ -735,70 +857,70 @@ def moveLeft(self):
                     self.moveText+=self.moveText
                     self.btnshipImage.setText(self.moveText)
                     if(self.moveLimit==0 and self.zoomLimit==1):
-                                self.btnMarker1Room1.setGeometry(QtCore.QRect(344, 258, 51, 101))
-                                self.btnMarker2Room1.setGeometry(QtCore.QRect(281, 240, 101, 51))
-                                self.btnMarker3Room1.setGeometry(QtCore.QRect(344, 157, 51, 101))
-                                self.btnMarker1Room2.setGeometry(QtCore.QRect(413, 157, 51, 101))
-                                self.btnMarker2Room2.setGeometry(QtCore.QRect(463, 157, 51, 101))
-                                self.btnMarker3Room2.setGeometry(QtCore.QRect(476, 240, 101, 51))
-                                self.btnMarker1Room3.setGeometry(QtCore.QRect(398, 307, 51, 101))
-                                self.btnMarker2Room3.setGeometry(QtCore.QRect(447, 307, 51, 101))
-                                self.btnMarker3Room3.setGeometry(QtCore.QRect(476, 295, 101, 51))
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(351, 258, 36, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(284, 240, 101, 36))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(351, 159, 36, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(420, 159, 36, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(473, 159, 36, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(474, 240, 101, 36))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(405, 306, 36, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(457, 306, 36, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(474, 303, 101, 36))
                         
                     elif(self.moveLimit==0 and self.zoomLimit==2):
-                                self.btnMarker1Room1.setGeometry(QtCore.QRect(341, 258, 51, 101))
-                                self.btnMarker2Room1.setGeometry(QtCore.QRect(278, 238, 101, 51))
-                                self.btnMarker3Room1.setGeometry(QtCore.QRect(341, 150, 51, 101))
-                                self.btnMarker1Room2.setGeometry(QtCore.QRect(423, 150, 51, 101))
-                                self.btnMarker2Room2.setGeometry(QtCore.QRect(486, 150, 51, 101))
-                                self.btnMarker3Room2.setGeometry(QtCore.QRect(499, 238, 101, 51))
-                                self.btnMarker1Room3.setGeometry(QtCore.QRect(406, 315, 51, 101))
-                                self.btnMarker2Room3.setGeometry(QtCore.QRect(465, 315, 51, 101))
-                                self.btnMarker3Room3.setGeometry(QtCore.QRect(499, 303, 101, 51))
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(348, 258, 36, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(281, 238, 101, 36))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(348, 151, 36, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(430, 151, 36, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(494, 151, 36, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(497, 238, 101, 36))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(413, 315, 36, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(478, 315, 36, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(497, 311, 101, 36))
 
                     elif(self.moveLimit==1 and self.zoomLimit==2):
-                                self.btnMarker1Room1.setGeometry(QtCore.QRect(215, 258, 51, 101))
-                                self.btnMarker2Room1.setGeometry(QtCore.QRect(152, 238, 101, 51))
-                                self.btnMarker3Room1.setGeometry(QtCore.QRect(215, 150, 51, 101))
-                                self.btnMarker1Room2.setGeometry(QtCore.QRect(296, 150, 51, 101))
-                                self.btnMarker2Room2.setGeometry(QtCore.QRect(360, 150, 51, 101))
-                                self.btnMarker3Room2.setGeometry(QtCore.QRect(373, 238, 101, 51))
-                                self.btnMarker1Room3.setGeometry(QtCore.QRect(280, 315, 51, 101))
-                                self.btnMarker2Room3.setGeometry(QtCore.QRect(339, 315, 51, 101))
-                                self.btnMarker3Room3.setGeometry(QtCore.QRect(373,303, 101, 51))
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(222, 258, 36, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(155, 238, 101, 36))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(222, 151, 36, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(303, 151, 36, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(369, 151, 36, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(371, 238, 101, 36))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(287, 315, 36, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(352, 315, 36, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(371, 311, 101, 36))
 
                     elif(self.moveLimit==0 and self.zoomLimit==3):
-                                self.btnMarker1Room1.setGeometry(QtCore.QRect(338, 258, 51, 101))
-                                self.btnMarker2Room1.setGeometry(QtCore.QRect(275, 235, 101, 51))
-                                self.btnMarker3Room1.setGeometry(QtCore.QRect(338, 143, 51, 101))
-                                self.btnMarker1Room2.setGeometry(QtCore.QRect(434, 143, 51, 101))
-                                self.btnMarker2Room2.setGeometry(QtCore.QRect(509, 143, 51, 101))
-                                self.btnMarker3Room2.setGeometry(QtCore.QRect(521, 235, 101, 51))
-                                self.btnMarker1Room3.setGeometry(QtCore.QRect(414, 327, 51, 101))
-                                self.btnMarker2Room3.setGeometry(QtCore.QRect(484, 327, 51, 101))
-                                self.btnMarker3Room3.setGeometry(QtCore.QRect(521, 313, 101, 51))
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(345, 258, 36, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(278, 235, 101, 36))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(345, 144, 36, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(441, 144, 36, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(517, 144, 36, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(519, 235, 101, 36))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(421, 327, 36, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(497, 327, 36, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(519, 320, 101, 36))
 
                     elif(self.moveLimit==1 and self.zoomLimit==3):
-                                self.btnMarker1Room1.setGeometry(QtCore.QRect(212, 258, 51, 101))
-                                self.btnMarker2Room1.setGeometry(QtCore.QRect(149, 235, 101, 51))
-                                self.btnMarker3Room1.setGeometry(QtCore.QRect(212, 143, 51, 101))
-                                self.btnMarker1Room2.setGeometry(QtCore.QRect(308, 143, 51, 101))
-                                self.btnMarker2Room2.setGeometry(QtCore.QRect(383, 143, 51, 101))
-                                self.btnMarker3Room2.setGeometry(QtCore.QRect(395, 235, 101, 51))
-                                self.btnMarker1Room3.setGeometry(QtCore.QRect(288, 327, 51, 101))
-                                self.btnMarker2Room3.setGeometry(QtCore.QRect(358, 327, 51, 101))
-                                self.btnMarker3Room3.setGeometry(QtCore.QRect(395, 313, 101, 51))
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(219, 258, 36, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(152, 235, 101, 36))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(219, 144, 36, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(315, 144, 36, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(391, 144, 36, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(393, 235, 101, 36))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(295, 327, 36, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(371, 327, 36, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(393, 320, 101, 36))
 
                     elif(self.moveLimit==2 and self.zoomLimit==3):
-                                self.btnMarker1Room1.setGeometry(QtCore.QRect(-40, 258, 51, 101))
-                                self.btnMarker2Room1.setGeometry(QtCore.QRect(-103, 235, 101, 51))
-                                self.btnMarker3Room1.setGeometry(QtCore.QRect(-40, 143, 51, 101))
-                                self.btnMarker1Room2.setGeometry(QtCore.QRect(56, 143, 51, 101))
-                                self.btnMarker2Room2.setGeometry(QtCore.QRect(131, 143, 51, 101))
-                                self.btnMarker3Room2.setGeometry(QtCore.QRect(143, 235, 101, 51))
-                                self.btnMarker1Room3.setGeometry(QtCore.QRect(36, 327, 51, 101))
-                                self.btnMarker2Room3.setGeometry(QtCore.QRect(106, 327, 51, 101))
-                                self.btnMarker3Room3.setGeometry(QtCore.QRect(143, 313, 101, 51))
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(-47, 258, 36, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(-100, 235, 101, 36))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(-47, 144, 36, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(63, 144, 36, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(139, 144, 36, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(141, 235, 101, 36))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(43, 327, 36, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(119, 327, 36, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(141, 320, 101, 36))
                                 
                     self.moveLimit+=1
             if(self.moveLimit<self.zoomLimit):
@@ -814,70 +936,70 @@ def moveRight(self):
                     self.moveText+=self.moveText
                     self.btnshipImage.setText(self.moveText)
                     if(self.moveLimit==0 and self.zoomLimit==1):
-                                self.btnMarker1Room1.setGeometry(QtCore.QRect(601, 258, 51, 101))
-                                self.btnMarker2Room1.setGeometry(QtCore.QRect(541, 240, 101, 51))
-                                self.btnMarker3Room1.setGeometry(QtCore.QRect(601, 157, 51, 101))
-                                self.btnMarker1Room2.setGeometry(QtCore.QRect(670, 157, 51, 101))
-                                self.btnMarker2Room2.setGeometry(QtCore.QRect(720, 157, 51, 101))
-                                self.btnMarker3Room2.setGeometry(QtCore.QRect(732, 240, 101, 51))
-                                self.btnMarker1Room3.setGeometry(QtCore.QRect(655, 307, 51, 101))
-                                self.btnMarker2Room3.setGeometry(QtCore.QRect(703, 307, 51, 101))
-                                self.btnMarker3Room3.setGeometry(QtCore.QRect(732, 295, 101, 51))
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(608, 258, 36, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(541, 240, 101, 36))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(608, 159, 36, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(676, 159, 36, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(728, 159, 36, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(730, 240, 101, 36))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(662, 306, 36, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(713, 306, 36, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(730, 303, 101, 36))
                         
                     elif(self.moveLimit==0 and self.zoomLimit==2):
-                                self.btnMarker1Room1.setGeometry(QtCore.QRect(597, 258, 51, 101))
-                                self.btnMarker2Room1.setGeometry(QtCore.QRect(534, 238, 101, 51))
-                                self.btnMarker3Room1.setGeometry(QtCore.QRect(597, 150, 51, 101))
-                                self.btnMarker1Room2.setGeometry(QtCore.QRect(679, 150, 51, 101))
-                                self.btnMarker2Room2.setGeometry(QtCore.QRect(742, 150, 51, 101))
-                                self.btnMarker3Room2.setGeometry(QtCore.QRect(755, 238, 101, 51))
-                                self.btnMarker1Room3.setGeometry(QtCore.QRect(662, 315, 51, 101))
-                                self.btnMarker2Room3.setGeometry(QtCore.QRect(719, 315, 51, 101))
-                                self.btnMarker3Room3.setGeometry(QtCore.QRect(755, 303, 101, 51))
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(604, 258, 36, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(537, 238, 101, 36))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(604, 151, 36, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(686, 151, 36, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(751, 151, 36, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(753, 238, 101, 36))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(669, 315, 36, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(732, 315, 36, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(753, 303, 101, 36))
 
                     elif(self.moveLimit==1 and self.zoomLimit==2):
-                                self.btnMarker1Room1.setGeometry(QtCore.QRect(723, 258, 51, 101))
-                                self.btnMarker2Room1.setGeometry(QtCore.QRect(660, 238, 101, 51))
-                                self.btnMarker3Room1.setGeometry(QtCore.QRect(723, 150, 51, 101))
-                                self.btnMarker1Room2.setGeometry(QtCore.QRect(805, 150, 51, 101))
-                                self.btnMarker2Room2.setGeometry(QtCore.QRect(868, 150, 51, 101))
-                                self.btnMarker3Room2.setGeometry(QtCore.QRect(881, 238, 101, 51))
-                                self.btnMarker1Room3.setGeometry(QtCore.QRect(788, 315, 51, 101))
-                                self.btnMarker2Room3.setGeometry(QtCore.QRect(845, 315, 51, 101))
-                                self.btnMarker3Room3.setGeometry(QtCore.QRect(881, 303, 101, 51))
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(730, 258, 36, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(663, 238, 101, 36))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(730, 151, 36, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(805, 151, 36, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(877, 151, 36, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(879, 238, 101, 36))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(795, 315, 36, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(858, 315, 36, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(879, 311, 101, 36))
 
                     elif(self.moveLimit==0 and self.zoomLimit==3):
-                                self.btnMarker1Room1.setGeometry(QtCore.QRect(594, 258, 51, 101))
-                                self.btnMarker2Room1.setGeometry(QtCore.QRect(531, 235, 101, 51))
-                                self.btnMarker3Room1.setGeometry(QtCore.QRect(594, 143, 51, 101))
-                                self.btnMarker1Room2.setGeometry(QtCore.QRect(690, 143, 51, 101))
-                                self.btnMarker2Room2.setGeometry(QtCore.QRect(765, 143, 51, 101))
-                                self.btnMarker3Room2.setGeometry(QtCore.QRect(777, 235, 101, 51))
-                                self.btnMarker1Room3.setGeometry(QtCore.QRect(670, 327, 51, 101))
-                                self.btnMarker2Room3.setGeometry(QtCore.QRect(740, 327, 51, 101))
-                                self.btnMarker3Room3.setGeometry(QtCore.QRect(777, 313, 101, 51))
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(601, 258, 36, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(534, 235, 101, 36))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(601, 144, 36, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(697, 144, 36, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(775, 144, 36, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(777, 235, 101, 36))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(677, 327, 36, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(753, 327, 36, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(777, 320, 101, 36))
 
                     elif(self.moveLimit==1 and self.zoomLimit==3):
-                                self.btnMarker1Room1.setGeometry(QtCore.QRect(720, 258, 51, 101))
-                                self.btnMarker2Room1.setGeometry(QtCore.QRect(657, 235, 101, 51))
-                                self.btnMarker3Room1.setGeometry(QtCore.QRect(720, 143, 51, 101))
-                                self.btnMarker1Room2.setGeometry(QtCore.QRect(816, 143, 51, 101))
-                                self.btnMarker2Room2.setGeometry(QtCore.QRect(891, 143, 51, 101))
-                                self.btnMarker3Room2.setGeometry(QtCore.QRect(903, 235, 101, 51))
-                                self.btnMarker1Room3.setGeometry(QtCore.QRect(796, 327, 51, 101))
-                                self.btnMarker2Room3.setGeometry(QtCore.QRect(866, 327, 51, 101))
-                                self.btnMarker3Room3.setGeometry(QtCore.QRect(903, 313, 101, 51))
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(727, 258, 36, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(660, 235, 101, 36))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(727, 144, 36, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(823, 144, 36, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(898, 144, 36, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(901, 235, 101, 36))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(803, 327, 36, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(879, 327, 36, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(901, 320, 101, 36))
 
                     elif(self.moveLimit==2 and self.zoomLimit==3):
-                                self.btnMarker1Room1.setGeometry(QtCore.QRect(972, 258, 51, 101))
-                                self.btnMarker2Room1.setGeometry(QtCore.QRect(909, 235, 101, 51))
-                                self.btnMarker3Room1.setGeometry(QtCore.QRect(972, 143, 51, 101))
-                                self.btnMarker1Room2.setGeometry(QtCore.QRect(1068, 143, 51, 101))
-                                self.btnMarker2Room2.setGeometry(QtCore.QRect(1143, 143, 51, 101))
-                                self.btnMarker3Room2.setGeometry(QtCore.QRect(1155, 235, 101, 51))
-                                self.btnMarker1Room3.setGeometry(QtCore.QRect(1048, 327, 51, 101))
-                                self.btnMarker2Room3.setGeometry(QtCore.QRect(1118, 327, 51, 101))
-                                self.btnMarker3Room3.setGeometry(QtCore.QRect(1155, 313, 101, 51))
+                                self.btnMarker1Room1.setGeometry(QtCore.QRect(979, 258, 36, 101))
+                                self.btnMarker2Room1.setGeometry(QtCore.QRect(912, 235, 101, 36))
+                                self.btnMarker3Room1.setGeometry(QtCore.QRect(979, 144, 36, 101))
+                                self.btnMarker1Room2.setGeometry(QtCore.QRect(1075, 144, 36, 101))
+                                self.btnMarker2Room2.setGeometry(QtCore.QRect(1151, 144, 36, 101))
+                                self.btnMarker3Room2.setGeometry(QtCore.QRect(1153, 235, 101, 36))
+                                self.btnMarker1Room3.setGeometry(QtCore.QRect(1055, 327, 36, 101))
+                                self.btnMarker2Room3.setGeometry(QtCore.QRect(1131, 327, 36, 101))
+                                self.btnMarker3Room3.setGeometry(QtCore.QRect(1153, 320, 101, 36))
                     self.moveLimit+=1
             if(self.moveLimit<self.zoomLimit):
                     pass
@@ -1015,6 +1137,11 @@ class App(QtWidgets.QMainWindow):
         self.addammotype= AddAmmoTypeWidget()
         self.addregno= AddRegNoWidget()
         self.markpunishment= MarkPunishmentWidget()
+        self.viewmob=MObDetailsWidget()
+        self.viewlocation= ViewPersonnelLocationWidget()
+        self.viewmanagementsystem= ViewPersonnelManagementWidget()
+        
+        self.viewmoblocation= ViewMOBLocationWidget()
 
         self.stacked = QtWidgets.QStackedWidget()
         self.setCentralWidget(self.stacked)
@@ -1041,6 +1168,7 @@ class App(QtWidgets.QMainWindow):
         self.stacked.addWidget(self.viewgangway)
         self.stacked.addWidget(self.viewnightround)
         self.stacked.addWidget(self.viewarmppe)
+        self.stacked.addWidget(self.viewmob)
 
         self.stacked.addWidget(self.viewstate)
         self.stacked.addWidget(self.managestate)
@@ -1056,7 +1184,14 @@ class App(QtWidgets.QMainWindow):
         self.stacked.addWidget(self.addammotype)
         self.stacked.addWidget(self.addregno)
         self.stacked.addWidget(self.markpunishment)
+        self.stacked.addWidget(self.viewmob)
+        self.stacked.addWidget(self.viewlocation)
+        self.stacked.addWidget(self.viewmanagementsystem)
+        self.stacked.addWidget(self.viewmoblocation)
 
+        self.personnellocation.btnMobError.hide()
+        self.personnelmanagement.btnMobError.hide()
+        self.mob.btnMobError.hide()
         disableHideMarkers(self.personnellocation)
         disableHideMarkers(self.personnelmanagement)
         disableHideMarkers(self.mob)
@@ -1065,184 +1200,206 @@ class App(QtWidgets.QMainWindow):
         thread.daemon = False                           # Daemonize thread
         thread.start() 
 
+
     def updateShipMarkersGUI(self):
-        braceletMacAddresses = ["d8:1e:dd:9c:6c:e5" , "cc:3a:61:6c:76:3e" , "6c:88:14:66:d2:5c"]
-        routerIPs = ["192.168.1.1/24"]
+        routerIPs=["192.168.1.1/24"]
         while(True):
-            routerNumber=0
-            detectionSum=0
-            print("")
-            braceletDetectionFlags = [0,0,0]
-            for i in range (len(routerIPs)):
-                targetIP = routerIPs[i]
-                arp = ARP(pdst=targetIP)
-                ether = Ether(dst="ff:ff:ff:ff:ff:ff")
-                packet = ether/arp
-                result = srp(packet, timeout=5, verbose=0)[0]
-                clientMacs = []
-                for sent, received in result:
-                    clientMacs.append(received.hwsrc)
-                for j in range(len(clientMacs)):
-                    for k in range(len(braceletMacAddresses)):
-                        if (clientMacs[j] == braceletMacAddresses[k] and braceletDetectionFlags[k] == 0):                  
-                            braceletDetectionFlags[k] = 1
+                braceletMacAddresses=fillComboBoxData("SELECT [ID No.] FROM PersonnelState Where Status='Present'")
+                if(len(braceletMacAddresses)!=0):
+                        routerNumber=0
+                        detectionSum=0
+                        braceletDetectionFlags = braceletMacAddresses.copy()
+                        for i in range (len(braceletDetectionFlags)):
+                                braceletDetectionFlags[i] = 0
+                        for i in range (len(routerIPs)):
+                                targetIP = routerIPs[i]
+                                arp = ARP(pdst=targetIP)
+                                ether = Ether(dst="ff:ff:ff:ff:ff:ff")
+                                packet = ether/arp
+                                result = srp(packet, timeout=5, verbose=0)[0]
+                                clientMacs = []
+                                for sent, received in result:
+                                        clientMacs.append(received.hwsrc)
+                                for j in range(len(clientMacs)):
+                                        for k in range(len(braceletMacAddresses)):
+                                                if (clientMacs[j] == braceletMacAddresses[k] and braceletDetectionFlags[k] == 0):                  
+                                                        braceletDetectionFlags[k] = 1
 
-                for l in range(len(braceletDetectionFlags)):
-                    detectionSum = detectionSum + braceletDetectionFlags[l]
-                print(detectionSum)
-                routerNumber=i
-                if (detectionSum<len(braceletDetectionFlags)):
-                    continue
-                else:
-                    break
-            for m in range(len(braceletDetectionFlags)):
-                    detectionSum = detectionSum + braceletDetectionFlags[m]
-                    if (braceletDetectionFlags[m]==1): 
-                        if (routerNumber==0 and m==0):
-                                self.personnellocation.btnMarker1Room1.show()
-                                self.personnellocation.btnMarker1Room1.setEnabled(True)
-                                self.personnelmanagement.btnMarker1Room1.show()
-                                self.personnelmanagement.btnMarker1Room1.setEnabled(True)
-                                self.mob.btnMarker1Room1.show()
-                                self.mob.btnMarker1Room1.setEnabled(True)
+                                for l in range(len(braceletDetectionFlags)):
+                                        detectionSum = detectionSum + braceletDetectionFlags[l]
+                                routerNumber=i
+                                if (detectionSum<len(braceletDetectionFlags)):
+                                        continue
+                                else:
+                                        break
+                        for m in range(len(braceletDetectionFlags)):
+                                if (braceletDetectionFlags[m]==1): 
+                                        if (routerNumber==0 and m==0):
+                                                self.personnellocation.btnMarker1Room1.show()
+                                                self.personnellocation.btnMarker1Room1.setEnabled(True)
+                                                self.personnelmanagement.btnMarker1Room1.show()
+                                                self.personnelmanagement.btnMarker1Room1.setEnabled(True)
+                                                self.mob.btnMarker1Room1.show()
+                                                self.mob.btnMarker1Room1.setEnabled(True)
                                 
-                        elif (routerNumber==0 and m==1):
-                                self.personnellocation.btnMarker2Room1.show()
-                                self.personnellocation.btnMarker2Room1.setEnabled(True)
-                                self.personnelmanagement.btnMarker2Room1.show()
-                                self.personnelmanagement.btnMarker2Room1.setEnabled(True)
-                                self.mob.btnMarker2Room1.show()
-                                self.mob.btnMarker2Room1.setEnabled(True)
+                                        elif (routerNumber==0 and m==1):
+                                                self.personnellocation.btnMarker2Room1.show()
+                                                self.personnellocation.btnMarker2Room1.setEnabled(True)
+                                                self.personnelmanagement.btnMarker2Room1.show()
+                                                self.personnelmanagement.btnMarker2Room1.setEnabled(True)
+                                                self.mob.btnMarker2Room1.show()
+                                                self.mob.btnMarker2Room1.setEnabled(True)
 
-                        elif (routerNumber==0 and m==2):
-                                self.personnellocation.btnMarker3Room1.show()
-                                self.personnellocation.btnMarker3Room1.setEnabled(True)
-                                self.personnelmanagement.btnMarker3Room1.show()
-                                self.personnelmanagement.btnMarker3Room1.setEnabled(True)
-                                self.mob.btnMarker3Room1.show()
-                                self.mob.btnMarker3Room1.setEnabled(True)
+                                        elif (routerNumber==0 and m==2):
+                                                self.personnellocation.btnMarker3Room1.show()
+                                                self.personnellocation.btnMarker3Room1.setEnabled(True)
+                                                self.personnelmanagement.btnMarker3Room1.show()
+                                                self.personnelmanagement.btnMarker3Room1.setEnabled(True)
+                                                self.mob.btnMarker3Room1.show()
+                                                self.mob.btnMarker3Room1.setEnabled(True)
 
-                        elif (routerNumber==1 and m==0):
-                                 self.personnellocation.btnMarker1Room2.show()
-                                 self.personnellocation.btnMarker1Room2.setEnabled(True)
-                                 self.personnelmanagement.btnMarker1Room2.show()
-                                 self.personnelmanagement.btnMarker1Room2.setEnabled(True)
-                                 self.mob.btnMarker1Room2.show()
-                                 self.mob.btnMarker1Room2.setEnabled(True)
+                                        elif (routerNumber==1 and m==0):
+                                                self.personnellocation.btnMarker1Room2.show()
+                                                self.personnellocation.btnMarker1Room2.setEnabled(True)
+                                                self.personnelmanagement.btnMarker1Room2.show()
+                                                self.personnelmanagement.btnMarker1Room2.setEnabled(True)
+                                                self.mob.btnMarker1Room2.show()
+                                                self.mob.btnMarker1Room2.setEnabled(True)
 
-                        elif (routerNumber==1 and m==1):
-                                self.personnellocation.btnMarker2Room2.show()
-                                self.personnellocation.btnMarker2Room2.setEnabled(True)
-                                self.personnelmanagement.btnMarker2Room2.show()
-                                self.personnelmanagement.btnMarker2Room2.setEnabled(True)
-                                self.mob.btnMarker2Room2.show()
-                                self.mob.btnMarker2Room2.setEnabled(True)
+                                        elif (routerNumber==1 and m==1):
+                                                self.personnellocation.btnMarker2Room2.show()
+                                                self.personnellocation.btnMarker2Room2.setEnabled(True)
+                                                self.personnelmanagement.btnMarker2Room2.show()
+                                                self.personnelmanagement.btnMarker2Room2.setEnabled(True)
+                                                self.mob.btnMarker2Room2.show()
+                                                self.mob.btnMarker2Room2.setEnabled(True)
 
-                        elif (routerNumber==1 and m==2):
-                                self.personnellocation.btnMarker3Room2.show()
-                                self.personnellocation.btnMarker3Room2.setEnabled(True)
-                                self.personnelmanagement.btnMarker3Room2.show()
-                                self.personnelmanagement.btnMarker3Room2.setEnabled(True)
-                                self.mob.btnMarker3Room2.show()
-                                self.mob.btnMarker3Room2.setEnabled(True)
+                                        elif (routerNumber==1 and m==2):
+                                                self.personnellocation.btnMarker3Room2.show()
+                                                self.personnellocation.btnMarker3Room2.setEnabled(True)
+                                                self.personnelmanagement.btnMarker3Room2.show()
+                                                self.personnelmanagement.btnMarker3Room2.setEnabled(True)
+                                                self.mob.btnMarker3Room2.show()
+                                                self.mob.btnMarker3Room2.setEnabled(True)
 
-                        elif (routerNumber==2 and m==0):
-                                self.personnellocation.btnMarker1Room3.show()
-                                self.personnellocation.btnMarker1Room3.setEnabled(True)
-                                self.personnelmanagement.btnMarker1Room3.show()
-                                self.personnelmanagement.btnMarker1Room3.setEnabled(True)
-                                self.mob.btnMarker1Room3.show()
-                                self.mob.btnMarker1Room3.setEnabled(True)
+                                        elif (routerNumber==2 and m==0):
+                                                self.personnellocation.btnMarker1Room3.show()
+                                                self.personnellocation.btnMarker1Room3.setEnabled(True)
+                                                self.personnelmanagement.btnMarker1Room3.show()
+                                                self.personnelmanagement.btnMarker1Room3.setEnabled(True)
+                                                self.mob.btnMarker1Room3.show()
+                                                self.mob.btnMarker1Room3.setEnabled(True)
 
-                        elif (routerNumber==2 and m==1):
-                                self.personnellocation.btnMarker2Room3.show()
-                                self.personnellocation.btnMarker2Room3.setEnabled(True) 
-                                self.personnelmanagement.btnMarker2Room3.show()
-                                self.personnelmanagement.btnMarker2Room3.setEnabled(True)
-                                self.mob.btnMarker2Room3.show()
-                                self.mob.btnMarker2Room3.setEnabled(True)
+                                        elif (routerNumber==2 and m==1):
+                                                self.personnellocation.btnMarker2Room3.show()
+                                                self.personnellocation.btnMarker2Room3.setEnabled(True) 
+                                                self.personnelmanagement.btnMarker2Room3.show()
+                                                self.personnelmanagement.btnMarker2Room3.setEnabled(True)
+                                                self.mob.btnMarker2Room3.show()
+                                                self.mob.btnMarker2Room3.setEnabled(True)
 
-                        elif (routerNumber==2 and m==2):
-                                self.personnellocation.btnMarker3Room3.show()
-                                self.personnellocation.btnMarker3Room3.setEnabled(True) 
-                                self.personnelmanagement.btnMarker3Room3.show()
-                                self.personnelmanagement.btnMarker3Room3.setEnabled(True) 
-                                self.mob.btnMarker3Room3.show()
-                                self.mob.btnMarker3Room3.setEnabled(True) 
+                                        elif (routerNumber==2 and m==2):
+                                                self.personnellocation.btnMarker3Room3.show()
+                                                self.personnellocation.btnMarker3Room3.setEnabled(True) 
+                                                self.personnelmanagement.btnMarker3Room3.show()
+                                                self.personnelmanagement.btnMarker3Room3.setEnabled(True) 
+                                                self.mob.btnMarker3Room3.show()
+                                                self.mob.btnMarker3Room3.setEnabled(True) 
 
-                    else: 
-                        if (routerNumber==0 and m==0):
-                                self.personnellocation.btnMarker1Room1.hide()
-                                self.personnellocation.btnMarker1Room1.setEnabled(False)
-                                self.personnelmanagement.btnMarker1Room1.hide()
-                                self.personnelmanagement.btnMarker1Room1.setEnabled(False)
-                                self.mob.btnMarker1Room1.hide()
-                                self.mob.btnMarker1Room1.setEnabled(False)
+                                else: 
+                                        if (routerNumber==0 and m==0):
+                                                self.personnellocation.btnMarker1Room1.hide()
+                                                self.personnellocation.btnMarker1Room1.setEnabled(False)
+                                                self.personnelmanagement.btnMarker1Room1.hide()
+                                                self.personnelmanagement.btnMarker1Room1.setEnabled(False)
+                                                self.mob.btnMarker1Room1.hide()
+                                                self.mob.btnMarker1Room1.setEnabled(False)
 
-                        elif (routerNumber==0 and m==1):
-                                self.personnellocation.btnMarker2Room1.hide()
-                                self.personnellocation.btnMarker2Room1.setEnabled(False)
-                                self.personnelmanagement.btnMarker2Room1.hide()
-                                self.personnelmanagement.btnMarker2Room1.setEnabled(False)
-                                self.mob.btnMarker2Room1.hide()
-                                self.mob.btnMarker2Room1.setEnabled(False)
+                                        elif (routerNumber==0 and m==1):
+                                                self.personnellocation.btnMarker2Room1.hide()
+                                                self.personnellocation.btnMarker2Room1.setEnabled(False)
+                                                self.personnelmanagement.btnMarker2Room1.hide()
+                                                self.personnelmanagement.btnMarker2Room1.setEnabled(False)
+                                                self.mob.btnMarker2Room1.hide()
+                                                self.mob.btnMarker2Room1.setEnabled(False)
 
-                        elif (routerNumber==0 and m==2):
-                                self.personnellocation.btnMarker3Room1.hide()
-                                self.personnellocation.btnMarker3Room1.setEnabled(False)
-                                self.personnelmanagement.btnMarker3Room1.hide()
-                                self.personnelmanagement.btnMarker3Room1.setEnabled(False)
-                                self.mob.btnMarker3Room1.hide()
-                                self.mob.btnMarker3Room1.setEnabled(False)
+                                        elif (routerNumber==0 and m==2):
+                                                self.personnellocation.btnMarker3Room1.hide()
+                                                self.personnellocation.btnMarker3Room1.setEnabled(False)
+                                                self.personnelmanagement.btnMarker3Room1.hide()
+                                                self.personnelmanagement.btnMarker3Room1.setEnabled(False)
+                                                self.mob.btnMarker3Room1.hide()
+                                                self.mob.btnMarker3Room1.setEnabled(False)
 
-                        elif (routerNumber==1 and m==0):
-                                 self.personnellocation.btnMarker1Room2.hide()
-                                 self.personnellocation.btnMarker1Room2.setEnabled(False)
-                                 self.personnelmanagement.btnMarker1Room2.hide()
-                                 self.personnelmanagement.btnMarker1Room2.setEnabled(False)
-                                 self.mob.btnMarker1Room2.hide()
-                                 self.mob.btnMarker1Room2.setEnabled(False)
+                                        elif (routerNumber==1 and m==0):
+                                                self.personnellocation.btnMarker1Room2.hide()
+                                                self.personnellocation.btnMarker1Room2.setEnabled(False)
+                                                self.personnelmanagement.btnMarker1Room2.hide()
+                                                self.personnelmanagement.btnMarker1Room2.setEnabled(False)
+                                                self.mob.btnMarker1Room2.hide()
+                                                self.mob.btnMarker1Room2.setEnabled(False)
 
-                        elif (routerNumber==1 and m==1):
-                                self.personnellocation.btnMarker2Room2.hide()
-                                self.personnellocation.btnMarker2Room2.setEnabled(False)
-                                self.personnelmanagement.btnMarker2Room2.hide()
-                                self.personnelmanagement.btnMarker2Room2.setEnabled(False)
-                                self.mob.btnMarker2Room2.hide()
-                                self.mob.btnMarker2Room2.setEnabled(False)
+                                        elif (routerNumber==1 and m==1):
+                                                self.personnellocation.btnMarker2Room2.hide()
+                                                self.personnellocation.btnMarker2Room2.setEnabled(False)
+                                                self.personnelmanagement.btnMarker2Room2.hide()
+                                                self.personnelmanagement.btnMarker2Room2.setEnabled(False)
+                                                self.mob.btnMarker2Room2.hide()
+                                                self.mob.btnMarker2Room2.setEnabled(False)
 
-                        elif (routerNumber==1 and m==2):
-                                self.personnellocation.btnMarker3Room2.hide()
-                                self.personnellocation.btnMarker3Room2.setEnabled(False)
-                                self.personnelmanagement.btnMarker3Room2.hide()
-                                self.personnelmanagement.btnMarker3Room2.setEnabled(False)
-                                self.mob.btnMarker3Room2.hide()
-                                self.mob.btnMarker3Room2.setEnabled(False)
+                                        elif (routerNumber==1 and m==2):
+                                                self.personnellocation.btnMarker3Room2.hide()
+                                                self.personnellocation.btnMarker3Room2.setEnabled(False)
+                                                self.personnelmanagement.btnMarker3Room2.hide()
+                                                self.personnelmanagement.btnMarker3Room2.setEnabled(False)
+                                                self.mob.btnMarker3Room2.hide()
+                                                self.mob.btnMarker3Room2.setEnabled(False)
 
-                        elif (routerNumber==2 and m==0):
-                                self.personnellocation.btnMarker1Room3.hide()
-                                self.personnellocation.btnMarker1Room3.setEnabled(False)
-                                self.personnelmanagement.btnMarker1Room3.hide()
-                                self.personnelmanagement.btnMarker1Room3.setEnabled(False)
-                                self.mob.btnMarker1Room3.hide()
-                                self.mob.btnMarker1Room3.setEnabled(False)
+                                        elif (routerNumber==2 and m==0):
+                                                self.personnellocation.btnMarker1Room3.hide()
+                                                self.personnellocation.btnMarker1Room3.setEnabled(False)
+                                                self.personnelmanagement.btnMarker1Room3.hide()
+                                                self.personnelmanagement.btnMarker1Room3.setEnabled(False)
+                                                self.mob.btnMarker1Room3.hide()
+                                                self.mob.btnMarker1Room3.setEnabled(False)
 
-                        elif (routerNumber==2 and m==1):
-                                self.personnellocation.btnMarker2Room3.hide()
-                                self.personnellocation.btnMarker2Room3.setEnabled(False)
-                                self.personnelmanagement.btnMarker2Room3.hide()
-                                self.personnelmanagement.btnMarker2Room3.setEnabled(False)
-                                self.mob.btnMarker2Room3.hide()
-                                self.mob.btnMarker2Room3.setEnabled(False)
+                                        elif (routerNumber==2 and m==1):
+                                                self.personnellocation.btnMarker2Room3.hide()
+                                                self.personnellocation.btnMarker2Room3.setEnabled(False)
+                                                self.personnelmanagement.btnMarker2Room3.hide()
+                                                self.personnelmanagement.btnMarker2Room3.setEnabled(False)
+                                                self.mob.btnMarker2Room3.hide()
+                                                self.mob.btnMarker2Room3.setEnabled(False)
 
-                        elif (routerNumber==2 and m==2):
-                                self.personnellocation.btnMarker3Room3.hide()
-                                self.personnellocation.btnMarker3Room3.setEnabled(False) 
-                                self.personnelmanagement.btnMarker3Room3.hide()
-                                self.personnelmanagement.btnMarker3Room3.setEnabled(False)
-                                self.mob.btnMarker3Room3.hide()
-                                self.mob.btnMarker3Room3.setEnabled(False) 
-            time.sleep(5)  
+                                        elif (routerNumber==2 and m==2):
+                                                self.personnellocation.btnMarker3Room3.hide()
+                                                self.personnellocation.btnMarker3Room3.setEnabled(False) 
+                                                self.personnelmanagement.btnMarker3Room3.hide()
+                                                self.personnelmanagement.btnMarker3Room3.setEnabled(False)
+                                                self.mob.btnMarker3Room3.hide()
+                                                self.mob.btnMarker3Room3.setEnabled(False) 
+                        
+                        if (detectionSum<len(braceletDetectionFlags)):
+                                self.personnellocation.btnMobError.show()
+                                self.personnelmanagement.btnMobError.show()
+                                        
+                        else:
+                                self.personnellocation.btnMobError.hide()
+                                self.personnelmanagement.btnMobError.hide()
+                        today = date.today()
+                        dateToday = today.strftime("%d/%m/%Y")
+                        now = datetime.now()
+                        timeNow = now.strftime("%H:%M:%S")
+                        dateAndTime=dateToday+"   "+timeNow
+                        for i in range(len(braceletDetectionFlags)):
+                                if(braceletDetectionFlags[i]==0):
+                                        updateQuery="UPDATE MOB SET DateTime='"+dateAndTime+"', Detected='Yes'"+"WHERE BandNo='"+braceletMacAddresses[i]+"'"
+                                        updateMOBData(self,updateQuery)
+                                else:
+                                        updateQuery="UPDATE MOB SET DateTime='"+dateAndTime+"', Detected='No'"+"WHERE BandNo='"+braceletMacAddresses[i]+"'"
+                                        updateMOBData(self,updateQuery)
+                else:
+                        continue
 
     def disableAdvancedFunctionality(self):
         self.viewpersonneldata.btnAddPersonnelData.setEnabled(False)
@@ -1378,12 +1535,11 @@ class App(QtWidgets.QMainWindow):
             resetManageCallGUI(self.managecall)
             self.stacked.setCurrentWidget(self.managecall)
         elif(option==26):
-            self.personnellocation.btnMobError.hide()
             self.stacked.setCurrentWidget(self.personnellocation)
         elif(option==27):
-            self.personnelmanagement.btnMobError.hide()
             self.stacked.setCurrentWidget(self.personnelmanagement)
         elif(option==28):
+            self.mob.lblDataEntrySuccessful.hide()
             self.stacked.setCurrentWidget(self.mob)
         elif(option==29):
             resetLoginGUI(self.login)
@@ -1417,7 +1573,21 @@ class App(QtWidgets.QMainWindow):
             resetMarkPunishGUI(self.markpunishment)
             self.markpunishment.lblDataEntrySuccessful.hide()
             self.stacked.setCurrentWidget(self.markpunishment) 
-        
+        elif(option==37):
+            resetMOBDetailsGUI(self.viewmob)
+            self.stacked.setCurrentWidget(self.viewmob)
+        elif(option==38):
+            self.viewlocation.markerOption=self.personnellocation.markerOption
+            resetLocationDetailsGUI(self.viewlocation)
+            self.stacked.setCurrentWidget(self.viewlocation)
+        elif(option==39):
+            self.viewmanagementsystem.markerOption=self.personnelmanagement.markerOption
+            resetLocationDetailsGUI(self.viewmanagementsystem)
+            self.stacked.setCurrentWidget(self.viewmanagementsystem)
+        elif(option==40):
+            self.viewmoblocation.markerOption=self.mob.markerOption
+            resetLocationDetailsGUI(self.viewmoblocation)
+            self.stacked.setCurrentWidget(self.viewmoblocation)
 ##################################################################### ComboBox and Button Widget Class########################################
 class TextRemark(QtWidgets.QPlainTextEdit):
     def __init__(self, parent):
@@ -1496,6 +1666,7 @@ class BtnMarkPunish(QtWidgets.QPushButton):
         self.punishCalled.emit(self.row)
 
 class BtnCall(QtWidgets.QPushButton):
+    singlePersonCalled = QtCore.pyqtSignal(list)
     def __init__(self, parent):
         super().__init__(parent)
         font = QtGui.QFont()
@@ -1543,6 +1714,12 @@ class BtnCall(QtWidgets.QPushButton):
         self.setIcon(icon17)
         self.setIconSize(QtCore.QSize(25, 25))
         self.setText("Call")
+        self.row=parent.rowVal
+        self.rInx=parent.rowIndex
+        self.row.append(self.rInx)
+        self.clicked.connect(self.getSingleCellVal)
+    def getSingleCellVal(self):
+        self.singlePersonCalled.emit(self.row)
 
 class ComboStatus(QtWidgets.QComboBox):
     def __init__(self, parent):
@@ -2573,9 +2750,9 @@ class AddImportantKey(object):
         self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.navViewPersonnel.setStyleSheet("QPushButton \n"
 "{\n"
-"    outline:none;\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#2F3C71;\n"
 "    border-width: 1px;\n"
 "    border-color: #2F3C71;\n"
@@ -2586,6 +2763,7 @@ class AddImportantKey(object):
 "    padding-left: 5px;\n"
 "    padding-right: 5px;\n"
 "    min-width: 40px;\n"
+
 "}\n"
 "\n"
 "QPushButton:hover\n"
@@ -2676,8 +2854,8 @@ class AddImportantKey(object):
         self.btnAddImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btnAddImpKey.setStyleSheet("QPushButton \n"
 "{\n"
-"    outline:none;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#4154A0;\n"
 "    border-width: 1px;\n"
 "    border-color: #4154A0;\n"
@@ -4392,8 +4570,12 @@ class AddPersonnelData(object):
             if(persPno!=""and persName!=""):
                     queryString="INSERT INTO PersonnelDataBook VALUES('"+persID+"',"+"'"+persPno+"',"+"'"+persRank+"',"+"'"+persName+"',"+"'"+persDepart+"',"+"'"+persBG+"')"
                     insertData(self,queryString)
-                    queryString="INSERT INTO ArmoryState VALUES('"+persID+"',"+"'"+persPno+"',"+"'"+persRank+"',"+"'"+persName+"',"+"'"+persDepart+"',"+"'"+persBG+"','Present')"
+                    queryString="INSERT INTO PersonnelState VALUES('"+persID+"',"+"'"+persPno+"',"+"'"+persRank+"',"+"'"+persName+"',"+"'"+persDepart+"',"+"'"+persBG+"','Present')"
                     insertData(self,queryString)
+                    queryString="INSERT INTO MOB VALUES('"+persID+"','','')"
+                    insertData(self,queryString)
+                    queryString="Update Bands SET Available ='No' Where BandNo ='"+persID+"'"
+                    updateMOBData(self,queryString)
                     if(self.lblDataEntrySuccessful.text()!="Details could not be saved!"):
                             resetPersonnelDataGUI(self)
             else:
@@ -10149,7 +10331,7 @@ class AddVisitor(object):
         self.cBoxInterval.setItemText(0, _translate("MainWindow", "min"))
         self.cBoxInterval.setItemText(1, _translate("MainWindow", "hr"))
         self.label_19.setText(_translate("MainWindow", "Rank/ Rate:"))
-        self.lblRank.setText(_translate("MainWindow", "Rank from Database"))
+        self.lblRank.setText(_translate("MainWindow", "[Rank/ Rate] from Database"))
         self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.label_6.setText(_translate("MainWindow", "Enter Visitor Details"))
         self.btnAddVisitor.setText(_translate("MainWindow", "Add New Visitor Entry"))
@@ -12858,6 +13040,7 @@ class AddPunish(object):
 "{\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
+"    outline:none;\n"
 "    border-width: 1px;\n"
 "    border-color: #4154A0;\n"
 "    border-style: solid;\n"
@@ -31697,7 +31880,7 @@ class ManageState(object):
                     depart=self.tblDetails.item(i,4).text()
                     bGroup=self.tblDetails.item(i,5).text()
                     status=self.tblDetails.cellWidget(i,7).currentText()
-                    updateQuery="UPDATE ArmoryState SET Status='"+status+"'"+"WHERE [ID No.]='"+idNo+"'"+" AND [P No./ O No.]='"+pNo+"'"+" AND [Rank/ Rate]='"+rank+"'"+" AND Name='"+name+"'"+" AND Department='"+depart+"'"+" AND [Blood Group]='"+bGroup+"'"
+                    updateQuery="UPDATE PersonnelState SET Status='"+status+"'"+"WHERE [ID No.]='"+idNo+"'"+" AND [P No./ O No.]='"+pNo+"'"+" AND [Rank/ Rate]='"+rank+"'"+" AND Name='"+name+"'"+" AND Department='"+depart+"'"+" AND [Blood Group]='"+bGroup+"'"
                     updateData(self,updateQuery)
     def resetManageStateSuccess(self):
             self.lblDataEntrySuccessful.hide()
@@ -32669,6 +32852,7 @@ class ManageCall(object):
         self.lblDataEntrySuccessful.setText(_translate("MainWindow", "Changes Saved Successfully!"))
         self.label_6.setText(_translate("MainWindow", "Call Personnel"))
 #----------------------------------------backend for Manage Call Interface--------------------------------------------
+        rowVal=0
         val=False
         self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
         self.navViewImpKey.clicked.connect(self.navViewImportantKeyMethod)
@@ -32686,6 +32870,27 @@ class ManageCall(object):
         self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
         self.navViewMOB.clicked.connect(self.navMOBMethod)
         self.btnLogout.clicked.connect(self.navLogoutMethod)
+    def callSinglePerson(self,val):
+            thread=threading.Thread(target=self.call, args=(val,))
+            thread.daemon = False                         
+            thread.start()
+            
+    def call(self,val):
+            self.lblDataEntrySuccessful.setStyleSheet("color: Blue;\n""background-color:#ffffff;\n""font-size: 11pt")
+            self.lblDataEntrySuccessful.setText("Calling Personnel, Please Wait ...")
+            self.lblDataEntrySuccessful.show()
+            braceletIPs=scanNetwork(val[0].split())
+            if (len(braceletIPs)>0):
+                thread=threading.Thread(target=sendRequest, args=("http://"+braceletIPs[0]+"/"+"/LED=Call",))
+                thread.daemon = False                         
+                thread.start()
+            else: 
+                self.lblDataEntrySuccessful.setStyleSheet("color: Blue;\n""background-color:#ffffff;\n""font-size: 11pt")
+                self.lblDataEntrySuccessful.setText("Specified Personnel Not on Ship, Please Check MOB!")
+                self.lblDataEntrySuccessful.show()    
+            time.sleep(2)
+            self.lblDataEntrySuccessful.hide()
+            
     def resetManageStateSuccess(self):
             self.lblDataEntrySuccessful.hide()
             self.lblDataEntrySuccessful.setStyleSheet("color: green;\n""background-color:#ffffff;\n""font-size: 11pt")
@@ -33744,7 +33949,7 @@ class PersonnelLocation(object):
         self.btnMoveLeft.setIconSize(QtCore.QSize(25, 25))
         self.btnMoveLeft.setObjectName("btnMoveLeft")
         self.btnMarker2Room2 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker2Room2.setGeometry(QtCore.QRect(570, 163, 51, 101))
+        self.btnMarker2Room2.setGeometry(QtCore.QRect(580, 165, 36, 101))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -33761,10 +33966,10 @@ class PersonnelLocation(object):
         icon22 = QtGui.QIcon()
         icon22.addPixmap(QtGui.QPixmap(":/images/markerRoom3.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnMarker2Room2.setIcon(icon22)
-        self.btnMarker2Room2.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker2Room2.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker2Room2.setObjectName("btnMarker2Room2")
         self.btnMarker1Room2 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker1Room2.setGeometry(QtCore.QRect(531, 163, 51, 101))
+        self.btnMarker1Room2.setGeometry(QtCore.QRect(538, 165, 36, 101))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -33779,10 +33984,10 @@ class PersonnelLocation(object):
 "}")
         self.btnMarker1Room2.setText("")
         self.btnMarker1Room2.setIcon(icon22)
-        self.btnMarker1Room2.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker1Room2.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker1Room2.setObjectName("btnMarker1Room2")
         self.btnMarker3Room1 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker3Room1.setGeometry(QtCore.QRect(476, 163, 51, 101))
+        self.btnMarker3Room1.setGeometry(QtCore.QRect(482, 165, 36, 101))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -33799,10 +34004,10 @@ class PersonnelLocation(object):
         icon23 = QtGui.QIcon()
         icon23.addPixmap(QtGui.QPixmap(":/images/markerRoom2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnMarker3Room1.setIcon(icon23)
-        self.btnMarker3Room1.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker3Room1.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker3Room1.setObjectName("btnMarker3Room1")
         self.btnMarker2Room1 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker2Room1.setGeometry(QtCore.QRect(413, 240, 101, 51))
+        self.btnMarker2Room1.setGeometry(QtCore.QRect(416, 240, 101, 36))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -33819,10 +34024,10 @@ class PersonnelLocation(object):
         icon24 = QtGui.QIcon()
         icon24.addPixmap(QtGui.QPixmap(":/images/markerRoomLeft2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnMarker2Room1.setIcon(icon24)
-        self.btnMarker2Room1.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker2Room1.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker2Room1.setObjectName("btnMarker2Room1")
         self.btnMarker1Room3 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker1Room3.setGeometry(QtCore.QRect(520, 298, 51, 101))
+        self.btnMarker1Room3.setGeometry(QtCore.QRect(526, 297, 36, 101))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -33839,10 +34044,10 @@ class PersonnelLocation(object):
         icon25 = QtGui.QIcon()
         icon25.addPixmap(QtGui.QPixmap(":/images/markerRoom1.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnMarker1Room3.setIcon(icon25)
-        self.btnMarker1Room3.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker1Room3.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker1Room3.setObjectName("btnMarker1Room3")
         self.btnMarker2Room3 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker2Room3.setGeometry(QtCore.QRect(560, 298, 51, 101))
+        self.btnMarker2Room3.setGeometry(QtCore.QRect(569, 297, 36, 101))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -33858,10 +34063,10 @@ class PersonnelLocation(object):
 "}")
         self.btnMarker2Room3.setText("")
         self.btnMarker2Room3.setIcon(icon25)
-        self.btnMarker2Room3.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker2Room3.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker2Room3.setObjectName("btnMarker2Room3")
         self.btnMarker1Room1 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker1Room1.setGeometry(QtCore.QRect(476, 258, 51, 101))
+        self.btnMarker1Room1.setGeometry(QtCore.QRect(482, 257, 36, 101))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -33878,10 +34083,10 @@ class PersonnelLocation(object):
         icon26 = QtGui.QIcon()
         icon26.addPixmap(QtGui.QPixmap(":/images/markerRoomDown2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnMarker1Room1.setIcon(icon26)
-        self.btnMarker1Room1.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker1Room1.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker1Room1.setObjectName("btnMarker1Room1")
         self.btnMarker3Room3 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker3Room3.setGeometry(QtCore.QRect(583, 286, 101, 51))
+        self.btnMarker3Room3.setGeometry(QtCore.QRect(582, 294, 101, 36))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -33898,10 +34103,10 @@ class PersonnelLocation(object):
         icon27 = QtGui.QIcon()
         icon27.addPixmap(QtGui.QPixmap(":/images/markerRoomRight1.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnMarker3Room3.setIcon(icon27)
-        self.btnMarker3Room3.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker3Room3.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker3Room3.setObjectName("btnMarker3Room3")
         self.btnMarker3Room2 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker3Room2.setGeometry(QtCore.QRect(583, 240, 101, 51))
+        self.btnMarker3Room2.setGeometry(QtCore.QRect(582, 240, 101, 36))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -33918,7 +34123,7 @@ class PersonnelLocation(object):
         icon28 = QtGui.QIcon()
         icon28.addPixmap(QtGui.QPixmap(":/images/markerRoomRight3.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnMarker3Room2.setIcon(icon28)
-        self.btnMarker3Room2.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker3Room2.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker3Room2.setObjectName("btnMarker3Room2")
         self.btnMobError = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
         self.btnMobError.setEnabled(True)
@@ -34009,9 +34214,7 @@ class PersonnelLocation(object):
 
 
 #----------------------------------------backend for Personnel Location Interface----------------------------------------------
-      
-        
-         
+        markerOption=0
         self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
         self.navViewImpKey.clicked.connect(self.navViewImportantKeyMethod)
         self.navViewGenKey.clicked.connect(self.navViewGeneralKeyMethod)
@@ -34038,6 +34241,16 @@ class PersonnelLocation(object):
         self.btnZoomOut.clicked.connect(self.zoomOutMethod)
         self.btnMoveRight.clicked.connect(self.moveRightMethod)
         self.btnMoveLeft.clicked.connect(self.moveLeftMethod)
+
+        self.btnMarker1Room1.clicked.connect(self.navViewPersonnelLocationDetailsOne)
+        self.btnMarker2Room1.clicked.connect(self.navViewPersonnelLocationDetailsTwo)
+        self.btnMarker3Room1.clicked.connect(self.navViewPersonnelLocationDetailsThree)
+        self.btnMarker1Room2.clicked.connect(self.navViewPersonnelLocationDetailsOne)
+        self.btnMarker2Room2.clicked.connect(self.navViewPersonnelLocationDetailsTwo)
+        self.btnMarker3Room2.clicked.connect(self.navViewPersonnelLocationDetailsThree)
+        self.btnMarker1Room3.clicked.connect(self.navViewPersonnelLocationDetailsOne)
+        self.btnMarker2Room3.clicked.connect(self.navViewPersonnelLocationDetailsTwo)
+        self.btnMarker3Room3.clicked.connect(self.navViewPersonnelLocationDetailsThree)
 
     def zoomInMethod(self):
             zoomIn(self)
@@ -34080,6 +34293,15 @@ class PersonnelLocation(object):
              w.change_view(28)
     def navLogoutMethod(self):
              w.change_view(29)
+    def navViewPersonnelLocationDetailsOne(self):
+            self.markerOption=1
+            w.change_view(38) 
+    def navViewPersonnelLocationDetailsTwo(self):
+            self.markerOption=2
+            w.change_view(38) 
+    def navViewPersonnelLocationDetailsThree(self):
+            self.markerOption=3
+            w.change_view(38) 
     
 class PersonnelLocationWidget(QtWidgets.QMainWindow,PersonnelLocation ):
     def __init__(self, parent=None):
@@ -35104,7 +35326,7 @@ class PersonnelManagement(object):
         self.btnMoveLeft.setIconSize(QtCore.QSize(25, 25))
         self.btnMoveLeft.setObjectName("btnMoveLeft")
         self.btnMarker2Room2 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker2Room2.setGeometry(QtCore.QRect(570, 163, 51, 101))
+        self.btnMarker2Room2.setGeometry(QtCore.QRect(580, 165, 36, 101))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -35121,10 +35343,10 @@ class PersonnelManagement(object):
         icon22 = QtGui.QIcon()
         icon22.addPixmap(QtGui.QPixmap(":/images/markerRoom3.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnMarker2Room2.setIcon(icon22)
-        self.btnMarker2Room2.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker2Room2.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker2Room2.setObjectName("btnMarker2Room2")
         self.btnMarker1Room2 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker1Room2.setGeometry(QtCore.QRect(531, 163, 51, 101))
+        self.btnMarker1Room2.setGeometry(QtCore.QRect(538, 165, 36, 101))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -35139,10 +35361,10 @@ class PersonnelManagement(object):
 "}")
         self.btnMarker1Room2.setText("")
         self.btnMarker1Room2.setIcon(icon22)
-        self.btnMarker1Room2.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker1Room2.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker1Room2.setObjectName("btnMarker1Room2")
         self.btnMarker3Room1 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker3Room1.setGeometry(QtCore.QRect(476, 163, 51, 101))
+        self.btnMarker3Room1.setGeometry(QtCore.QRect(482, 165, 36, 101))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -35159,10 +35381,10 @@ class PersonnelManagement(object):
         icon23 = QtGui.QIcon()
         icon23.addPixmap(QtGui.QPixmap(":/images/markerRoom2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnMarker3Room1.setIcon(icon23)
-        self.btnMarker3Room1.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker3Room1.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker3Room1.setObjectName("btnMarker3Room1")
         self.btnMarker2Room1 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker2Room1.setGeometry(QtCore.QRect(413, 240, 101, 51))
+        self.btnMarker2Room1.setGeometry(QtCore.QRect(416, 240, 101, 36))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -35179,10 +35401,10 @@ class PersonnelManagement(object):
         icon24 = QtGui.QIcon()
         icon24.addPixmap(QtGui.QPixmap(":/images/markerRoomLeft2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnMarker2Room1.setIcon(icon24)
-        self.btnMarker2Room1.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker2Room1.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker2Room1.setObjectName("btnMarker2Room1")
         self.btnMarker1Room3 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker1Room3.setGeometry(QtCore.QRect(520, 298, 51, 101))
+        self.btnMarker1Room3.setGeometry(QtCore.QRect(526, 297, 36, 101))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -35199,10 +35421,10 @@ class PersonnelManagement(object):
         icon25 = QtGui.QIcon()
         icon25.addPixmap(QtGui.QPixmap(":/images/markerRoom1.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnMarker1Room3.setIcon(icon25)
-        self.btnMarker1Room3.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker1Room3.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker1Room3.setObjectName("btnMarker1Room3")
         self.btnMarker2Room3 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker2Room3.setGeometry(QtCore.QRect(560, 298, 51, 101))
+        self.btnMarker2Room3.setGeometry(QtCore.QRect(569, 297, 36, 101))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -35218,10 +35440,10 @@ class PersonnelManagement(object):
 "}")
         self.btnMarker2Room3.setText("")
         self.btnMarker2Room3.setIcon(icon25)
-        self.btnMarker2Room3.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker2Room3.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker2Room3.setObjectName("btnMarker2Room3")
         self.btnMarker1Room1 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker1Room1.setGeometry(QtCore.QRect(476, 258, 51, 101))
+        self.btnMarker1Room1.setGeometry(QtCore.QRect(482, 257, 36, 101))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -35238,10 +35460,10 @@ class PersonnelManagement(object):
         icon26 = QtGui.QIcon()
         icon26.addPixmap(QtGui.QPixmap(":/images/markerRoomDown2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnMarker1Room1.setIcon(icon26)
-        self.btnMarker1Room1.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker1Room1.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker1Room1.setObjectName("btnMarker1Room1")
         self.btnMarker3Room3 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker3Room3.setGeometry(QtCore.QRect(583, 286, 101, 51))
+        self.btnMarker3Room3.setGeometry(QtCore.QRect(582, 294, 101, 36))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -35258,10 +35480,10 @@ class PersonnelManagement(object):
         icon27 = QtGui.QIcon()
         icon27.addPixmap(QtGui.QPixmap(":/images/markerRoomRight1.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnMarker3Room3.setIcon(icon27)
-        self.btnMarker3Room3.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker3Room3.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker3Room3.setObjectName("btnMarker3Room3")
         self.btnMarker3Room2 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker3Room2.setGeometry(QtCore.QRect(583, 240, 101, 51))
+        self.btnMarker3Room2.setGeometry(QtCore.QRect(582, 240, 101, 36))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -35278,7 +35500,7 @@ class PersonnelManagement(object):
         icon28 = QtGui.QIcon()
         icon28.addPixmap(QtGui.QPixmap(":/images/markerRoomRight3.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnMarker3Room2.setIcon(icon28)
-        self.btnMarker3Room2.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker3Room2.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker3Room2.setObjectName("btnMarker3Room2")
         self.btnMobError = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
         self.btnMobError.setEnabled(True)
@@ -35491,8 +35713,11 @@ class PersonnelManagement(object):
         self.cBoxRoom.setItemText(2, _translate("MainWindow", "Battery Changing Room"))
 #----------------------------------------backend for Personnel Management System Interface----------------------------------------------
       
-        
-        
+
+        markerOption=0
+        self.room=""
+        self.action=""
+        self.braceletMacAddresses=""
         self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
         self.navViewImpKey.clicked.connect(self.navViewImportantKeyMethod)
         self.navViewGenKey.clicked.connect(self.navViewGeneralKeyMethod)
@@ -35519,6 +35744,45 @@ class PersonnelManagement(object):
         self.btnZoomOut.clicked.connect(self.zoomOutMethod)
         self.btnMoveRight.clicked.connect(self.moveRightMethod)
         self.btnMoveLeft.clicked.connect(self.moveLeftMethod)
+        self.btnCallAll.clicked.connect(self.makeGroupCall)
+        self.cBoxRoom.activated.connect(self.selectRoom)
+        self.cBoxAction.activated.connect(self.selectAction)
+        self.btnMarker1Room1.clicked.connect(self.navViewPersonnelLocationDetailsOne)
+        self.btnMarker2Room1.clicked.connect(self.navViewPersonnelLocationDetailsTwo)
+        self.btnMarker3Room1.clicked.connect(self.navViewPersonnelLocationDetailsThree)
+        self.btnMarker1Room2.clicked.connect(self.navViewPersonnelLocationDetailsOne)
+        self.btnMarker2Room2.clicked.connect(self.navViewPersonnelLocationDetailsTwo)
+        self.btnMarker3Room2.clicked.connect(self.navViewPersonnelLocationDetailsThree)
+        self.btnMarker1Room3.clicked.connect(self.navViewPersonnelLocationDetailsOne)
+        self.btnMarker2Room3.clicked.connect(self.navViewPersonnelLocationDetailsTwo)
+        self.btnMarker3Room3.clicked.connect(self.navViewPersonnelLocationDetailsThree)
+    def selectRoom(self):
+            self.room=self.cBoxRoom.currentText()
+
+    def selectAction(self):
+            self.action=self.cBoxAction.currentText()
+
+    def makeGroupCall(self):
+            thread=threading.Thread(target=self.sendGroupCallAlert, args=())
+            thread.daemon = False                           # Daemonize thread
+            thread.start()
+    def sendGroupCallAlert(self):
+            self.btnCallAll.setEnabled(False)
+            braceletMacAddresses=fillComboBoxData("SELECT [ID No.] FROM PersonnelState Where Status='Present'")
+            braceletIPs=scanNetwork(braceletMacAddresses)
+            if(self.room=="" and self.action==""):
+                self.room=self.cBoxRoom.currentText()
+                self.action=self.cBoxAction.currentText()
+            else:
+                pass
+            if (len(braceletIPs)>0):
+                for i in range (len(braceletIPs)):
+                        thread=threading.Thread(target=sendRequest, args=("http://"+braceletIPs[i]+"/"+"/LED="+self.action,))
+                        thread.daemon = False                           # Daemonize thread
+                        thread.start()
+            else:
+                    self.lblDataEntrySuccessful.setText("No Personnel Detected on Ship!")
+            self.btnCallAll.setEnabled(True)
 
     def zoomInMethod(self):
             zoomIn(self)
@@ -35561,6 +35825,15 @@ class PersonnelManagement(object):
              w.change_view(28) 
     def navLogoutMethod(self):
              w.change_view(29)
+    def navViewPersonnelLocationDetailsOne(self):
+            self.markerOption=1
+            w.change_view(39) 
+    def navViewPersonnelLocationDetailsTwo(self):
+            self.markerOption=2
+            w.change_view(39) 
+    def navViewPersonnelLocationDetailsThree(self):
+            self.markerOption=3
+            w.change_view(39) 
 class PersonnelManagementWidget(QtWidgets.QMainWindow,PersonnelManagement ):
     def __init__(self, parent=None):
         super(PersonnelManagementWidget, self).__init__(parent)
@@ -36583,7 +36856,7 @@ class MOb(object):
         self.btnMoveLeft.setIconSize(QtCore.QSize(25, 25))
         self.btnMoveLeft.setObjectName("btnMoveLeft")
         self.btnMarker2Room2 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker2Room2.setGeometry(QtCore.QRect(570, 163, 51, 101))
+        self.btnMarker2Room2.setGeometry(QtCore.QRect(580, 165, 36, 101))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -36600,10 +36873,10 @@ class MOb(object):
         icon22 = QtGui.QIcon()
         icon22.addPixmap(QtGui.QPixmap(":/images/markerRoom3.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnMarker2Room2.setIcon(icon22)
-        self.btnMarker2Room2.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker2Room2.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker2Room2.setObjectName("btnMarker2Room2")
         self.btnMarker1Room2 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker1Room2.setGeometry(QtCore.QRect(531, 163, 51, 101))
+        self.btnMarker1Room2.setGeometry(QtCore.QRect(538, 165, 36, 101))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -36618,10 +36891,10 @@ class MOb(object):
 "}")
         self.btnMarker1Room2.setText("")
         self.btnMarker1Room2.setIcon(icon22)
-        self.btnMarker1Room2.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker1Room2.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker1Room2.setObjectName("btnMarker1Room2")
         self.btnMarker3Room1 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker3Room1.setGeometry(QtCore.QRect(476, 163, 51, 101))
+        self.btnMarker3Room1.setGeometry(QtCore.QRect(482, 165, 36, 101))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -36638,10 +36911,10 @@ class MOb(object):
         icon23 = QtGui.QIcon()
         icon23.addPixmap(QtGui.QPixmap(":/images/markerRoom2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnMarker3Room1.setIcon(icon23)
-        self.btnMarker3Room1.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker3Room1.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker3Room1.setObjectName("btnMarker3Room1")
         self.btnMarker2Room1 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker2Room1.setGeometry(QtCore.QRect(413, 240, 101, 51))
+        self.btnMarker2Room1.setGeometry(QtCore.QRect(416, 240, 101, 36))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -36658,10 +36931,10 @@ class MOb(object):
         icon24 = QtGui.QIcon()
         icon24.addPixmap(QtGui.QPixmap(":/images/markerRoomLeft2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnMarker2Room1.setIcon(icon24)
-        self.btnMarker2Room1.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker2Room1.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker2Room1.setObjectName("btnMarker2Room1")
         self.btnMarker1Room3 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker1Room3.setGeometry(QtCore.QRect(520, 298, 51, 101))
+        self.btnMarker1Room3.setGeometry(QtCore.QRect(526, 297, 36, 101))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -36678,10 +36951,10 @@ class MOb(object):
         icon25 = QtGui.QIcon()
         icon25.addPixmap(QtGui.QPixmap(":/images/markerRoom1.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnMarker1Room3.setIcon(icon25)
-        self.btnMarker1Room3.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker1Room3.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker1Room3.setObjectName("btnMarker1Room3")
         self.btnMarker2Room3 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker2Room3.setGeometry(QtCore.QRect(560, 298, 51, 101))
+        self.btnMarker2Room3.setGeometry(QtCore.QRect(569, 297, 36, 101))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -36697,10 +36970,10 @@ class MOb(object):
 "}")
         self.btnMarker2Room3.setText("")
         self.btnMarker2Room3.setIcon(icon25)
-        self.btnMarker2Room3.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker2Room3.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker2Room3.setObjectName("btnMarker2Room3")
         self.btnMarker1Room1 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker1Room1.setGeometry(QtCore.QRect(476, 258, 51, 101))
+        self.btnMarker1Room1.setGeometry(QtCore.QRect(482, 257, 36, 101))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -36717,10 +36990,10 @@ class MOb(object):
         icon26 = QtGui.QIcon()
         icon26.addPixmap(QtGui.QPixmap(":/images/markerRoomDown2.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnMarker1Room1.setIcon(icon26)
-        self.btnMarker1Room1.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker1Room1.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker1Room1.setObjectName("btnMarker1Room1")
         self.btnMarker3Room3 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker3Room3.setGeometry(QtCore.QRect(583, 286, 101, 51))
+        self.btnMarker3Room3.setGeometry(QtCore.QRect(582, 294, 101, 36))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -36737,10 +37010,10 @@ class MOb(object):
         icon27 = QtGui.QIcon()
         icon27.addPixmap(QtGui.QPixmap(":/images/markerRoomRight1.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnMarker3Room3.setIcon(icon27)
-        self.btnMarker3Room3.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker3Room3.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker3Room3.setObjectName("btnMarker3Room3")
         self.btnMarker3Room2 = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
-        self.btnMarker3Room2.setGeometry(QtCore.QRect(583, 240, 101, 51))
+        self.btnMarker3Room2.setGeometry(QtCore.QRect(582, 240, 101, 36))
         font = QtGui.QFont()
         font.setFamily("Segoe UI")
         font.setPointSize(11)
@@ -36757,7 +37030,7 @@ class MOb(object):
         icon28 = QtGui.QIcon()
         icon28.addPixmap(QtGui.QPixmap(":/images/markerRoomRight3.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.btnMarker3Room2.setIcon(icon28)
-        self.btnMarker3Room2.setIconSize(QtCore.QSize(75, 75))
+        self.btnMarker3Room2.setIconSize(QtCore.QSize(70, 70))
         self.btnMarker3Room2.setObjectName("btnMarker3Room2")
         self.btnshipImage.raise_()
         self.btnMarker2Room2.raise_()
@@ -36815,6 +37088,36 @@ class MOb(object):
         self.btnSearchMOB.setIcon(icon29)
         self.btnSearchMOB.setIconSize(QtCore.QSize(25, 25))
         self.btnSearchMOB.setObjectName("btnSearchMOB")
+        self.btnMobError = QtWidgets.QPushButton(self.scrollAreaWidgetContents_4)
+        self.btnMobError.setEnabled(True)
+        self.btnMobError.setGeometry(QtCore.QRect(6, 482, 211, 61))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnMobError.setFont(font)
+        self.btnMobError.setStyleSheet("border:1px solid  #FF5555;\n"
+"background-color: #FF5555;\n"
+"outline:none;\n"
+"color: #FFFFFF;")
+        icon29 = QtGui.QIcon()
+        icon29.addPixmap(QtGui.QPixmap(":/images/notification.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnMobError.setIcon(icon29)
+        self.btnMobError.setIconSize(QtCore.QSize(32, 32))
+        self.btnMobError.setObjectName("btnMobError")
+        self.lblDataEntrySuccessful = QtWidgets.QLabel(self.frame)
+        self.lblDataEntrySuccessful.setEnabled(True)
+        self.lblDataEntrySuccessful.setGeometry(QtCore.QRect(326, 620, 291, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblDataEntrySuccessful.setFont(font)
+        self.lblDataEntrySuccessful.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblDataEntrySuccessful.setStyleSheet("color: red;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblDataEntrySuccessful.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblDataEntrySuccessful.setObjectName("lblDataEntrySuccessful")
+        
         self.label_2.raise_()
         self.label.raise_()
         self.navViewPunishment.raise_()
@@ -36834,12 +37137,14 @@ class MOb(object):
         self.navViewCMS.raise_()
         self.navViewStateArmory.raise_()
         self.btnLogout.raise_()
+        self.lblDataEntrySuccessful.raise_()
         self.pushButton.raise_()
         self.pushButton_2.raise_()
         self.navViewPersonnel.raise_()
         self.navViewStatePersonnel.raise_()
         self.scrollArea.raise_()
         self.btnSearchMOB.raise_()
+        self.btnMobError.raise_()
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
@@ -36868,9 +37173,10 @@ class MOb(object):
         self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
         self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
         self.btnSearchMOB.setText(_translate("MainWindow", "Search for MOB"))
+        self.btnMobError.setText(_translate("MainWindow", "Alert! Man Overboard!"))
 
 #----------------------------------------backend for MOB Interface----------------------------------------------
-      
+        markerOption=0
         self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
         self.navViewImpKey.clicked.connect(self.navViewImportantKeyMethod)
         self.navViewGenKey.clicked.connect(self.navViewGeneralKeyMethod)
@@ -36897,7 +37203,16 @@ class MOb(object):
         self.btnZoomOut.clicked.connect(self.zoomOutMethod)
         self.btnMoveRight.clicked.connect(self.moveRightMethod)
         self.btnMoveLeft.clicked.connect(self.moveLeftMethod)
-
+        self.btnSearchMOB.clicked.connect(self.searchMOB)
+        self.btnMarker1Room1.clicked.connect(self.navViewPersonnelLocationDetailsOne)
+        self.btnMarker2Room1.clicked.connect(self.navViewPersonnelLocationDetailsTwo)
+        self.btnMarker3Room1.clicked.connect(self.navViewPersonnelLocationDetailsThree)
+        self.btnMarker1Room2.clicked.connect(self.navViewPersonnelLocationDetailsOne)
+        self.btnMarker2Room2.clicked.connect(self.navViewPersonnelLocationDetailsTwo)
+        self.btnMarker3Room2.clicked.connect(self.navViewPersonnelLocationDetailsThree)
+        self.btnMarker1Room3.clicked.connect(self.navViewPersonnelLocationDetailsOne)
+        self.btnMarker2Room3.clicked.connect(self.navViewPersonnelLocationDetailsTwo)
+        self.btnMarker3Room3.clicked.connect(self.navViewPersonnelLocationDetailsThree)
     def zoomInMethod(self):
             zoomIn(self)
     def zoomOutMethod(self):
@@ -36938,6 +37253,29 @@ class MOb(object):
              w.change_view(27)
     def navLogoutMethod(self):
              w.change_view(29)
+    def navViewPersonnelLocationDetailsOne(self):
+            self.markerOption=1
+            w.change_view(40) 
+    def navViewPersonnelLocationDetailsTwo(self):
+            self.markerOption=2
+            w.change_view(40) 
+    def navViewPersonnelLocationDetailsThree(self):
+            self.markerOption=3
+            w.change_view(40) 
+    def searchMOB(self):
+            detectCountQuery="SELECT Count (BandNo) FROM MOB WHERE Detected='Yes'"
+            conn=createTable()
+            c=conn.cursor()
+            c.execute(detectCountQuery)
+            detectCount=c.fetchone()
+            c.close()
+            conn.close()
+            if(detectCount[0]>0):
+                     w.change_view(37)
+            else:
+                    self.lblDataEntrySuccessful.setText("No MOB Detected !")
+                    self.lblDataEntrySuccessful.show()
+             
 class MObWidget(QtWidgets.QMainWindow,MOb ):
     def __init__(self, parent=None):
         super(MObWidget, self).__init__(parent)
@@ -38839,7 +39177,7 @@ class AddBand(object):
     def addBand(self):
         bandNo=self.edtBandNo.text()
         if(bandNo!=""):
-                queryString="INSERT INTO Bands VALUES('"+bandNo+"')"
+                queryString="INSERT INTO Bands VALUES('"+bandNo+"','Yes')"
                 insertData(self,queryString)
                 if(self.lblDataEntrySuccessful.text()!="Details could not be saved!"):
                         resetBandGUI(self)
@@ -39576,6 +39914,7 @@ class AddAmmoType(object):
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#2F3C71;\n"
 "    border-width: 1px;\n"
 "    border-color: #2F3C71;\n"
@@ -39895,6 +40234,7 @@ class AddRegNo(object):
 "{\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
+"    outline:none;\n"
 "    border-width: 1px;\n"
 "    border-color: #4154A0;\n"
 "    border-style: solid;\n"
@@ -40430,6 +40770,7 @@ class MarkPunishment(object):
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#2F3C71;\n"
 "    border-width: 1px;\n"
 "    border-color: #2F3C71;\n"
@@ -40477,6 +40818,7 @@ class MarkPunishment(object):
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#2F3C71;\n"
 "    border-width: 1px;\n"
 "    border-color: #2F3C71;\n"
@@ -40519,6 +40861,7 @@ class MarkPunishment(object):
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#2F3C71;\n"
 "    border-width: 1px;\n"
 "    border-color: #2F3C71;\n"
@@ -40562,6 +40905,7 @@ class MarkPunishment(object):
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#2F3C71;\n"
 "    border-width: 1px;\n"
 "    border-color: #2F3C71;\n"
@@ -40604,6 +40948,7 @@ class MarkPunishment(object):
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#2F3C71;\n"
 "    border-width: 1px;\n"
 "    border-color: #2F3C71;\n"
@@ -40646,6 +40991,7 @@ class MarkPunishment(object):
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#2F3C71;\n"
 "    border-width: 1px;\n"
 "    border-color: #2F3C71;\n"
@@ -40688,6 +41034,7 @@ class MarkPunishment(object):
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#2F3C71;\n"
 "    border-width: 1px;\n"
 "    border-color: #2F3C71;\n"
@@ -40730,6 +41077,7 @@ class MarkPunishment(object):
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#2F3C71;\n"
 "    border-width: 1px;\n"
 "    border-color: #2F3C71;\n"
@@ -40777,6 +41125,7 @@ class MarkPunishment(object):
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#2F3C71;\n"
 "    border-width: 1px;\n"
 "    border-color: #2F3C71;\n"
@@ -40819,6 +41168,7 @@ class MarkPunishment(object):
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#2F3C71;\n"
 "    border-width: 1px;\n"
 "    border-color: #2F3C71;\n"
@@ -40861,6 +41211,7 @@ class MarkPunishment(object):
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#2F3C71;\n"
 "    border-width: 1px;\n"
 "    border-color: #2F3C71;\n"
@@ -40903,6 +41254,7 @@ class MarkPunishment(object):
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#2F3C71;\n"
 "    border-width: 1px;\n"
 "    border-color: #2F3C71;\n"
@@ -40945,6 +41297,7 @@ class MarkPunishment(object):
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#2F3C71;\n"
 "    border-width: 1px;\n"
 "    border-color: #2F3C71;\n"
@@ -40987,6 +41340,7 @@ class MarkPunishment(object):
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#2F3C71;\n"
 "    border-width: 1px;\n"
 "    border-color: #2F3C71;\n"
@@ -41054,6 +41408,7 @@ class MarkPunishment(object):
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#2F3C71;\n"
 "    border-width: 1px;\n"
 "    border-color: #2F3C71;\n"
@@ -41097,6 +41452,7 @@ class MarkPunishment(object):
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#2F3C71;\n"
 "    border-width: 1px;\n"
 "    border-color: #2F3C71;\n"
@@ -41158,6 +41514,7 @@ class MarkPunishment(object):
 "{\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
+"    outline:none;\n"
 "    border-width: 1px;\n"
 "    border-color: #4154A0;\n"
 "    border-style: solid;\n"
@@ -41198,6 +41555,7 @@ class MarkPunishment(object):
 "{\n"
 "    color: #ffffff;\n"
 "    background-color:#4154A0;\n"
+"    outline:none;\n"
 "    border-width: 1px;\n"
 "    border-color: #4154A0;\n"
 "    border-style: solid;\n"
@@ -41275,6 +41633,7 @@ class MarkPunishment(object):
 "{\n"
 "    text-align: left;\n"
 "    color: #ffffff;\n"
+"    outline:none;\n"
 "    background-color:#2F3C71;\n"
 "    border-width: 1px;\n"
 "    border-color: #2F3C71;\n"
@@ -41515,6 +41874,4827 @@ class MarkPunishmentWidget(QtWidgets.QMainWindow,MarkPunishment ):
     def __init__(self, parent=None):
         super(MarkPunishmentWidget, self).__init__(parent)
         self.setup_MarkPunishment(self)
+
+############################################################# MOB Details Interface ######################################################################
+class MOBDetails(object):
+    def setup_MOBDetails(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(1366, 765)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.frame = QtWidgets.QFrame(self.centralwidget)
+        self.frame.setGeometry(QtCore.QRect(0, 0, 1366, 768))
+        self.frame.setStyleSheet("background-color: #ffffff")
+        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame.setObjectName("frame")
+        self.label = QtWidgets.QLabel(self.frame)
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
+        self.label.setStyleSheet(
+"background-color:#2F3C71;")
+        self.label.setText("")
+        self.label.setObjectName("label")
+        self.label_2 = QtWidgets.QLabel(self.frame)
+        self.label_2.setGeometry(QtCore.QRect(0, 0, 1366, 44))
+        self.label_2.setStyleSheet(
+"background-color:#222222;")
+        self.label_2.setText("")
+        self.label_2.setObjectName("label_2")
+        self.navViewPunishment = QtWidgets.QPushButton(self.frame)
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPunishment.setFont(font)
+        self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPunishment.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/images/punishment.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPunishment.setIcon(icon)
+        self.navViewPunishment.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPunishment.setFlat(False)
+        self.navViewPunishment.setObjectName("navViewPunishment")
+        self.navViewImpKey = QtWidgets.QPushButton(self.frame)
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewImpKey.setFont(font)
+        self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewImpKey.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/images/impKey.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewImpKey.setIcon(icon1)
+        self.navViewImpKey.setIconSize(QtCore.QSize(25, 25))
+        self.navViewImpKey.setFlat(False)
+        self.navViewImpKey.setObjectName("navViewImpKey")
+        self.navViewGenKey = QtWidgets.QPushButton(self.frame)
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewGenKey.setFont(font)
+        self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewGenKey.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(":/images/genKey.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewGenKey.setIcon(icon2)
+        self.navViewGenKey.setIconSize(QtCore.QSize(25, 25))
+        self.navViewGenKey.setFlat(False)
+        self.navViewGenKey.setObjectName("navViewGenKey")
+        self.navViewVisitor = QtWidgets.QPushButton(self.frame)
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewVisitor.setFont(font)
+        self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewVisitor.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"}")
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(":/images/visitor.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewVisitor.setIcon(icon3)
+        self.navViewVisitor.setIconSize(QtCore.QSize(25, 25))
+        self.navViewVisitor.setFlat(False)
+        self.navViewVisitor.setObjectName("navViewVisitor")
+        self.navViewTransport = QtWidgets.QPushButton(self.frame)
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewTransport.setFont(font)
+        self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewTransport.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon4 = QtGui.QIcon()
+        icon4.addPixmap(QtGui.QPixmap(":/images/transport.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewTransport.setIcon(icon4)
+        self.navViewTransport.setIconSize(QtCore.QSize(25, 25))
+        self.navViewTransport.setFlat(False)
+        self.navViewTransport.setObjectName("navViewTransport")
+        self.navViewGangway = QtWidgets.QPushButton(self.frame)
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewGangway.setFont(font)
+        self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewGangway.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon5 = QtGui.QIcon()
+        icon5.addPixmap(QtGui.QPixmap(":/images/gangway.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewGangway.setIcon(icon5)
+        self.navViewGangway.setIconSize(QtCore.QSize(25, 25))
+        self.navViewGangway.setFlat(False)
+        self.navViewGangway.setObjectName("navViewGangway")
+        self.navViewDuty = QtWidgets.QPushButton(self.frame)
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewDuty.setFont(font)
+        self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewDuty.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon6 = QtGui.QIcon()
+        icon6.addPixmap(QtGui.QPixmap(":/images/duty.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewDuty.setIcon(icon6)
+        self.navViewDuty.setIconSize(QtCore.QSize(25, 25))
+        self.navViewDuty.setFlat(False)
+        self.navViewDuty.setObjectName("navViewDuty")
+        self.navViewNight = QtWidgets.QPushButton(self.frame)
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewNight.setFont(font)
+        self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewNight.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon7 = QtGui.QIcon()
+        icon7.addPixmap(QtGui.QPixmap(":/images/night.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewNight.setIcon(icon7)
+        self.navViewNight.setIconSize(QtCore.QSize(25, 25))
+        self.navViewNight.setFlat(False)
+        self.navViewNight.setObjectName("navViewNight")
+        self.label_4 = QtWidgets.QLabel(self.frame)
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
+        self.label_4.setStyleSheet("background-color:#4154A0;")
+        self.label_4.setText("")
+        self.label_4.setObjectName("label_4")
+        self.navViewMOB = QtWidgets.QPushButton(self.frame)
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewMOB.setFont(font)
+        self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewMOB.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:active\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon8 = QtGui.QIcon()
+        icon8.addPixmap(QtGui.QPixmap(":/images/mob.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewMOB.setIcon(icon8)
+        self.navViewMOB.setIconSize(QtCore.QSize(32, 32))
+        self.navViewMOB.setFlat(False)
+        self.navViewMOB.setObjectName("navViewMOB")
+        self.navViewLocation = QtWidgets.QPushButton(self.frame)
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewLocation.setFont(font)
+        self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewLocation.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon9 = QtGui.QIcon()
+        icon9.addPixmap(QtGui.QPixmap(":/images/locate.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewLocation.setIcon(icon9)
+        self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
+        self.navViewLocation.setFlat(False)
+        self.navViewLocation.setObjectName("navViewLocation")
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon10 = QtGui.QIcon()
+        icon10.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewManagement.setIcon(icon10)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
+        self.navViewPPE = QtWidgets.QPushButton(self.frame)
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPPE.setFont(font)
+        self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPPE.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon11 = QtGui.QIcon()
+        icon11.addPixmap(QtGui.QPixmap(":/images/armPPE.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPPE.setIcon(icon11)
+        self.navViewPPE.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPPE.setFlat(False)
+        self.navViewPPE.setObjectName("navViewPPE")
+        self.navViewOOD = QtWidgets.QPushButton(self.frame)
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewOOD.setFont(font)
+        self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewOOD.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon12 = QtGui.QIcon()
+        icon12.addPixmap(QtGui.QPixmap(":/images/oodObserve.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewOOD.setIcon(icon12)
+        self.navViewOOD.setIconSize(QtCore.QSize(25, 25))
+        self.navViewOOD.setFlat(False)
+        self.navViewOOD.setObjectName("navViewOOD")
+        self.navViewCMS = QtWidgets.QPushButton(self.frame)
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewCMS.setFont(font)
+        self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewCMS.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon13 = QtGui.QIcon()
+        icon13.addPixmap(QtGui.QPixmap(":/images/sreCall.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewCMS.setIcon(icon13)
+        self.navViewCMS.setIconSize(QtCore.QSize(25, 25))
+        self.navViewCMS.setFlat(False)
+        self.navViewCMS.setObjectName("navViewCMS")
+        self.pushButton = QtWidgets.QPushButton(self.frame)
+        self.pushButton.setEnabled(True)
+        self.pushButton.setGeometry(QtCore.QRect(1080, 5, 260, 35))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.pushButton.setFont(font)
+        self.pushButton.setStyleSheet(" text-align: right;\n"
+"    color: #ffffff;\n"
+"    background-color:#222222;")
+        self.pushButton.setIcon(icon8)
+        self.pushButton.setIconSize(QtCore.QSize(32, 32))
+        self.pushButton.setObjectName("pushButton")
+        self.pushButton_2 = QtWidgets.QPushButton(self.frame)
+        self.pushButton_2.setEnabled(True)
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
+        self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
+"    border-radius:4px;\n"
+"    outline:none;")
+        self.pushButton_2.setText("")
+        icon14 = QtGui.QIcon()
+        icon14.addPixmap(QtGui.QPixmap(":/images/logoMTIP.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_2.setIcon(icon14)
+        self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
+        self.pushButton_2.setObjectName("pushButton_2")
+        self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPersonnel.setFont(font)
+        self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPersonnel.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon15 = QtGui.QIcon()
+        icon15.addPixmap(QtGui.QPixmap(":/images/personnelData.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPersonnel.setIcon(icon15)
+        self.navViewPersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPersonnel.setFlat(False)
+        self.navViewPersonnel.setObjectName("navViewPersonnel")
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon16 = QtGui.QIcon()
+        icon16.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStatePersonnel.setIcon(icon16)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navMOB = QtWidgets.QPushButton(self.frame)
+        self.navMOB.setGeometry(QtCore.QRect(1185, 120, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navMOB.setFont(font)
+        self.navMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navMOB.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#4154A0;\n"
+"    outline:none;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon17 = QtGui.QIcon()
+        icon17.addPixmap(QtGui.QPixmap(":/images/back.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navMOB.setIcon(icon17)
+        self.navMOB.setIconSize(QtCore.QSize(25, 25))
+        self.navMOB.setObjectName("navMOB")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon18 = QtGui.QIcon()
+        icon18.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon18)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.label_11 = QtWidgets.QLabel(self.frame)
+        self.label_11.setGeometry(QtCore.QRect(316, 252, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_11.setFont(font)
+        self.label_11.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_11.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_11.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_11.setObjectName("label_11")
+        self.lblBGroup = QtWidgets.QLabel(self.frame)
+        self.lblBGroup.setGeometry(QtCore.QRect(507, 384, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblBGroup.setFont(font)
+        self.lblBGroup.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblBGroup.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblBGroup.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblBGroup.setObjectName("lblBGroup")
+        self.label_12 = QtWidgets.QLabel(self.frame)
+        self.label_12.setGeometry(QtCore.QRect(316, 296, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_12.setFont(font)
+        self.label_12.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_12.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_12.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_12.setObjectName("label_12")
+        self.label_15 = QtWidgets.QLabel(self.frame)
+        self.label_15.setGeometry(QtCore.QRect(316, 384, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_15.setFont(font)
+        self.label_15.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_15.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_15.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_15.setObjectName("label_15")
+        self.lblRank = QtWidgets.QLabel(self.frame)
+        self.lblRank.setGeometry(QtCore.QRect(507, 252, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblRank.setFont(font)
+        self.lblRank.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblRank.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblRank.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblRank.setObjectName("lblRank")
+        self.label_9 = QtWidgets.QLabel(self.frame)
+        self.label_9.setGeometry(QtCore.QRect(316, 164, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_9.setFont(font)
+        self.label_9.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_9.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_9.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_9.setObjectName("label_9")
+        self.lblDepartment = QtWidgets.QLabel(self.frame)
+        self.lblDepartment.setGeometry(QtCore.QRect(507, 340, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblDepartment.setFont(font)
+        self.lblDepartment.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblDepartment.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblDepartment.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblDepartment.setObjectName("lblDepartment")
+        self.lblPNo = QtWidgets.QLabel(self.frame)
+        self.lblPNo.setGeometry(QtCore.QRect(507, 208, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblPNo.setFont(font)
+        self.lblPNo.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblPNo.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblPNo.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblPNo.setObjectName("lblPNo")
+        self.label_14 = QtWidgets.QLabel(self.frame)
+        self.label_14.setGeometry(QtCore.QRect(316, 340, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_14.setFont(font)
+        self.label_14.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_14.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_14.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_14.setObjectName("label_14")
+        self.lblName = QtWidgets.QLabel(self.frame)
+        self.lblName.setGeometry(QtCore.QRect(507, 296, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblName.setFont(font)
+        self.lblName.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblName.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblName.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblName.setObjectName("lblName")
+        self.label_10 = QtWidgets.QLabel(self.frame)
+        self.label_10.setGeometry(QtCore.QRect(316, 208, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_10.setFont(font)
+        self.label_10.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_10.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_10.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_10.setObjectName("label_10")
+        self.cBoxIDNo = QtWidgets.QComboBox(self.frame)
+        self.cBoxIDNo.setGeometry(QtCore.QRect(507, 166, 345, 38))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        font.setKerning(True)
+        self.cBoxIDNo.setFont(font)
+        self.cBoxIDNo.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.cBoxIDNo.setStyleSheet("QComboBox{ border-width: 1px;\n"
+" border-color: #aaa;\n"
+" border-style: solid;\n"
+"border-radius:6; \n"
+"}\n"
+"\n"
+"QComboBox::drop-down:button{\n"
+"background-color:transparent;\n"
+"}\n"
+"QComboBox::down-arrow {\n"
+" \n"
+"    image: url(C:/Users/home/Desktop/IndoorPoistionInterfaces/InterfaceIcons/dropDown.png);\n"
+"    width: 25px;\n"
+"    height: 9px;\n"
+"}\n"
+"QComboBox:hover{\n"
+"     border:1px solid #000;    \n"
+"}\n"
+"  QComboBox:focus{\n"
+"    border-color:dodgerBlue;\n"
+"  }\n"
+"")
+        self.cBoxIDNo.setFrame(True)
+        self.cBoxIDNo.setObjectName("cBoxIDNo")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    outline:none;\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
+
+        self.label_2.raise_()
+        self.label.raise_()
+        self.navViewPunishment.raise_()
+        self.navViewImpKey.raise_()
+        self.navViewGenKey.raise_()
+        self.navViewVisitor.raise_()
+        self.navViewTransport.raise_()
+        self.navViewGangway.raise_()
+        self.navViewDuty.raise_()
+        self.navViewNight.raise_()
+        self.label_4.raise_()
+        self.navViewMOB.raise_()
+        self.navViewLocation.raise_()
+        self.navViewManagement.raise_()
+        self.navViewPPE.raise_()
+        self.navViewOOD.raise_()
+        self.navViewCMS.raise_()
+        self.pushButton.raise_()
+        self.pushButton_2.raise_()
+        self.navViewPersonnel.raise_()
+        self.navViewStatePersonnel.raise_()
+        self.navMOB.raise_()
+        self.navViewStateArmory.raise_()
+        self.label_11.raise_()
+        self.lblBGroup.raise_()
+        self.label_12.raise_()
+        self.label_15.raise_()
+        self.lblRank.raise_()
+        self.label_9.raise_()
+        self.lblDepartment.raise_()
+        self.lblPNo.raise_()
+        self.label_14.raise_()
+        self.btnLogout.raise_()
+        self.lblName.raise_()
+        self.label_10.raise_()
+        self.cBoxIDNo.raise_()
+        self.label_13 = QtWidgets.QLabel(self.centralwidget)
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
+        self.label_13.setStyleSheet("background-color:#A0A0A0;")
+        self.label_13.setText("")
+        self.label_13.setObjectName("label_13")
+        self.label_6 = QtWidgets.QLabel(self.centralwidget)
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_6.setFont(font)
+        self.label_6.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_6.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_6.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_6.setObjectName("label_6")
+        self.label_7 = QtWidgets.QLabel(self.centralwidget)
+        self.label_7.setGeometry(QtCore.QRect(316, 120, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_7.setFont(font)
+        self.label_7.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_7.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_7.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_7.setObjectName("label_7")
+        self.lblLastDetectedOn = QtWidgets.QLabel(self.centralwidget)
+        self.lblLastDetectedOn.setGeometry(QtCore.QRect(507, 120, 371, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblLastDetectedOn.setFont(font)
+        self.lblLastDetectedOn.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblLastDetectedOn.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblLastDetectedOn.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblLastDetectedOn.setObjectName("lblLastDetectedOn")
+        MainWindow.setCentralWidget(self.centralwidget)
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.navViewPunishment.setText(_translate("MainWindow", "Punishment Book"))
+        self.navViewImpKey.setText(_translate("MainWindow", "Important Key Book"))
+        self.navViewGenKey.setText(_translate("MainWindow", "General Key Book"))
+        self.navViewVisitor.setText(_translate("MainWindow", "Visitor Book"))
+        self.navViewTransport.setText(_translate("MainWindow", "Transport Book"))
+        self.navViewGangway.setText(_translate("MainWindow", "Gangway Book"))
+        self.navViewDuty.setText(_translate("MainWindow", "Duty Book"))
+        self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
+        self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
+        self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
+        self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
+        self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.pushButton.setText(_translate("MainWindow", "Man Over Board"))
+        self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
+        self.navMOB.setText(_translate("MainWindow", "Back"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.label_11.setText(_translate("MainWindow", "Rank/Rate:"))
+        self.lblBGroup.setText(_translate("MainWindow", "label"))
+        self.label_12.setText(_translate("MainWindow", "Name:"))
+        self.label_15.setText(_translate("MainWindow", "Blood Group:"))
+        self.lblRank.setText(_translate("MainWindow", "label"))
+        self.label_9.setText(_translate("MainWindow", "ID No.:"))
+        self.lblDepartment.setText(_translate("MainWindow", "label"))
+        self.lblPNo.setText(_translate("MainWindow", "label"))
+        self.label_14.setText(_translate("MainWindow", "Department:"))
+        self.lblName.setText(_translate("MainWindow", "label"))
+        self.label_10.setText(_translate("MainWindow", "P No./ O No.:"))
+        self.label_6.setText(_translate("MainWindow", "MOB Details"))
+        self.label_7.setText(_translate("MainWindow", "Last Detected on:"))
+        self.lblLastDetectedOn.setText(_translate("MainWindow", "Last Detected on:"))    
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
+#----------------------------------------backend for MOB Details Interface----------------------------------------------
+        listIDNo=[]
+        self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
+        self.navViewImpKey.clicked.connect(self.navViewImportantKeyMethod)
+        self.navViewGenKey.clicked.connect(self.navViewGeneralKeyMethod)
+        self.navViewOOD.clicked.connect(self.navViewOODMethod)
+        self.navViewTransport.clicked.connect(self.navViewTransportMethod)
+        self.navViewVisitor.clicked.connect(self.navViewVisitorMethod)
+        self.navViewDuty.clicked.connect(self.navViewDutyMethod)
+        self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
+        self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
+        self.navViewPunishment.clicked.connect(self.navViewPunishMethod)
+        self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
+        self.navViewCMS.clicked.connect(self.navManageCallMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
+        self.navMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
+        self.cBoxIDNo.activated.connect(self.setLabelText)
+
+    def navViewPersonnelMethod(self):
+             w.change_view(1)    
+    def navViewImportantKeyMethod(self):
+             w.change_view(2)
+    def navViewGeneralKeyMethod(self):
+             w.change_view(3)  
+    def navViewVisitorMethod(self):
+             w.change_view(4)
+    def navViewTransportMethod(self):
+             w.change_view(5) 
+    def navViewGangwayMethod(self):
+             w.change_view(6)
+    def navViewDutyMethod(self):
+             w.change_view(7)
+    def navViewPunishMethod(self):
+             w.change_view(8)    
+    def navViewOODMethod(self):
+             w.change_view(9)      
+    def navViewNightRoundMethod(self):
+             w.change_view(10) 
+    def navViewArmPPEMethod(self):
+             w.change_view(11) 
+    def navViewStatePersonnelMethod(self):
+             w.change_view(23) 
+    def navManageCallMethod(self):
+             w.change_view(25) 
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29)
+    def setLabelText (self,val):
+             cbPNo=fillComboBoxData("SELECT [P No./ O No.] FROM PersonnelDataBook Where [ID No.] = '"+self.cBoxIDNo.currentText()+"'")
+             cbRank=fillComboBoxData("SELECT [Rank/ Rate] from PersonnelDataBook Where [ID No.] = '"+self.cBoxIDNo.currentText()+"'")
+             cbName=fillComboBoxData("SELECT Name FROM PersonnelDataBook Where [ID No.] = '"+self.cBoxIDNo.currentText()+"'")
+             cbDepartment=fillComboBoxData("SELECT Department FROM PersonnelDataBook Where [ID No.] = '"+self.cBoxIDNo.currentText()+"'")
+             cbBloodGroup=fillComboBoxData("SELECT [Blood Group] FROM PersonnelDataBook Where [ID No.] = '"+self.cBoxIDNo.currentText()+"'")
+             if(len(cbPNo)!=0):
+                        self.lblPNo.setText(cbPNo[0])
+                        self.lblRank.setText(cbRank[0])
+                        self.lblName.setText(cbName[0])
+                        self.lblDepartment.setText(cbDepartment[0])
+                        self.lblBGroup.setText(cbBloodGroup[0])
+class MObDetailsWidget(QtWidgets.QMainWindow,MOBDetails ):
+    def __init__(self, parent=None):
+        super(MObDetailsWidget, self).__init__(parent)
+        self.setup_MOBDetails(self)
+
+############################################################# View Personnel Location Interface ######################################################################
+class ViewPersonnelLocation(object):
+    def setup_ViewPersonnelLocation(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(1366, 765)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.frame = QtWidgets.QFrame(self.centralwidget)
+        self.frame.setGeometry(QtCore.QRect(0, 0, 1366, 768))
+        self.frame.setStyleSheet("background-color: #ffffff")
+        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame.setObjectName("frame")
+        self.label = QtWidgets.QLabel(self.frame)
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
+        self.label.setStyleSheet(
+"background-color:#2F3C71;")
+        self.label.setText("")
+        self.label.setObjectName("label")
+        self.label_2 = QtWidgets.QLabel(self.frame)
+        self.label_2.setGeometry(QtCore.QRect(0, 0, 1366, 44))
+        self.label_2.setStyleSheet(
+"background-color:#222222;")
+        self.label_2.setText("")
+        self.label_2.setObjectName("label_2")
+        self.navViewPunishment = QtWidgets.QPushButton(self.frame)
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPunishment.setFont(font)
+        self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPunishment.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/images/punishment.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPunishment.setIcon(icon)
+        self.navViewPunishment.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPunishment.setFlat(False)
+        self.navViewPunishment.setObjectName("navViewPunishment")
+        self.navViewImpKey = QtWidgets.QPushButton(self.frame)
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewImpKey.setFont(font)
+        self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewImpKey.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/images/impKey.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewImpKey.setIcon(icon1)
+        self.navViewImpKey.setIconSize(QtCore.QSize(25, 25))
+        self.navViewImpKey.setFlat(False)
+        self.navViewImpKey.setObjectName("navViewImpKey")
+        self.navViewGenKey = QtWidgets.QPushButton(self.frame)
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewGenKey.setFont(font)
+        self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewGenKey.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(":/images/genKey.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewGenKey.setIcon(icon2)
+        self.navViewGenKey.setIconSize(QtCore.QSize(25, 25))
+        self.navViewGenKey.setFlat(False)
+        self.navViewGenKey.setObjectName("navViewGenKey")
+        self.navViewVisitor = QtWidgets.QPushButton(self.frame)
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewVisitor.setFont(font)
+        self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewVisitor.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"}")
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(":/images/visitor.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewVisitor.setIcon(icon3)
+        self.navViewVisitor.setIconSize(QtCore.QSize(25, 25))
+        self.navViewVisitor.setFlat(False)
+        self.navViewVisitor.setObjectName("navViewVisitor")
+        self.navViewTransport = QtWidgets.QPushButton(self.frame)
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewTransport.setFont(font)
+        self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewTransport.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon4 = QtGui.QIcon()
+        icon4.addPixmap(QtGui.QPixmap(":/images/transport.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewTransport.setIcon(icon4)
+        self.navViewTransport.setIconSize(QtCore.QSize(25, 25))
+        self.navViewTransport.setFlat(False)
+        self.navViewTransport.setObjectName("navViewTransport")
+        self.navViewGangway = QtWidgets.QPushButton(self.frame)
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewGangway.setFont(font)
+        self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewGangway.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon5 = QtGui.QIcon()
+        icon5.addPixmap(QtGui.QPixmap(":/images/gangway.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewGangway.setIcon(icon5)
+        self.navViewGangway.setIconSize(QtCore.QSize(25, 25))
+        self.navViewGangway.setFlat(False)
+        self.navViewGangway.setObjectName("navViewGangway")
+        self.navViewDuty = QtWidgets.QPushButton(self.frame)
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewDuty.setFont(font)
+        self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewDuty.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon6 = QtGui.QIcon()
+        icon6.addPixmap(QtGui.QPixmap(":/images/duty.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewDuty.setIcon(icon6)
+        self.navViewDuty.setIconSize(QtCore.QSize(25, 25))
+        self.navViewDuty.setFlat(False)
+        self.navViewDuty.setObjectName("navViewDuty")
+        self.navViewNight = QtWidgets.QPushButton(self.frame)
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewNight.setFont(font)
+        self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewNight.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon7 = QtGui.QIcon()
+        icon7.addPixmap(QtGui.QPixmap(":/images/night.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewNight.setIcon(icon7)
+        self.navViewNight.setIconSize(QtCore.QSize(25, 25))
+        self.navViewNight.setFlat(False)
+        self.navViewNight.setObjectName("navViewNight")
+        self.label_4 = QtWidgets.QLabel(self.frame)
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
+        self.label_4.setStyleSheet("background-color:#4154A0;")
+        self.label_4.setText("")
+        self.label_4.setObjectName("label_4")
+        self.navViewMOB = QtWidgets.QPushButton(self.frame)
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewMOB.setFont(font)
+        self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewMOB.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon8 = QtGui.QIcon()
+        icon8.addPixmap(QtGui.QPixmap(":/images/mob.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewMOB.setIcon(icon8)
+        self.navViewMOB.setIconSize(QtCore.QSize(32, 32))
+        self.navViewMOB.setFlat(False)
+        self.navViewMOB.setObjectName("navViewMOB")
+        self.navViewLocation = QtWidgets.QPushButton(self.frame)
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewLocation.setFont(font)
+        self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewLocation.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:active\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon9 = QtGui.QIcon()
+        icon9.addPixmap(QtGui.QPixmap(":/images/locate.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewLocation.setIcon(icon9)
+        self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
+        self.navViewLocation.setFlat(False)
+        self.navViewLocation.setObjectName("navViewLocation")
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon10 = QtGui.QIcon()
+        icon10.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewManagement.setIcon(icon10)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
+        self.navViewPPE = QtWidgets.QPushButton(self.frame)
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPPE.setFont(font)
+        self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPPE.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon11 = QtGui.QIcon()
+        icon11.addPixmap(QtGui.QPixmap(":/images/armPPE.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPPE.setIcon(icon11)
+        self.navViewPPE.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPPE.setFlat(False)
+        self.navViewPPE.setObjectName("navViewPPE")
+        self.navViewOOD = QtWidgets.QPushButton(self.frame)
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewOOD.setFont(font)
+        self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewOOD.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon12 = QtGui.QIcon()
+        icon12.addPixmap(QtGui.QPixmap(":/images/oodObserve.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewOOD.setIcon(icon12)
+        self.navViewOOD.setIconSize(QtCore.QSize(25, 25))
+        self.navViewOOD.setFlat(False)
+        self.navViewOOD.setObjectName("navViewOOD")
+        self.navViewCMS = QtWidgets.QPushButton(self.frame)
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewCMS.setFont(font)
+        self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewCMS.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon13 = QtGui.QIcon()
+        icon13.addPixmap(QtGui.QPixmap(":/images/sreCall.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewCMS.setIcon(icon13)
+        self.navViewCMS.setIconSize(QtCore.QSize(25, 25))
+        self.navViewCMS.setFlat(False)
+        self.navViewCMS.setObjectName("navViewCMS")
+        self.pushButton = QtWidgets.QPushButton(self.frame)
+        self.pushButton.setEnabled(True)
+        self.pushButton.setGeometry(QtCore.QRect(1080, 5, 260, 35))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.pushButton.setFont(font)
+        self.pushButton.setStyleSheet(" text-align: right;\n"
+"    color: #ffffff;\n"
+"    background-color:#222222;")
+        self.pushButton.setIcon(icon9)
+        self.pushButton.setIconSize(QtCore.QSize(32, 32))
+        self.pushButton.setObjectName("pushButton")
+        self.pushButton_2 = QtWidgets.QPushButton(self.frame)
+        self.pushButton_2.setEnabled(True)
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
+        self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
+"    border-radius:4px;\n"
+"    outline:none;")
+        self.pushButton_2.setText("")
+        icon14 = QtGui.QIcon()
+        icon14.addPixmap(QtGui.QPixmap(":/images/logoMTIP.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_2.setIcon(icon14)
+        self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
+        self.pushButton_2.setObjectName("pushButton_2")
+        self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPersonnel.setFont(font)
+        self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPersonnel.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon15 = QtGui.QIcon()
+        icon15.addPixmap(QtGui.QPixmap(":/images/personnelData.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPersonnel.setIcon(icon15)
+        self.navViewPersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPersonnel.setFlat(False)
+        self.navViewPersonnel.setObjectName("navViewPersonnel")
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon16 = QtGui.QIcon()
+        icon16.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStatePersonnel.setIcon(icon16)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navLocation = QtWidgets.QPushButton(self.frame)
+        self.navLocation.setGeometry(QtCore.QRect(1185, 120, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navLocation.setFont(font)
+        self.navLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navLocation.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon17 = QtGui.QIcon()
+        icon17.addPixmap(QtGui.QPixmap(":/images/back.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navLocation.setIcon(icon17)
+        self.navLocation.setIconSize(QtCore.QSize(25, 25))
+        self.navLocation.setObjectName("navLocation")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon18 = QtGui.QIcon()
+        icon18.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon18)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.label_11 = QtWidgets.QLabel(self.frame)
+        self.label_11.setGeometry(QtCore.QRect(316, 252, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_11.setFont(font)
+        self.label_11.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_11.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_11.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_11.setObjectName("label_11")
+        self.lblBGroup = QtWidgets.QLabel(self.frame)
+        self.lblBGroup.setGeometry(QtCore.QRect(507, 384, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblBGroup.setFont(font)
+        self.lblBGroup.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblBGroup.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblBGroup.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblBGroup.setObjectName("lblBGroup")
+        self.label_12 = QtWidgets.QLabel(self.frame)
+        self.label_12.setGeometry(QtCore.QRect(316, 296, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_12.setFont(font)
+        self.label_12.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_12.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_12.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_12.setObjectName("label_12")
+        self.label_15 = QtWidgets.QLabel(self.frame)
+        self.label_15.setGeometry(QtCore.QRect(316, 384, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_15.setFont(font)
+        self.label_15.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_15.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_15.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_15.setObjectName("label_15")
+        self.lblRank = QtWidgets.QLabel(self.frame)
+        self.lblRank.setGeometry(QtCore.QRect(507, 252, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblRank.setFont(font)
+        self.lblRank.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblRank.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblRank.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblRank.setObjectName("lblRank")
+        self.label_9 = QtWidgets.QLabel(self.frame)
+        self.label_9.setGeometry(QtCore.QRect(316, 164, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_9.setFont(font)
+        self.label_9.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_9.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_9.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_9.setObjectName("label_9")
+        self.lblDepartment = QtWidgets.QLabel(self.frame)
+        self.lblDepartment.setGeometry(QtCore.QRect(507, 340, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblDepartment.setFont(font)
+        self.lblDepartment.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblDepartment.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblDepartment.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblDepartment.setObjectName("lblDepartment")
+        self.lblPNo = QtWidgets.QLabel(self.frame)
+        self.lblPNo.setGeometry(QtCore.QRect(507, 208, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblPNo.setFont(font)
+        self.lblPNo.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblPNo.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblPNo.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblPNo.setObjectName("lblPNo")
+        self.label_14 = QtWidgets.QLabel(self.frame)
+        self.label_14.setGeometry(QtCore.QRect(316, 340, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_14.setFont(font)
+        self.label_14.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_14.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_14.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_14.setObjectName("label_14")
+        self.lblName = QtWidgets.QLabel(self.frame)
+        self.lblName.setGeometry(QtCore.QRect(507, 296, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblName.setFont(font)
+        self.lblName.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblName.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblName.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblName.setObjectName("lblName")
+        self.label_10 = QtWidgets.QLabel(self.frame)
+        self.label_10.setGeometry(QtCore.QRect(316, 208, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_10.setFont(font)
+        self.label_10.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_10.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_10.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_10.setObjectName("label_10")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    outline:none;\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
+        
+        self.label_2.raise_()
+        self.label.raise_()
+        self.navViewPunishment.raise_()
+        self.navViewImpKey.raise_()
+        self.navViewGenKey.raise_()
+        self.navViewVisitor.raise_()
+        self.navViewTransport.raise_()
+        self.navViewGangway.raise_()
+        self.navViewDuty.raise_()
+        self.navViewNight.raise_()
+        self.label_4.raise_()
+        self.navViewMOB.raise_()
+        self.navViewLocation.raise_()
+        self.navViewManagement.raise_()
+        self.navViewPPE.raise_()
+        self.navViewOOD.raise_()
+        self.navViewCMS.raise_()
+        self.pushButton.raise_()
+        self.pushButton_2.raise_()
+        self.navViewPersonnel.raise_()
+        self.navViewStatePersonnel.raise_()
+        self.navLocation.raise_()
+        self.btnLogout.raise_()
+        self.navViewStateArmory.raise_()
+        self.label_11.raise_()
+        self.lblBGroup.raise_()
+        self.label_12.raise_()
+        self.label_15.raise_()
+        self.lblRank.raise_()
+        self.label_9.raise_()
+        self.lblDepartment.raise_()
+        self.lblPNo.raise_()
+        self.label_14.raise_()
+        self.lblName.raise_()
+        self.label_10.raise_()
+        self.label_13 = QtWidgets.QLabel(self.centralwidget)
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
+        self.label_13.setStyleSheet("background-color:#A0A0A0;")
+        self.label_13.setText("")
+        self.label_13.setObjectName("label_13")
+        self.label_6 = QtWidgets.QLabel(self.centralwidget)
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_6.setFont(font)
+        self.label_6.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_6.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_6.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_6.setObjectName("label_6")
+        self.label_7 = QtWidgets.QLabel(self.centralwidget)
+        self.label_7.setGeometry(QtCore.QRect(316, 120, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_7.setFont(font)
+        self.label_7.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_7.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_7.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_7.setObjectName("label_7")
+        self.lblLastLocatedOn = QtWidgets.QLabel(self.centralwidget)
+        self.lblLastLocatedOn.setGeometry(QtCore.QRect(507, 120, 371, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblLastLocatedOn.setFont(font)
+        self.lblLastLocatedOn.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblLastLocatedOn.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblLastLocatedOn.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblLastLocatedOn.setObjectName("lblLastLocatedOn")
+        self.lbIDNo = QtWidgets.QLabel(self.centralwidget)
+        self.lbIDNo.setGeometry(QtCore.QRect(507, 164, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lbIDNo.setFont(font)
+        self.lbIDNo.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lbIDNo.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lbIDNo.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lbIDNo.setObjectName("lbIDNo")
+        MainWindow.setCentralWidget(self.centralwidget)
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.navViewPunishment.setText(_translate("MainWindow", "Punishment Book"))
+        self.navViewImpKey.setText(_translate("MainWindow", "Important Key Book"))
+        self.navViewGenKey.setText(_translate("MainWindow", "General Key Book"))
+        self.navViewVisitor.setText(_translate("MainWindow", "Visitor Book"))
+        self.navViewTransport.setText(_translate("MainWindow", "Transport Book"))
+        self.navViewGangway.setText(_translate("MainWindow", "Gangway Book"))
+        self.navViewDuty.setText(_translate("MainWindow", "Duty Book"))
+        self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
+        self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
+        self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
+        self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
+        self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.pushButton.setText(_translate("MainWindow", "Personnel Location"))
+        self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
+        self.navLocation.setText(_translate("MainWindow", "Back"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.label_11.setText(_translate("MainWindow", "Rank/Rate:"))
+        self.lblBGroup.setText(_translate("MainWindow", "label"))
+        self.label_12.setText(_translate("MainWindow", "Name:"))
+        self.label_15.setText(_translate("MainWindow", "Blood Group:"))
+        self.lblRank.setText(_translate("MainWindow", "label"))
+        self.label_9.setText(_translate("MainWindow", "ID No.:"))
+        self.lblDepartment.setText(_translate("MainWindow", "label"))
+        self.lblPNo.setText(_translate("MainWindow", "label"))
+        self.label_14.setText(_translate("MainWindow", "Department:"))
+        self.lblName.setText(_translate("MainWindow", "label"))
+        self.label_10.setText(_translate("MainWindow", "P No./ O No.:"))
+        self.label_6.setText(_translate("MainWindow", "Located Personnel\'s Details"))
+        self.label_7.setText(_translate("MainWindow", "Last Located on:"))
+        self.lblLastLocatedOn.setText(_translate("MainWindow", "Last Detected on:"))
+        self.lbIDNo.setText(_translate("MainWindow", "label"))
+#----------------------------------------backend for View Personnel Location Interface----------------------------------------------
+        markerOption=0
+        self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
+        self.navViewImpKey.clicked.connect(self.navViewImportantKeyMethod)
+        self.navViewGenKey.clicked.connect(self.navViewGeneralKeyMethod)
+        self.navViewOOD.clicked.connect(self.navViewOODMethod)
+        self.navViewTransport.clicked.connect(self.navViewTransportMethod)
+        self.navViewVisitor.clicked.connect(self.navViewVisitorMethod)
+        self.navViewDuty.clicked.connect(self.navViewDutyMethod)
+        self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
+        self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
+        self.navViewPunishment.clicked.connect(self.navViewPunishMethod)
+        self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
+        self.navViewCMS.clicked.connect(self.navManageCallMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
+        self.navLocation.clicked.connect(self.navPersonnelLocationMethod)
+    def navViewPersonnelMethod(self):
+             w.change_view(1)    
+    def navViewImportantKeyMethod(self):
+             w.change_view(2)
+    def navViewGeneralKeyMethod(self):
+             w.change_view(3)  
+    def navViewVisitorMethod(self):
+             w.change_view(4)
+    def navViewTransportMethod(self):
+             w.change_view(5) 
+    def navViewGangwayMethod(self):
+             w.change_view(6)
+    def navViewDutyMethod(self):
+             w.change_view(7)
+    def navViewPunishMethod(self):
+             w.change_view(8)    
+    def navViewOODMethod(self):
+             w.change_view(9)      
+    def navViewNightRoundMethod(self):
+             w.change_view(10) 
+    def navViewArmPPEMethod(self):
+             w.change_view(11) 
+    def navViewStatePersonnelMethod(self):
+             w.change_view(23) 
+    def navManageCallMethod(self):
+             w.change_view(25) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27) 
+    def navMOBMethod(self):
+             w.change_view(28)
+    def navLogoutMethod(self):
+             w.change_view(29)
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    
+class ViewPersonnelLocationWidget(QtWidgets.QMainWindow,ViewPersonnelLocation ):
+    def __init__(self, parent=None):
+        super(ViewPersonnelLocationWidget, self).__init__(parent)
+        self.setup_ViewPersonnelLocation(self)
+############################################################# View Personnel Management System Interface ######################################################################
+class ViewPersonnelManagement(object):
+    def setup_ViewPersonnelManagement(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(1366, 765)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.frame = QtWidgets.QFrame(self.centralwidget)
+        self.frame.setGeometry(QtCore.QRect(0, 0, 1366, 768))
+        self.frame.setStyleSheet("background-color: #ffffff")
+        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame.setObjectName("frame")
+        self.label = QtWidgets.QLabel(self.frame)
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
+        self.label.setStyleSheet(
+"background-color:#2F3C71;")
+        self.label.setText("")
+        self.label.setObjectName("label")
+        self.label_2 = QtWidgets.QLabel(self.frame)
+        self.label_2.setGeometry(QtCore.QRect(0, 0, 1366, 44))
+        self.label_2.setStyleSheet(
+"background-color:#222222;")
+        self.label_2.setText("")
+        self.label_2.setObjectName("label_2")
+        self.navViewPunishment = QtWidgets.QPushButton(self.frame)
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPunishment.setFont(font)
+        self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPunishment.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/images/punishment.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPunishment.setIcon(icon)
+        self.navViewPunishment.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPunishment.setFlat(False)
+        self.navViewPunishment.setObjectName("navViewPunishment")
+        self.navViewImpKey = QtWidgets.QPushButton(self.frame)
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewImpKey.setFont(font)
+        self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewImpKey.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/images/impKey.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewImpKey.setIcon(icon1)
+        self.navViewImpKey.setIconSize(QtCore.QSize(25, 25))
+        self.navViewImpKey.setFlat(False)
+        self.navViewImpKey.setObjectName("navViewImpKey")
+        self.navViewGenKey = QtWidgets.QPushButton(self.frame)
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewGenKey.setFont(font)
+        self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewGenKey.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(":/images/genKey.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewGenKey.setIcon(icon2)
+        self.navViewGenKey.setIconSize(QtCore.QSize(25, 25))
+        self.navViewGenKey.setFlat(False)
+        self.navViewGenKey.setObjectName("navViewGenKey")
+        self.navViewVisitor = QtWidgets.QPushButton(self.frame)
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewVisitor.setFont(font)
+        self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewVisitor.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"}")
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(":/images/visitor.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewVisitor.setIcon(icon3)
+        self.navViewVisitor.setIconSize(QtCore.QSize(25, 25))
+        self.navViewVisitor.setFlat(False)
+        self.navViewVisitor.setObjectName("navViewVisitor")
+        self.navViewTransport = QtWidgets.QPushButton(self.frame)
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewTransport.setFont(font)
+        self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewTransport.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon4 = QtGui.QIcon()
+        icon4.addPixmap(QtGui.QPixmap(":/images/transport.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewTransport.setIcon(icon4)
+        self.navViewTransport.setIconSize(QtCore.QSize(25, 25))
+        self.navViewTransport.setFlat(False)
+        self.navViewTransport.setObjectName("navViewTransport")
+        self.navViewGangway = QtWidgets.QPushButton(self.frame)
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewGangway.setFont(font)
+        self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewGangway.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon5 = QtGui.QIcon()
+        icon5.addPixmap(QtGui.QPixmap(":/images/gangway.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewGangway.setIcon(icon5)
+        self.navViewGangway.setIconSize(QtCore.QSize(25, 25))
+        self.navViewGangway.setFlat(False)
+        self.navViewGangway.setObjectName("navViewGangway")
+        self.navViewDuty = QtWidgets.QPushButton(self.frame)
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewDuty.setFont(font)
+        self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewDuty.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon6 = QtGui.QIcon()
+        icon6.addPixmap(QtGui.QPixmap(":/images/duty.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewDuty.setIcon(icon6)
+        self.navViewDuty.setIconSize(QtCore.QSize(25, 25))
+        self.navViewDuty.setFlat(False)
+        self.navViewDuty.setObjectName("navViewDuty")
+        self.navViewNight = QtWidgets.QPushButton(self.frame)
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewNight.setFont(font)
+        self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewNight.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon7 = QtGui.QIcon()
+        icon7.addPixmap(QtGui.QPixmap(":/images/night.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewNight.setIcon(icon7)
+        self.navViewNight.setIconSize(QtCore.QSize(25, 25))
+        self.navViewNight.setFlat(False)
+        self.navViewNight.setObjectName("navViewNight")
+        self.label_4 = QtWidgets.QLabel(self.frame)
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
+        self.label_4.setStyleSheet("background-color:#4154A0;")
+        self.label_4.setText("")
+        self.label_4.setObjectName("label_4")
+        self.navViewMOB = QtWidgets.QPushButton(self.frame)
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewMOB.setFont(font)
+        self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewMOB.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon8 = QtGui.QIcon()
+        icon8.addPixmap(QtGui.QPixmap(":/images/mob.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewMOB.setIcon(icon8)
+        self.navViewMOB.setIconSize(QtCore.QSize(32, 32))
+        self.navViewMOB.setFlat(False)
+        self.navViewMOB.setObjectName("navViewMOB")
+        self.navViewLocation = QtWidgets.QPushButton(self.frame)
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewLocation.setFont(font)
+        self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewLocation.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon9 = QtGui.QIcon()
+        icon9.addPixmap(QtGui.QPixmap(":/images/locate.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewLocation.setIcon(icon9)
+        self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
+        self.navViewLocation.setFlat(False)
+        self.navViewLocation.setObjectName("navViewLocation")
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"QPushButton:active\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon10 = QtGui.QIcon()
+        icon10.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewManagement.setIcon(icon10)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
+        self.navViewPPE = QtWidgets.QPushButton(self.frame)
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPPE.setFont(font)
+        self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPPE.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon11 = QtGui.QIcon()
+        icon11.addPixmap(QtGui.QPixmap(":/images/armPPE.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPPE.setIcon(icon11)
+        self.navViewPPE.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPPE.setFlat(False)
+        self.navViewPPE.setObjectName("navViewPPE")
+        self.navViewOOD = QtWidgets.QPushButton(self.frame)
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewOOD.setFont(font)
+        self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewOOD.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon12 = QtGui.QIcon()
+        icon12.addPixmap(QtGui.QPixmap(":/images/oodObserve.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewOOD.setIcon(icon12)
+        self.navViewOOD.setIconSize(QtCore.QSize(25, 25))
+        self.navViewOOD.setFlat(False)
+        self.navViewOOD.setObjectName("navViewOOD")
+        self.navViewCMS = QtWidgets.QPushButton(self.frame)
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewCMS.setFont(font)
+        self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewCMS.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon13 = QtGui.QIcon()
+        icon13.addPixmap(QtGui.QPixmap(":/images/sreCall.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewCMS.setIcon(icon13)
+        self.navViewCMS.setIconSize(QtCore.QSize(25, 25))
+        self.navViewCMS.setFlat(False)
+        self.navViewCMS.setObjectName("navViewCMS")
+        self.pushButton = QtWidgets.QPushButton(self.frame)
+        self.pushButton.setEnabled(True)
+        self.pushButton.setGeometry(QtCore.QRect(1080, 5, 260, 35))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.pushButton.setFont(font)
+        self.pushButton.setStyleSheet(" text-align: right;\n"
+"    color: #ffffff;\n"
+"    background-color:#222222;")
+        self.pushButton.setIcon(icon10)
+        self.pushButton.setIconSize(QtCore.QSize(32, 32))
+        self.pushButton.setObjectName("pushButton")
+        self.pushButton_2 = QtWidgets.QPushButton(self.frame)
+        self.pushButton_2.setEnabled(True)
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
+        self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
+"    border-radius:4px;\n"
+"    outline:none;")
+        self.pushButton_2.setText("")
+        icon14 = QtGui.QIcon()
+        icon14.addPixmap(QtGui.QPixmap(":/images/logoMTIP.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_2.setIcon(icon14)
+        self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
+        self.pushButton_2.setObjectName("pushButton_2")
+        self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPersonnel.setFont(font)
+        self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPersonnel.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon15 = QtGui.QIcon()
+        icon15.addPixmap(QtGui.QPixmap(":/images/personnelData.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPersonnel.setIcon(icon15)
+        self.navViewPersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPersonnel.setFlat(False)
+        self.navViewPersonnel.setObjectName("navViewPersonnel")
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon16 = QtGui.QIcon()
+        icon16.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStatePersonnel.setIcon(icon16)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    outline:none;\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
+        self.navViewManage = QtWidgets.QPushButton(self.frame)
+        self.navViewManage.setGeometry(QtCore.QRect(1185, 120, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewManage.setFont(font)
+        self.navViewManage.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManage.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon17 = QtGui.QIcon()
+        icon17.addPixmap(QtGui.QPixmap(":/images/back.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewManage.setIcon(icon17)
+        self.navViewManage.setIconSize(QtCore.QSize(25, 25))
+        self.navViewManage.setObjectName("navViewManage")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    outline:none;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon18 = QtGui.QIcon()
+        icon18.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon18)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.label_11 = QtWidgets.QLabel(self.frame)
+        self.label_11.setGeometry(QtCore.QRect(316, 252, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_11.setFont(font)
+        self.label_11.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_11.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_11.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_11.setObjectName("label_11")
+        self.lblBGroup = QtWidgets.QLabel(self.frame)
+        self.lblBGroup.setGeometry(QtCore.QRect(507, 384, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblBGroup.setFont(font)
+        self.lblBGroup.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblBGroup.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblBGroup.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblBGroup.setObjectName("lblBGroup")
+        self.label_12 = QtWidgets.QLabel(self.frame)
+        self.label_12.setGeometry(QtCore.QRect(316, 296, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_12.setFont(font)
+        self.label_12.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_12.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_12.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_12.setObjectName("label_12")
+        self.label_15 = QtWidgets.QLabel(self.frame)
+        self.label_15.setGeometry(QtCore.QRect(316, 384, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_15.setFont(font)
+        self.label_15.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_15.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_15.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_15.setObjectName("label_15")
+        self.lblRank = QtWidgets.QLabel(self.frame)
+        self.lblRank.setGeometry(QtCore.QRect(507, 252, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblRank.setFont(font)
+        self.lblRank.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblRank.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblRank.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblRank.setObjectName("lblRank")
+        self.label_9 = QtWidgets.QLabel(self.frame)
+        self.label_9.setGeometry(QtCore.QRect(316, 164, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_9.setFont(font)
+        self.label_9.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_9.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_9.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_9.setObjectName("label_9")
+        self.lblDepartment = QtWidgets.QLabel(self.frame)
+        self.lblDepartment.setGeometry(QtCore.QRect(507, 340, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblDepartment.setFont(font)
+        self.lblDepartment.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblDepartment.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblDepartment.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblDepartment.setObjectName("lblDepartment")
+        self.lblPNo = QtWidgets.QLabel(self.frame)
+        self.lblPNo.setGeometry(QtCore.QRect(507, 208, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblPNo.setFont(font)
+        self.lblPNo.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblPNo.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblPNo.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblPNo.setObjectName("lblPNo")
+        self.label_14 = QtWidgets.QLabel(self.frame)
+        self.label_14.setGeometry(QtCore.QRect(316, 340, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_14.setFont(font)
+        self.label_14.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_14.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_14.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_14.setObjectName("label_14")
+        self.lblName = QtWidgets.QLabel(self.frame)
+        self.lblName.setGeometry(QtCore.QRect(507, 296, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblName.setFont(font)
+        self.lblName.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblName.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblName.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblName.setObjectName("lblName")
+        self.label_10 = QtWidgets.QLabel(self.frame)
+        self.label_10.setGeometry(QtCore.QRect(316, 208, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_10.setFont(font)
+        self.label_10.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_10.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_10.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_10.setObjectName("label_10")
+        
+        self.label_2.raise_()
+        self.label.raise_()
+        self.navViewPunishment.raise_()
+        self.navViewImpKey.raise_()
+        self.navViewGenKey.raise_()
+        self.navViewVisitor.raise_()
+        self.navViewTransport.raise_()
+        self.navViewGangway.raise_()
+        self.navViewDuty.raise_()
+        self.navViewNight.raise_()
+        self.label_4.raise_()
+        self.navViewMOB.raise_()
+        self.navViewLocation.raise_()
+        self.navViewManagement.raise_()
+        self.navViewPPE.raise_()
+        self.navViewOOD.raise_()
+        self.navViewCMS.raise_()
+        self.pushButton.raise_()
+        self.pushButton_2.raise_()
+        self.navViewPersonnel.raise_()
+        self.navViewStatePersonnel.raise_()
+        self.navViewManage.raise_()
+        self.btnLogout.raise_()
+        self.navViewStateArmory.raise_()
+        self.label_11.raise_()
+        self.lblBGroup.raise_()
+        self.label_12.raise_()
+        self.label_15.raise_()
+        self.lblRank.raise_()
+        self.label_9.raise_()
+        self.lblDepartment.raise_()
+        self.lblPNo.raise_()
+        self.label_14.raise_()
+        self.lblName.raise_()
+        self.label_10.raise_()
+        self.label_13 = QtWidgets.QLabel(self.centralwidget)
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
+        self.label_13.setStyleSheet("background-color:#A0A0A0;")
+        self.label_13.setText("")
+        self.label_13.setObjectName("label_13")
+        self.label_6 = QtWidgets.QLabel(self.centralwidget)
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_6.setFont(font)
+        self.label_6.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_6.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_6.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_6.setObjectName("label_6")
+        self.label_7 = QtWidgets.QLabel(self.centralwidget)
+        self.label_7.setGeometry(QtCore.QRect(316, 120, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_7.setFont(font)
+        self.label_7.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_7.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_7.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_7.setObjectName("label_7")
+        self.lblLastLocatedOn = QtWidgets.QLabel(self.centralwidget)
+        self.lblLastLocatedOn.setGeometry(QtCore.QRect(507, 120, 371, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblLastLocatedOn.setFont(font)
+        self.lblLastLocatedOn.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblLastLocatedOn.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblLastLocatedOn.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblLastLocatedOn.setObjectName("lblLastLocatedOn")
+        self.lbIDNo = QtWidgets.QLabel(self.centralwidget)
+        self.lbIDNo.setGeometry(QtCore.QRect(507, 164, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lbIDNo.setFont(font)
+        self.lbIDNo.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lbIDNo.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lbIDNo.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lbIDNo.setObjectName("lbIDNo")
+        MainWindow.setCentralWidget(self.centralwidget)
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.navViewPunishment.setText(_translate("MainWindow", "Punishment Book"))
+        self.navViewImpKey.setText(_translate("MainWindow", "Important Key Book"))
+        self.navViewGenKey.setText(_translate("MainWindow", "General Key Book"))
+        self.navViewVisitor.setText(_translate("MainWindow", "Visitor Book"))
+        self.navViewTransport.setText(_translate("MainWindow", "Transport Book"))
+        self.navViewGangway.setText(_translate("MainWindow", "Gangway Book"))
+        self.navViewDuty.setText(_translate("MainWindow", "Duty Book"))
+        self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
+        self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
+        self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
+        self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
+        self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.pushButton.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
+        self.navViewManage.setText(_translate("MainWindow", "Back"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.label_11.setText(_translate("MainWindow", "Rank/Rate:"))
+        self.lblBGroup.setText(_translate("MainWindow", "label"))
+        self.label_12.setText(_translate("MainWindow", "Name:"))
+        self.label_15.setText(_translate("MainWindow", "Blood Group:"))
+        self.lblRank.setText(_translate("MainWindow", "label"))
+        self.label_9.setText(_translate("MainWindow", "ID No.:"))
+        self.lblDepartment.setText(_translate("MainWindow", "label"))
+        self.lblPNo.setText(_translate("MainWindow", "label"))
+        self.label_14.setText(_translate("MainWindow", "Department:"))
+        self.lblName.setText(_translate("MainWindow", "label"))
+        self.label_10.setText(_translate("MainWindow", "P No./ O No.:"))
+        self.label_6.setText(_translate("MainWindow", "Located Personnel\'s Details"))
+        self.label_7.setText(_translate("MainWindow", "Last Located on:"))
+        self.lblLastLocatedOn.setText(_translate("MainWindow", "Last Detected on:"))
+        self.lbIDNo.setText(_translate("MainWindow", "label"))
+#----------------------------------------backend for View Personnel Management System Interface----------------------------------------------
+        markerOption=0
+        self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
+        self.navViewImpKey.clicked.connect(self.navViewImportantKeyMethod)
+        self.navViewGenKey.clicked.connect(self.navViewGeneralKeyMethod)
+        self.navViewOOD.clicked.connect(self.navViewOODMethod)
+        self.navViewTransport.clicked.connect(self.navViewTransportMethod)
+        self.navViewVisitor.clicked.connect(self.navViewVisitorMethod)
+        self.navViewDuty.clicked.connect(self.navViewDutyMethod)
+        self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
+        self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
+        self.navViewPunishment.clicked.connect(self.navViewPunishMethod)
+        self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
+        self.navViewCMS.clicked.connect(self.navManageCallMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewMOB.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
+        self.navViewManage.clicked.connect(self.navPersonnelManagementMethod)
+    def navViewPersonnelMethod(self):
+             w.change_view(1)    
+    def navViewImportantKeyMethod(self):
+             w.change_view(2)
+    def navViewGeneralKeyMethod(self):
+             w.change_view(3)  
+    def navViewVisitorMethod(self):
+             w.change_view(4)
+    def navViewTransportMethod(self):
+             w.change_view(5) 
+    def navViewGangwayMethod(self):
+             w.change_view(6)
+    def navViewDutyMethod(self):
+             w.change_view(7)
+    def navViewPunishMethod(self):
+             w.change_view(8)    
+    def navViewOODMethod(self):
+             w.change_view(9)      
+    def navViewNightRoundMethod(self):
+             w.change_view(10) 
+    def navViewArmPPEMethod(self):
+             w.change_view(11) 
+    def navViewStatePersonnelMethod(self):
+             w.change_view(23) 
+    def navManageCallMethod(self):
+             w.change_view(25) 
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27) 
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29)
+class ViewPersonnelManagementWidget(QtWidgets.QMainWindow,ViewPersonnelManagement ):
+    def __init__(self, parent=None):
+        super(ViewPersonnelManagementWidget, self).__init__(parent)
+        self.setup_ViewPersonnelManagement(self)
+
+############################################################# View MOB Location interface ######################################################################
+class ViewMOBLocation(object):
+    def setup_ViewMOBLocation(self, MainWindow):
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(1366, 765)
+        self.centralwidget = QtWidgets.QWidget(MainWindow)
+        self.centralwidget.setObjectName("centralwidget")
+        self.frame = QtWidgets.QFrame(self.centralwidget)
+        self.frame.setGeometry(QtCore.QRect(0, 0, 1366, 768))
+        self.frame.setStyleSheet("background-color: #ffffff")
+        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame.setObjectName("frame")
+        self.label = QtWidgets.QLabel(self.frame)
+        self.label.setGeometry(QtCore.QRect(0, 0, 310, 768))
+        self.label.setStyleSheet("\n"
+"background-color:#2F3C71;")
+        self.label.setText("")
+        self.label.setObjectName("label")
+        self.label_2 = QtWidgets.QLabel(self.frame)
+        self.label_2.setGeometry(QtCore.QRect(0, 0, 1366, 44))
+        self.label_2.setStyleSheet("\n"
+"background-color:#222222;")
+        self.label_2.setText("")
+        self.label_2.setObjectName("label_2")
+        self.navViewPunishment = QtWidgets.QPushButton(self.frame)
+        self.navViewPunishment.setGeometry(QtCore.QRect(10, 587, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPunishment.setFont(font)
+        self.navViewPunishment.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPunishment.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    outline:none;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap(":/images/punishment.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPunishment.setIcon(icon)
+        self.navViewPunishment.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPunishment.setFlat(False)
+        self.navViewPunishment.setObjectName("navViewPunishment")
+        self.navViewImpKey = QtWidgets.QPushButton(self.frame)
+        self.navViewImpKey.setGeometry(QtCore.QRect(10, 323, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewImpKey.setFont(font)
+        self.navViewImpKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewImpKey.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    outline:none;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon1 = QtGui.QIcon()
+        icon1.addPixmap(QtGui.QPixmap(":/images/impKey.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewImpKey.setIcon(icon1)
+        self.navViewImpKey.setIconSize(QtCore.QSize(25, 25))
+        self.navViewImpKey.setFlat(False)
+        self.navViewImpKey.setObjectName("navViewImpKey")
+        self.navViewGenKey = QtWidgets.QPushButton(self.frame)
+        self.navViewGenKey.setGeometry(QtCore.QRect(10, 367, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewGenKey.setFont(font)
+        self.navViewGenKey.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewGenKey.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    outline:none;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon2 = QtGui.QIcon()
+        icon2.addPixmap(QtGui.QPixmap(":/images/genKey.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewGenKey.setIcon(icon2)
+        self.navViewGenKey.setIconSize(QtCore.QSize(25, 25))
+        self.navViewGenKey.setFlat(False)
+        self.navViewGenKey.setObjectName("navViewGenKey")
+        self.navViewVisitor = QtWidgets.QPushButton(self.frame)
+        self.navViewVisitor.setGeometry(QtCore.QRect(10, 411, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewVisitor.setFont(font)
+        self.navViewVisitor.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewVisitor.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    outline:none;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"}")
+        icon3 = QtGui.QIcon()
+        icon3.addPixmap(QtGui.QPixmap(":/images/visitor.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewVisitor.setIcon(icon3)
+        self.navViewVisitor.setIconSize(QtCore.QSize(25, 25))
+        self.navViewVisitor.setFlat(False)
+        self.navViewVisitor.setObjectName("navViewVisitor")
+        self.navViewTransport = QtWidgets.QPushButton(self.frame)
+        self.navViewTransport.setGeometry(QtCore.QRect(10, 455, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewTransport.setFont(font)
+        self.navViewTransport.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewTransport.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    outline:none;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon4 = QtGui.QIcon()
+        icon4.addPixmap(QtGui.QPixmap(":/images/transport.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewTransport.setIcon(icon4)
+        self.navViewTransport.setIconSize(QtCore.QSize(25, 25))
+        self.navViewTransport.setFlat(False)
+        self.navViewTransport.setObjectName("navViewTransport")
+        self.navViewGangway = QtWidgets.QPushButton(self.frame)
+        self.navViewGangway.setGeometry(QtCore.QRect(10, 499, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewGangway.setFont(font)
+        self.navViewGangway.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewGangway.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    outline:none;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon5 = QtGui.QIcon()
+        icon5.addPixmap(QtGui.QPixmap(":/images/gangway.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewGangway.setIcon(icon5)
+        self.navViewGangway.setIconSize(QtCore.QSize(25, 25))
+        self.navViewGangway.setFlat(False)
+        self.navViewGangway.setObjectName("navViewGangway")
+        self.navViewDuty = QtWidgets.QPushButton(self.frame)
+        self.navViewDuty.setGeometry(QtCore.QRect(10, 543, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewDuty.setFont(font)
+        self.navViewDuty.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewDuty.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    outline:none;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon6 = QtGui.QIcon()
+        icon6.addPixmap(QtGui.QPixmap(":/images/duty.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewDuty.setIcon(icon6)
+        self.navViewDuty.setIconSize(QtCore.QSize(25, 25))
+        self.navViewDuty.setFlat(False)
+        self.navViewDuty.setObjectName("navViewDuty")
+        self.navViewNight = QtWidgets.QPushButton(self.frame)
+        self.navViewNight.setGeometry(QtCore.QRect(10, 675, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewNight.setFont(font)
+        self.navViewNight.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewNight.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    outline:none;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon7 = QtGui.QIcon()
+        icon7.addPixmap(QtGui.QPixmap(":/images/night.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewNight.setIcon(icon7)
+        self.navViewNight.setIconSize(QtCore.QSize(25, 25))
+        self.navViewNight.setFlat(False)
+        self.navViewNight.setObjectName("navViewNight")
+        self.label_4 = QtWidgets.QLabel(self.frame)
+        self.label_4.setGeometry(QtCore.QRect(10, 272, 290, 2))
+        self.label_4.setStyleSheet("background-color:#4154A0;")
+        self.label_4.setText("")
+        self.label_4.setObjectName("label_4")
+        self.navViewMOB = QtWidgets.QPushButton(self.frame)
+        self.navViewMOB.setGeometry(QtCore.QRect(10, 91, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewMOB.setFont(font)
+        self.navViewMOB.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewMOB.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    outline:none;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:active\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon8 = QtGui.QIcon()
+        icon8.addPixmap(QtGui.QPixmap(":/images/mob.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewMOB.setIcon(icon8)
+        self.navViewMOB.setIconSize(QtCore.QSize(32, 32))
+        self.navViewMOB.setFlat(False)
+        self.navViewMOB.setObjectName("navViewMOB")
+        self.navViewLocation = QtWidgets.QPushButton(self.frame)
+        self.navViewLocation.setGeometry(QtCore.QRect(10, 3, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewLocation.setFont(font)
+        self.navViewLocation.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewLocation.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"    outline:none;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon9 = QtGui.QIcon()
+        icon9.addPixmap(QtGui.QPixmap(":/images/locate.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewLocation.setIcon(icon9)
+        self.navViewLocation.setIconSize(QtCore.QSize(25, 25))
+        self.navViewLocation.setFlat(False)
+        self.navViewLocation.setObjectName("navViewLocation")
+        self.navViewManagement = QtWidgets.QPushButton(self.frame)
+        self.navViewManagement.setGeometry(QtCore.QRect(10, 47, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewManagement.setFont(font)
+        self.navViewManagement.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewManagement.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"    outline:none;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon10 = QtGui.QIcon()
+        icon10.addPixmap(QtGui.QPixmap(":/images/personnel.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewManagement.setIcon(icon10)
+        self.navViewManagement.setIconSize(QtCore.QSize(32, 32))
+        self.navViewManagement.setFlat(False)
+        self.navViewManagement.setObjectName("navViewManagement")
+        self.navViewPPE = QtWidgets.QPushButton(self.frame)
+        self.navViewPPE.setGeometry(QtCore.QRect(10, 719, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPPE.setFont(font)
+        self.navViewPPE.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPPE.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    outline:none;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"    outline:none;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon11 = QtGui.QIcon()
+        icon11.addPixmap(QtGui.QPixmap(":/images/armPPE.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPPE.setIcon(icon11)
+        self.navViewPPE.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPPE.setFlat(False)
+        self.navViewPPE.setObjectName("navViewPPE")
+        self.navViewOOD = QtWidgets.QPushButton(self.frame)
+        self.navViewOOD.setGeometry(QtCore.QRect(10, 631, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewOOD.setFont(font)
+        self.navViewOOD.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewOOD.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    outline:none;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon12 = QtGui.QIcon()
+        icon12.addPixmap(QtGui.QPixmap(":/images/oodObserve.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewOOD.setIcon(icon12)
+        self.navViewOOD.setIconSize(QtCore.QSize(25, 25))
+        self.navViewOOD.setFlat(False)
+        self.navViewOOD.setObjectName("navViewOOD")
+        self.navViewCMS = QtWidgets.QPushButton(self.frame)
+        self.navViewCMS.setGeometry(QtCore.QRect(10, 135, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewCMS.setFont(font)
+        self.navViewCMS.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewCMS.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    outline:none;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon13 = QtGui.QIcon()
+        icon13.addPixmap(QtGui.QPixmap(":/images/sreCall.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewCMS.setIcon(icon13)
+        self.navViewCMS.setIconSize(QtCore.QSize(25, 25))
+        self.navViewCMS.setFlat(False)
+        self.navViewCMS.setObjectName("navViewCMS")
+        self.pushButton = QtWidgets.QPushButton(self.frame)
+        self.pushButton.setEnabled(True)
+        self.pushButton.setGeometry(QtCore.QRect(1080, 5, 260, 35))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.pushButton.setFont(font)
+        self.pushButton.setStyleSheet(" text-align: right;\n"
+"    color: #ffffff;\n"
+"    background-color:#222222;")
+        self.pushButton.setIcon(icon8)
+        self.pushButton.setIconSize(QtCore.QSize(32, 32))
+        self.pushButton.setObjectName("pushButton")
+        self.pushButton_2 = QtWidgets.QPushButton(self.frame)
+        self.pushButton_2.setEnabled(True)
+        self.pushButton_2.setGeometry(QtCore.QRect(316, 680, 100, 80))
+        self.pushButton_2.setStyleSheet(" border:1px solid #fff;\n"
+"    border-radius:4px;\n"
+"    outline:none;")
+        self.pushButton_2.setText("")
+        icon14 = QtGui.QIcon()
+        icon14.addPixmap(QtGui.QPixmap(":/images/logoMTIP.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.pushButton_2.setIcon(icon14)
+        self.pushButton_2.setIconSize(QtCore.QSize(200, 200))
+        self.pushButton_2.setObjectName("pushButton_2")
+        self.navViewPersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewPersonnel.setGeometry(QtCore.QRect(10, 279, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewPersonnel.setFont(font)
+        self.navViewPersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewPersonnel.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    outline:none;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon15 = QtGui.QIcon()
+        icon15.addPixmap(QtGui.QPixmap(":/images/personnelData.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewPersonnel.setIcon(icon15)
+        self.navViewPersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewPersonnel.setFlat(False)
+        self.navViewPersonnel.setObjectName("navViewPersonnel")
+        self.navViewStatePersonnel = QtWidgets.QPushButton(self.frame)
+        self.navViewStatePersonnel.setGeometry(QtCore.QRect(10, 179, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStatePersonnel.setFont(font)
+        self.navViewStatePersonnel.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStatePersonnel.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    outline:none;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon16 = QtGui.QIcon()
+        icon16.addPixmap(QtGui.QPixmap(":/images/armoryState.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStatePersonnel.setIcon(icon16)
+        self.navViewStatePersonnel.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStatePersonnel.setFlat(False)
+        self.navViewStatePersonnel.setObjectName("navViewStatePersonnel")
+        self.navMob = QtWidgets.QPushButton(self.frame)
+        self.navMob.setGeometry(QtCore.QRect(1185, 120, 151, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navMob.setFont(font)
+        self.navMob.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navMob.setStyleSheet("QPushButton\n"
+"{\n"
+"    color: #ffffff;\n"
+"    background-color:#4154A0;\n"
+"    border-width: 1px;\n"
+"    border-color: #4154A0;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    padding: 3px;\n"
+"    outline:none;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#384889\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon17 = QtGui.QIcon()
+        icon17.addPixmap(QtGui.QPixmap(":/images/back.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navMob.setIcon(icon17)
+        self.navMob.setIconSize(QtCore.QSize(25, 25))
+        self.navMob.setObjectName("navMob")
+        self.navViewStateArmory = QtWidgets.QPushButton(self.frame)
+        self.navViewStateArmory.setGeometry(QtCore.QRect(10, 223, 290, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.navViewStateArmory.setFont(font)
+        self.navViewStateArmory.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.navViewStateArmory.setStyleSheet("QPushButton \n"
+"{\n"
+"    text-align: left;\n"
+"    color: #ffffff;\n"
+"    background-color:#2F3C71;\n"
+"    border-width: 1px;\n"
+"    border-color: #2F3C71;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"    outline:none;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"    min-width: 40px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#4154A0;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #384889;\n"
+"     border-width: 3px;\n"
+"    border-color: #5C70BC;\n"
+"    border-style: solid;\n"
+"    border-radius: 6;\n"
+"\n"
+"}")
+        icon18 = QtGui.QIcon()
+        icon18.addPixmap(QtGui.QPixmap(":/images/armory.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.navViewStateArmory.setIcon(icon18)
+        self.navViewStateArmory.setIconSize(QtCore.QSize(25, 25))
+        self.navViewStateArmory.setFlat(False)
+        self.navViewStateArmory.setObjectName("navViewStateArmory")
+        self.label_11 = QtWidgets.QLabel(self.frame)
+        self.label_11.setGeometry(QtCore.QRect(316, 252, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_11.setFont(font)
+        self.label_11.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_11.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_11.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_11.setObjectName("label_11")
+        self.lblBGroup = QtWidgets.QLabel(self.frame)
+        self.lblBGroup.setGeometry(QtCore.QRect(507, 384, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblBGroup.setFont(font)
+        self.lblBGroup.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblBGroup.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblBGroup.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblBGroup.setObjectName("lblBGroup")
+        self.label_12 = QtWidgets.QLabel(self.frame)
+        self.label_12.setGeometry(QtCore.QRect(316, 296, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_12.setFont(font)
+        self.label_12.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_12.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_12.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_12.setObjectName("label_12")
+        self.label_15 = QtWidgets.QLabel(self.frame)
+        self.label_15.setGeometry(QtCore.QRect(316, 384, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_15.setFont(font)
+        self.label_15.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_15.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_15.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_15.setObjectName("label_15")
+        self.lblRank = QtWidgets.QLabel(self.frame)
+        self.lblRank.setGeometry(QtCore.QRect(507, 252, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblRank.setFont(font)
+        self.lblRank.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblRank.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblRank.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblRank.setObjectName("lblRank")
+        self.label_9 = QtWidgets.QLabel(self.frame)
+        self.label_9.setGeometry(QtCore.QRect(316, 164, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_9.setFont(font)
+        self.label_9.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_9.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_9.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_9.setObjectName("label_9")
+        self.lblDepartment = QtWidgets.QLabel(self.frame)
+        self.lblDepartment.setGeometry(QtCore.QRect(507, 340, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblDepartment.setFont(font)
+        self.lblDepartment.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblDepartment.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblDepartment.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblDepartment.setObjectName("lblDepartment")
+        self.lblPNo = QtWidgets.QLabel(self.frame)
+        self.lblPNo.setGeometry(QtCore.QRect(507, 208, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblPNo.setFont(font)
+        self.lblPNo.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblPNo.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblPNo.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblPNo.setObjectName("lblPNo")
+        self.label_14 = QtWidgets.QLabel(self.frame)
+        self.label_14.setGeometry(QtCore.QRect(316, 340, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_14.setFont(font)
+        self.label_14.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_14.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_14.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_14.setObjectName("label_14")
+        self.lblName = QtWidgets.QLabel(self.frame)
+        self.lblName.setGeometry(QtCore.QRect(507, 296, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblName.setFont(font)
+        self.lblName.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblName.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblName.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblName.setObjectName("lblName")
+        self.label_10 = QtWidgets.QLabel(self.frame)
+        self.label_10.setGeometry(QtCore.QRect(316, 208, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_10.setFont(font)
+        self.label_10.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_10.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_10.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_10.setObjectName("label_10")
+        self.btnLogout = QtWidgets.QPushButton(self.frame)
+        self.btnLogout.setGeometry(QtCore.QRect(326, 0, 111, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.btnLogout.setFont(font)
+        self.btnLogout.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btnLogout.setStyleSheet("QPushButton \n"
+"{\n"
+"    outline:none;\n"
+"    color: #ffffff;\n"
+"    background-color:#EF7901;\n"
+"    border-width: 1px;\n"
+"    border-color: #F35305;\n"
+"    border-style: solid;\n"
+"    padding: 3px;\n"
+"    font-size: 11pt;\n"
+"    padding-left: 5px;\n"
+"    padding-right: 5px;\n"
+"}\n"
+"\n"
+"QPushButton:hover\n"
+"{\n"
+"    background-color:#FE9730;\n"
+"}\n"
+"QPushButton:pressed\n"
+"{\n"
+"    background-color: #EF7901;\n"
+"     border-width: 3px;\n"
+"    border-color: #FE9730;\n"
+"    border-style: solid;\n"
+"\n"
+"}")
+        icon32 = QtGui.QIcon()
+        icon32.addPixmap(QtGui.QPixmap(":/images/logout.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.btnLogout.setIcon(icon32)
+        self.btnLogout.setIconSize(QtCore.QSize(32, 32))
+        self.btnLogout.setFlat(False)
+        self.btnLogout.setObjectName("btnLogout")
+        
+        self.label_2.raise_()
+        self.label.raise_()
+        self.navViewPunishment.raise_()
+        self.navViewImpKey.raise_()
+        self.navViewGenKey.raise_()
+        self.navViewVisitor.raise_()
+        self.navViewTransport.raise_()
+        self.navViewGangway.raise_()
+        self.navViewDuty.raise_()
+        self.navViewNight.raise_()
+        self.label_4.raise_()
+        self.navViewMOB.raise_()
+        self.navViewLocation.raise_()
+        self.navViewManagement.raise_()
+        self.navViewPPE.raise_()
+        self.navViewOOD.raise_()
+        self.navViewCMS.raise_()
+        self.pushButton.raise_()
+        self.pushButton_2.raise_()
+        self.navViewPersonnel.raise_()
+        self.navViewStatePersonnel.raise_()
+        self.navMob.raise_()
+        self.navViewStateArmory.raise_()
+        self.label_11.raise_()
+        self.lblBGroup.raise_()
+        self.label_12.raise_()
+        self.label_15.raise_()
+        self.lblRank.raise_()
+        self.label_9.raise_()
+        self.lblDepartment.raise_()
+        self.btnLogout.raise_()
+        self.lblPNo.raise_()
+        self.label_14.raise_()
+        self.lblName.raise_()
+        self.label_10.raise_()
+        self.label_13 = QtWidgets.QLabel(self.centralwidget)
+        self.label_13.setGeometry(QtCore.QRect(316, 100, 1020, 1))
+        self.label_13.setStyleSheet("background-color:#A0A0A0;")
+        self.label_13.setText("")
+        self.label_13.setObjectName("label_13")
+        self.label_6 = QtWidgets.QLabel(self.centralwidget)
+        self.label_6.setGeometry(QtCore.QRect(316, 60, 221, 31))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_6.setFont(font)
+        self.label_6.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_6.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_6.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_6.setObjectName("label_6")
+        self.label_7 = QtWidgets.QLabel(self.centralwidget)
+        self.label_7.setGeometry(QtCore.QRect(316, 120, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.label_7.setFont(font)
+        self.label_7.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.label_7.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.label_7.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.label_7.setObjectName("label_7")
+        self.lblLastLocatedOn = QtWidgets.QLabel(self.centralwidget)
+        self.lblLastLocatedOn.setGeometry(QtCore.QRect(507, 120, 371, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lblLastLocatedOn.setFont(font)
+        self.lblLastLocatedOn.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lblLastLocatedOn.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lblLastLocatedOn.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lblLastLocatedOn.setObjectName("lblLastLocatedOn")
+        self.lbIDNo = QtWidgets.QLabel(self.centralwidget)
+        self.lbIDNo.setGeometry(QtCore.QRect(507, 164, 191, 44))
+        font = QtGui.QFont()
+        font.setFamily("Segoe UI")
+        font.setPointSize(11)
+        self.lbIDNo.setFont(font)
+        self.lbIDNo.setLayoutDirection(QtCore.Qt.LeftToRight)
+        self.lbIDNo.setStyleSheet("color: #000000;\n"
+"background-color:#ffffff;\n"
+"font-size: 11pt")
+        self.lbIDNo.setAlignment(QtCore.Qt.AlignLeading|QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        self.lbIDNo.setObjectName("lbIDNo")
+        MainWindow.setCentralWidget(self.centralwidget)
+
+        self.retranslateUi(MainWindow)
+        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
+        self.navViewPunishment.setText(_translate("MainWindow", "Punishment Book"))
+        self.navViewImpKey.setText(_translate("MainWindow", "Important Key Book"))
+        self.navViewGenKey.setText(_translate("MainWindow", "General Key Book"))
+        self.navViewVisitor.setText(_translate("MainWindow", "Visitor Book"))
+        self.navViewTransport.setText(_translate("MainWindow", "Transport Book"))
+        self.navViewGangway.setText(_translate("MainWindow", "Gangway Book"))
+        self.navViewDuty.setText(_translate("MainWindow", "Duty Book"))
+        self.navViewNight.setText(_translate("MainWindow", "Night Round Book"))
+        self.navViewMOB.setText(_translate("MainWindow", "Man Over Board"))
+        self.navViewLocation.setText(_translate("MainWindow", "Personnel Location"))
+        self.navViewManagement.setText(_translate("MainWindow", "Personnel Management System"))
+        self.navViewPPE.setText(_translate("MainWindow", "Small Arm and PPE Book"))
+        self.navViewOOD.setText(_translate("MainWindow", "OOD Observation Book"))
+        self.navViewCMS.setText(_translate("MainWindow", "SRE Call Management System"))
+        self.pushButton.setText(_translate("MainWindow", "Man Over Board"))
+        self.navViewPersonnel.setText(_translate("MainWindow", "Personnel Data Book"))
+        self.navViewStatePersonnel.setText(_translate("MainWindow", "Personnel State Management System"))
+        self.navMob.setText(_translate("MainWindow", "Back"))
+        self.navViewStateArmory.setText(_translate("MainWindow", "Armory State Management System"))
+        self.label_11.setText(_translate("MainWindow", "Rank/Rate:"))
+        self.lblBGroup.setText(_translate("MainWindow", "label"))
+        self.label_12.setText(_translate("MainWindow", "Name:"))
+        self.label_15.setText(_translate("MainWindow", "Blood Group:"))
+        self.lblRank.setText(_translate("MainWindow", "label"))
+        self.label_9.setText(_translate("MainWindow", "ID No.:"))
+        self.lblDepartment.setText(_translate("MainWindow", "label"))
+        self.lblPNo.setText(_translate("MainWindow", "label"))
+        self.label_14.setText(_translate("MainWindow", "Department:"))
+        self.lblName.setText(_translate("MainWindow", "label"))
+        self.label_10.setText(_translate("MainWindow", "P No./ O No.:"))
+        self.label_6.setText(_translate("MainWindow", "Located Personnel\'s Details"))
+        self.label_7.setText(_translate("MainWindow", "Last Located on:"))
+        self.lblLastLocatedOn.setText(_translate("MainWindow", "Last Detected on:"))
+        self.lbIDNo.setText(_translate("MainWindow", "label"))
+        self.btnLogout.setText(_translate("MainWindow", "Logout"))
+
+#----------------------------------------backend for View Personnel Location Interface----------------------------------------------
+        markerOption=0
+        self.navViewPersonnel.clicked.connect(self.navViewPersonnelMethod)
+        self.navViewImpKey.clicked.connect(self.navViewImportantKeyMethod)
+        self.navViewGenKey.clicked.connect(self.navViewGeneralKeyMethod)
+        self.navViewOOD.clicked.connect(self.navViewOODMethod)
+        self.navViewTransport.clicked.connect(self.navViewTransportMethod)
+        self.navViewVisitor.clicked.connect(self.navViewVisitorMethod)
+        self.navViewDuty.clicked.connect(self.navViewDutyMethod)
+        self.navViewGangway.clicked.connect(self.navViewGangwayMethod)
+        self.navViewNight.clicked.connect(self.navViewNightRoundMethod)
+        self.navViewPunishment.clicked.connect(self.navViewPunishMethod)
+        self.navViewPPE.clicked.connect(self.navViewArmPPEMethod)
+        self.navViewCMS.clicked.connect(self.navManageCallMethod)
+        self.navViewLocation.clicked.connect(self.navPersonnelLocationMethod)
+        self.navViewManagement.clicked.connect(self.navPersonnelManagementMethod)
+        self.navViewStatePersonnel.clicked.connect(self.navViewStatePersonnelMethod)
+        self.navMob.clicked.connect(self.navMOBMethod)
+        self.btnLogout.clicked.connect(self.navLogoutMethod)
+
+    def navViewPersonnelMethod(self):
+             w.change_view(1)    
+    def navViewImportantKeyMethod(self):
+             w.change_view(2)
+    def navViewGeneralKeyMethod(self):
+             w.change_view(3)  
+    def navViewVisitorMethod(self):
+             w.change_view(4)
+    def navViewTransportMethod(self):
+             w.change_view(5) 
+    def navViewGangwayMethod(self):
+             w.change_view(6)
+    def navViewDutyMethod(self):
+             w.change_view(7)
+    def navViewPunishMethod(self):
+             w.change_view(8)    
+    def navViewOODMethod(self):
+             w.change_view(9)      
+    def navViewNightRoundMethod(self):
+             w.change_view(10) 
+    def navViewArmPPEMethod(self):
+             w.change_view(11) 
+    def navViewStatePersonnelMethod(self):
+             w.change_view(23) 
+    def navManageCallMethod(self):
+             w.change_view(25) 
+    def navPersonnelLocationMethod(self):
+             w.change_view(26) 
+    def navPersonnelManagementMethod(self):
+             w.change_view(27)
+    def navMOBMethod(self):
+             w.change_view(28) 
+    def navLogoutMethod(self):
+             w.change_view(29)
+class ViewMOBLocationWidget(QtWidgets.QMainWindow, ViewMOBLocation ):
+    def __init__(self, parent=None):
+        super(ViewMOBLocationWidget, self).__init__(parent)
+        self.setup_ViewMOBLocation(self)
 ############################################################# Main ######################################################################
 import IconResource_rc
 
@@ -41529,5 +46709,5 @@ if __name__ == "__main__":
     w.setWindowState(QtCore.Qt.WindowMaximized)
     w.showFullScreen()
     w.show()
-    w.change_view(19)
+    w.change_view(29)
     sys.exit(app.exec_())
