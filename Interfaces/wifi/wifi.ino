@@ -1,15 +1,12 @@
 #include <ESP8266WiFi.h>
- 
-const char* ssid = "Zong G4  pknet 03471819549";
-const char* password = "link 12$.";
+const char* ssid[] = {"Router_2", "Router_3", "Router_4"};
+const char* password[] = {"alpha_123", "beta_123", "gamma_123"};
 int ledPinb = 16;
-int ledPinr = 5;
+int ledPinr = 4;
 int buzzPin = 0;
 WiFiServer server(80);
 void setup() {
   Serial.begin(65200);
-  pinMode(ledPinb, OUTPUT);
-  pinMode(ledPinr, OUTPUT);
   pinMode(buzzPin, OUTPUT);
   digitalWrite(ledPinb, HIGH);
   digitalWrite(ledPinr, HIGH);
@@ -20,6 +17,8 @@ void setup() {
       WiFi.begin(ssid, password);
       Serial.println("Connecting to ");
       Serial.print(ssid);
+  pinMode(ledPinb, OUTPUT);
+  pinMode(ledPinr, OUTPUT);
       WiFi.mode(WIFI_STA);
     while (WiFi.status() != WL_CONNECTED) {
       delay(5000);
